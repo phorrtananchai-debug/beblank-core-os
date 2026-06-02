@@ -21,12 +21,13 @@ export const OSLayout = () => {
   const { data, queueSuggestionImport } = useOs()
 
   return (
-    <div className="min-h-screen bg-[#f3ebdf] px-4 py-4 text-[#26221c] md:px-6">
-      <div className="mx-auto flex w-full max-w-[1450px] gap-4">
-        <aside className="sticky top-4 h-[calc(100vh-2rem)] w-[290px] rounded-[28px] border border-[#e0d7ca] bg-[#fffaf1] p-5 shadow-[0_20px_45px_-30px_rgba(34,25,12,0.35)]">
-          <div className="mb-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-[#9a6a42]">Be Blank</p>
-            <h1 className="mt-1 text-xl font-semibold">Core OS</h1>
+    <div className="os-shell min-h-screen bg-[#faf9f8] px-4 py-4 text-[#111111] md:px-6">
+      <div className="mx-auto flex w-full max-w-[1480px] gap-5 rounded-[32px] border border-black/[0.04] bg-[#f3f1ee] p-3 shadow-[0_28px_70px_-48px_rgba(0,0,0,0.28)]">
+        <aside className="sticky top-4 h-[calc(100vh-2rem)] w-[292px] rounded-[32px] border border-black/[0.05] bg-[#fffaf1] p-5 shadow-[0_20px_45px_-34px_rgba(0,0,0,0.34)]">
+          <div className="mb-6">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Environment</p>
+            <h1 className="mt-2 text-2xl font-bold leading-none tracking-tight">BE BLANK OS</h1>
+            <p className="mt-2 text-xs leading-5 text-[#777777]">Sheet-first operating surface</p>
           </div>
           <nav className="space-y-1">
             {links.map((link) => (
@@ -35,7 +36,7 @@ export const OSLayout = () => {
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `block rounded-2xl px-3 py-2 text-sm transition ${isActive ? 'bg-[#26221c] text-[#fff9ef]' : 'text-[#3f3a33] hover:bg-[#f4ecdf]'}`
+                  `block rounded-2xl px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-black text-white' : 'text-[#55504a] hover:bg-black/[0.04] hover:text-[#111111]'}`
                 }
               >
                 {link.label}
@@ -48,10 +49,10 @@ export const OSLayout = () => {
         </aside>
 
         <div className="flex-1 space-y-4">
-          <div className="rounded-[28px] border border-[#e0d7ca] bg-[#f9f3e9] p-6">
+          <div className="rounded-[32px] border border-black/[0.05] bg-white p-5 md:p-7">
             <Outlet />
           </div>
-          <div className="grid gap-4 rounded-[28px] border border-[#e0d7ca] bg-[#f7efe3] p-4 xl:grid-cols-3">
+          <div className="grid gap-4 rounded-[32px] border border-black/[0.05] bg-white p-4 xl:grid-cols-3">
             <AIContextExportPanel contexts={data.aiContexts} />
             <AISuggestionImportPanel onImport={queueSuggestionImport} />
             <ModuleAISummaryPanel moduleName="" suggestions={data.aiSuggestions} />

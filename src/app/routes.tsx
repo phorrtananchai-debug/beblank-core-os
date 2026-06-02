@@ -10,11 +10,14 @@ import { SettingsPage } from '../pages/os/SettingsPage'
 import { StudioPage } from '../pages/os/StudioPage'
 import { TradingLabPage } from '../pages/os/TradingLabPage'
 import { AboutPage } from '../pages/public/AboutPage'
+import { CareersPage } from '../pages/public/CareersPage'
 import { ContactPage } from '../pages/public/ContactPage'
 import { HomePage } from '../pages/public/HomePage'
+import { JournalPage } from '../pages/public/JournalPage'
 import { LoginPage } from '../pages/public/LoginPage'
 import { ProjectDetailPage } from '../pages/public/ProjectDetailPage'
 import { ProjectsPage } from '../pages/public/ProjectsPage'
+import { ServicesPage } from '../pages/public/ServicesPage'
 import { ProtectedRoute } from '../routes/ProtectedRoute'
 
 export const AppRoutes = () => {
@@ -24,6 +27,10 @@ export const AppRoutes = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:slug" element={<ProjectDetailPage />} />
+        <Route path="/work" element={<ProjectsPage />} />
+        <Route path="/journal" element={<JournalPage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/careers" element={<CareersPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
