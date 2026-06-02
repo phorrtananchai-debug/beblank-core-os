@@ -8,24 +8,25 @@ export const ProjectDetailPage = () => {
 
   if (!project) {
     return (
-      <section className="py-10">
-        <h1 className="text-3xl font-semibold">Project not found</h1>
-        <Link to="/projects" className="mt-4 inline-block underline">Back to projects</Link>
+      <section className="mx-auto min-h-screen max-w-screen-2xl px-5 pb-32 pt-40 md:px-8">
+        <h1 className="text-5xl font-extrabold uppercase leading-none">Project not found</h1>
+        <Link to="/projects" className="public-project-meta mt-8 inline-block border-b border-current">
+          back to projects
+        </Link>
       </section>
     )
   }
 
   return (
-    <section className="py-10">
-      <h1 className="text-4xl font-semibold">{project.name}</h1>
-      <p className="mt-3 max-w-2xl text-[#564f46]">
-        Public project profile page. Detailed operational controls are only available inside `/os/studio`.
+    <section className="mx-auto min-h-screen max-w-screen-2xl px-5 pb-32 pt-40 md:px-8">
+      <p className="public-project-meta text-[#777777]">{project.status} / {project.owner}</p>
+      <h1 className="mt-6 max-w-5xl text-6xl font-extrabold uppercase leading-[0.86] md:text-8xl">
+        {project.name}
+      </h1>
+      <div className="mt-16 h-[52vh] max-w-5xl border border-black/[0.06] bg-[linear-gradient(135deg,#eee9df,#cfc8bb_48%,#f7f4ed)]" />
+      <p className="mt-8 max-w-2xl text-sm leading-7 text-[#666666]">
+        Public project profile placeholder. Operational controls remain inside the private Studio OS workspace.
       </p>
-      <div className="mt-6 rounded-[28px] border border-[#dfd4c5] bg-white/80 p-5">
-        <p className="text-sm">Status: {project.status}</p>
-        <p className="text-sm">Owner: {project.owner}</p>
-      </div>
     </section>
   )
 }
-

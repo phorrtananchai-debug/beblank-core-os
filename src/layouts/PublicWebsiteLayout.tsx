@@ -1,37 +1,49 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 
 const navItems = [
-  { to: '/', label: 'Home' },
-  { to: '/projects', label: 'Projects' },
-  { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' },
-  { to: '/login', label: 'Login' },
+  { to: '/contact', label: 'contact' },
+  { to: '/projects', label: 'projects' },
+  { to: '/work', label: 'work' },
+  { to: '/journal', label: 'journal' },
+  { to: '/about', label: 'about' },
 ]
 
 export const PublicWebsiteLayout = () => {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fffdf7,_#f6f0e6_65%,_#efe5d7)] text-[#23201c]">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
-        <Link to="/" className="text-xl font-semibold tracking-tight">Be Blank Core OS</Link>
-        <nav className="flex flex-wrap items-center gap-2">
+    <div className="public-studio-canvas min-h-screen text-[#111111]">
+      <header className="public-masthead-nav fixed left-0 right-0 top-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-5 py-4 md:px-8">
+        <Link to="/" className="justify-self-start transition hover:opacity-55">
+          be blank
+        </Link>
+        <nav className="flex flex-wrap items-center justify-center gap-4 md:gap-7">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `rounded-full px-4 py-2 text-sm transition ${isActive ? 'bg-[#23201c] text-[#fffdf7]' : 'hover:bg-white/70'}`
+                `transition hover:opacity-55 ${isActive ? 'text-[#111111]' : 'text-[#777777]'}`
               }
-              end={item.to === '/'}
             >
               {item.label}
             </NavLink>
           ))}
         </nav>
+        <a
+          className="justify-self-end text-[#111111] transition hover:opacity-55"
+          href="https://instagram.com"
+          rel="noreferrer"
+          target="_blank"
+        >
+          instagram
+        </a>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-6 pb-16">
+      <main>
         <Outlet />
       </main>
+      <div className="public-utility-dock">
+        <Link to="/login">os</Link>
+        <Link to="/login">edit</Link>
+      </div>
     </div>
   )
 }
-

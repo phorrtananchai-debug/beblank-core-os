@@ -5,21 +5,28 @@ export const ProjectsPage = () => {
   const { data } = useOs()
 
   return (
-    <section className="py-10">
-      <h1 className="text-4xl font-semibold">Projects</h1>
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {data.projects.map((project) => (
-          <article key={project.id} className="rounded-[28px] border border-[#dfd4c5] bg-white/80 p-5">
-            <h2 className="text-xl font-semibold">{project.name}</h2>
-            <p className="mt-1 text-sm text-[#5c544b]">Owner: {project.owner}</p>
-            <p className="mt-2 text-xs uppercase tracking-wide text-[#98633d]">{project.status}</p>
-            <Link to={`/projects/${project.slug}`} className="mt-4 inline-block text-sm font-medium underline">
-              Open details
+    <section className="mx-auto min-h-screen max-w-screen-2xl px-5 pb-32 pt-40 md:px-8">
+      <p className="public-project-meta text-[#777777]">projects / work index</p>
+      <h1 className="mt-6 max-w-4xl text-6xl font-extrabold uppercase leading-[0.86] md:text-8xl">
+        Studio archive in progress.
+      </h1>
+      <div className="mt-24 grid gap-y-16 border-t border-black/[0.08] pt-8">
+        {data.projects.map((project, index) => (
+          <article key={project.id} className="grid gap-4 md:grid-cols-[0.18fr_1fr_0.24fr]">
+            <p className="public-project-meta text-[#777777]">{String(index + 1).padStart(2, '0')}</p>
+            <Link to={`/projects/${project.slug}`} className="group">
+              <h2 className="public-project-title text-3xl transition group-hover:opacity-60 md:text-5xl">
+                {project.name}
+              </h2>
             </Link>
+            <p className="public-project-meta text-[#777777]">
+              {project.status}
+              <br />
+              {project.owner}
+            </p>
           </article>
         ))}
       </div>
     </section>
   )
 }
-
