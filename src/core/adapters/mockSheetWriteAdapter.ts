@@ -54,6 +54,11 @@ const cloneData = (data: OsData): OsData => ({
   aiMemories: [...data.aiMemories],
   aiDigests: [...data.aiDigests],
   aiObservations: [...data.aiObservations],
+  connectors: [...data.connectors],
+  sheetSources: [...data.sheetSources],
+  syncQueue: [...data.syncQueue],
+  bridgeContracts: [...data.bridgeContracts],
+  marketDataSymbols: [...data.marketDataSymbols],
 })
 
 export const validateActionRequest = (request: ActionRequest): string[] => {
@@ -355,6 +360,50 @@ export const mockSheetWriteAdapter = (
     }
     nextData.aiSuggestions = [suggestion, ...nextData.aiSuggestions]
     statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'bridge.approveTimelineSync') {
+    const syncId = String(request.payload.syncId ?? '')
+    nextData.syncQueue = nextData.syncQueue.map((item) =>
+      item.id === syncId ? { ...item, status: 'approved', lastAttemptAt: now, retryCount: item.retryCount + 1 } : item,
+    )
+    nextData.sheetSources = nextData.sheetSources.map((source) =>
+      source.id === 'sheet-studio-ops'
+        ? { ...source, syncState: 'idle', lastSyncedAt: now, sourceStatus: { ...source.sourceStatus, lastSyncedAt: now, isStale: false, syncState: 'idle', pendingSyncCount: 0 } }
+        : source,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false, syncState: 'idle', pendingSyncCount: 0 }
+    statusMap.appsScriptBridge = { ...statusMap.appsScriptBridge, lastSyncedAt: now, isStale: false, syncState: 'idle', pendingSyncCount: 0, health: 'healthy' }
+  }
+
+  if (request.actionType === 'bridge.approveFinanceRefresh') {
+    const syncId = String(request.payload.syncId ?? '')
+    nextData.syncQueue = nextData.syncQueue.map((item) =>
+      item.id === syncId ? { ...item, status: 'approved', lastAttemptAt: now, retryCount: item.retryCount + 1 } : item,
+    )
+    nextData.marketDataSymbols = nextData.marketDataSymbols.map((symbol) => ({
+      ...symbol,
+      lastUpdated: now,
+      sourceStatus: { ...symbol.sourceStatus, lastSyncedAt: now, isStale: false, syncState: 'idle', health: 'healthy' },
+    }))
+    statusMap.finnhub = { ...statusMap.finnhub, lastSyncedAt: now, isStale: false, syncState: 'idle', pendingSyncCount: 0, health: 'healthy' }
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false, syncState: 'idle', pendingSyncCount: 0 }
+  }
+
+  if (request.actionType === 'bridge.approveSheetExport') {
+    const syncId = String(request.payload.syncId ?? '')
+    nextData.syncQueue = nextData.syncQueue.map((item) =>
+      item.id === syncId ? { ...item, status: 'approved', lastAttemptAt: now, retryCount: item.retryCount + 1 } : item,
+    )
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false, syncState: 'idle', pendingSyncCount: 0 }
+  }
+
+  if (request.actionType === 'bridge.retryStaleSourceSync') {
+    const syncId = String(request.payload.syncId ?? '')
+    nextData.syncQueue = nextData.syncQueue.map((item) =>
+      item.id === syncId ? { ...item, status: 'pending', lastAttemptAt: now, retryCount: item.retryCount + 1, notes: `${item.notes} Manual retry queued.` } : item,
+    )
+    statusMap.appsScriptBridge = { ...statusMap.appsScriptBridge, lastSyncedAt: now, isStale: true, syncState: 'pending', pendingSyncCount: 1, health: 'warning' }
   }
 
   const changeLog: ChangeLogRecord = {

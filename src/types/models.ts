@@ -5,6 +5,12 @@ export interface SourceStatus {
   lastSyncedAt: string
   isStale: boolean
   mode: SourceMode
+  health?: 'healthy' | 'warning' | 'error' | 'disconnected'
+  syncState?: 'idle' | 'pending' | 'syncing' | 'failed' | 'review-required'
+  pendingSyncCount?: number
+  bridgeWarning?: string
+  authority?: 'mock' | 'sheet' | 'connector' | 'manual'
+  ownerModule?: string
 }
 
 export interface ActionRequest {
@@ -150,6 +156,99 @@ export interface AIObservationRecord {
   confidence: number
   reviewStatus: 'open' | 'reviewed' | 'archived'
   approvedBy?: string
+  notes: string
+  tags: string[]
+}
+
+export type ConnectorCategory =
+  | 'apps-script-bridge'
+  | 'google-sheets'
+  | 'finnhub'
+  | 'ai-provider'
+  | 'agent-layer'
+  | 'communication'
+  | 'calendar'
+
+export interface ConnectorDefinition {
+  id: string
+  name: string
+  category: ConnectorCategory
+  status: 'mock' | 'ready' | 'disabled' | 'future'
+  capabilities: Array<'read' | 'write' | 'market-data' | 'notifications' | 'summaries' | 'manual-refresh'>
+  sourceOwnership: string[]
+  syncMode: 'manual' | 'scheduled-placeholder' | 'disabled'
+  health: 'healthy' | 'warning' | 'error' | 'disconnected'
+  lastSyncAt?: string
+  staleAfterHours: number
+  environmentNotes: string
+  credentialStatus: 'not-configured' | 'placeholder' | 'future-secret'
+  sourceStatus: SourceStatus
+}
+
+export interface SheetWorksheetDefinition {
+  id: string
+  sheetSourceId: string
+  name: string
+  ownerModule: string
+  rowOwnership: 'sheet-authoritative' | 'os-reviewed-write' | 'connector-readonly' | 'manual-import'
+  primaryKey: string
+  lastSyncedAt: string
+  isStale: boolean
+  sourceStatus: SourceStatus
+  notes: string
+}
+
+export interface SheetSourceDefinition {
+  id: string
+  name: string
+  connectorId: string
+  authority: 'source-of-truth' | 'derived' | 'readonly-reference'
+  ownerModule: string
+  syncState: 'idle' | 'pending' | 'failed' | 'review-required'
+  lastSyncedAt: string
+  staleAfterHours: number
+  sourceStatus: SourceStatus
+  notes: string
+  worksheets: SheetWorksheetDefinition[]
+}
+
+export interface SyncQueueItem {
+  id: string
+  connectorId: string
+  sourceId: string
+  module: string
+  operation: 'read-refresh' | 'write-export' | 'retry' | 'test-connection'
+  status: 'pending' | 'review-required' | 'approved' | 'failed' | 'completed'
+  requestedAt: string
+  lastAttemptAt?: string
+  retryCount: number
+  sourceStatus: SourceStatus
+  payloadPreview: string
+  notes: string
+  tags: string[]
+}
+
+export interface BridgeContract {
+  id: string
+  connectorId: string
+  name: string
+  readContract: string
+  writeContract: string
+  approvalRequired: boolean
+  snapshotRequired: boolean
+  changelogRequired: boolean
+  notes: string
+}
+
+export interface MarketDataSymbol {
+  id: string
+  connectorId: string
+  symbol: string
+  assetId?: string
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  staleAfterHours: number
+  delayedPriceTHB?: number
   notes: string
   tags: string[]
 }
@@ -515,5 +614,10 @@ export interface OsData {
   aiMemories: AIMemoryRecord[]
   aiDigests: AIDigestRecord[]
   aiObservations: AIObservationRecord[]
+  connectors: ConnectorDefinition[]
+  sheetSources: SheetSourceDefinition[]
+  syncQueue: SyncQueueItem[]
+  bridgeContracts: BridgeContract[]
+  marketDataSymbols: MarketDataSymbol[]
 }
 
