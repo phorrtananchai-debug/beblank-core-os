@@ -51,11 +51,14 @@ export const mockOsData: OsData = {
     { id: 'p2', slug: 'blank-gallery', name: 'Blank Gallery Pop-up', status: 'planning', owner: 'Creative Team' },
   ],
   tasks: [
+    { id: 't0', projectId: 'p1', title: 'Today Focus: approve Studio source review', status: 'doing' },
     { id: 't1', projectId: 'p1', title: 'Finalize WorkScope v1', status: 'doing' },
     { id: 't2', projectId: 'p1', title: 'Site watch checklist', status: 'todo' },
     { id: 't3', projectId: 'p2', title: 'Artwork brief draft', status: 'todo' },
+    { id: 't4', projectId: 'p2', title: 'Journal entry outline for public archive', status: 'todo' },
   ],
   timeline: [
+    { id: 'tl0', projectId: 'p1', label: 'Morning operating review', dueDate: '2026-06-02', state: 'planned' },
     { id: 'tl1', projectId: 'p1', label: 'Design Freeze', dueDate: '2026-06-20', state: 'planned' },
     { id: 'tl2', projectId: 'p1', label: 'Client Review', dueDate: '2026-06-12', state: 'at-risk' },
   ],
@@ -64,6 +67,7 @@ export const mockOsData: OsData = {
     { id: 'd2', projectId: 'p1', title: 'Material Schedule', version: 'v0.8', updatedAt: '2026-05-29' },
   ],
   siteIssues: [
+    { id: 's0', projectId: 'p1', issue: 'Client review packet needs final QA before sending', severity: 'high' },
     { id: 's1', projectId: 'p1', issue: 'HVAC shaft alignment check', severity: 'medium' },
     { id: 's2', projectId: 'p1', issue: 'Marble lot sample variance', severity: 'low' },
   ],
@@ -102,12 +106,21 @@ export const mockOsData: OsData = {
     {
       id: 'ctx1',
       module: 'Command Center',
-      title: 'Weekly Summary Context',
-      body: 'Studio deadlines are tightening, investment DCA is on plan, one trading signal is stale.',
+      title: 'Daily Command Context',
+      body: 'Studio deadlines are tightening, client review is at risk, THB reserve is healthy, and trading lab remains paper-only with one stale signal.',
       createdAt: '2026-06-02T03:50:00.000Z',
     },
   ],
   aiSuggestions: [
+    {
+      id: 'ai0',
+      module: 'Command Center',
+      title: 'Stabilize Today Focus',
+      recommendation: 'Review the client packet first, then approve one Studio source update before touching finance notes.',
+      riskNotes: 'Context switching between Studio and Trading Lab could delay the at-risk client review.',
+      createdAt: '2026-06-02T04:02:00.000Z',
+      status: 'imported',
+    },
     {
       id: 'ai1',
       module: 'Finance',
