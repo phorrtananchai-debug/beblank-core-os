@@ -82,6 +82,19 @@ export interface TimelineItem {
   state: 'planned' | 'at-risk' | 'completed'
 }
 
+export interface StudioTimelinePhase {
+  id: string
+  projectId: string
+  phase: 'briefing' | 'design' | 'drawing' | 'approval' | 'procurement' | 'construction' | 'handover' | 'opening'
+  startDate: string
+  endDate: string
+  status: 'planned' | 'active' | 'blocked' | 'reviewed' | 'complete'
+  risk: 'low' | 'medium' | 'high'
+  sourceStatus: SourceStatus
+  blockerIds: string[]
+  notes: string
+}
+
 export interface DocumentRecord {
   id: string
   projectId: string
@@ -215,6 +228,7 @@ export interface OsData {
   projects: Project[]
   tasks: Task[]
   timeline: TimelineItem[]
+  studioTimelinePhases: StudioTimelinePhase[]
   documents: DocumentRecord[]
   siteIssues: SiteIssue[]
   workScopeSections: WorkScopeSection[]

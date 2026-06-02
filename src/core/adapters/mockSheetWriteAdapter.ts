@@ -6,6 +6,7 @@ import type {
   OsData,
   SnapshotRecord,
   SourceStatus,
+  StudioTimelinePhase,
   Task,
   TimelineItem,
   TransactionRecord,
@@ -24,6 +25,7 @@ const cloneData = (data: OsData): OsData => ({
   ...data,
   tasks: [...data.tasks],
   timeline: [...data.timeline],
+  studioTimelinePhases: [...data.studioTimelinePhases],
   documents: [...data.documents],
   siteIssues: [...data.siteIssues],
   workScopeSections: [...data.workScopeSections],
@@ -119,6 +121,21 @@ export const mockSheetWriteAdapter = (
     )
     nextData.studioReviews = nextData.studioReviews.map((review) =>
       review.linkedRecordId === briefId ? { ...review, status: 'approved' } : review,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.markTimelinePhaseReviewed') {
+    const phaseId = String(request.payload.phaseId ?? '')
+    nextData.studioTimelinePhases = nextData.studioTimelinePhases.map((phase): StudioTimelinePhase =>
+      phase.id === phaseId
+        ? {
+            ...phase,
+            status: phase.status === 'complete' ? 'complete' : 'reviewed',
+            risk: phase.risk === 'high' ? 'medium' : phase.risk,
+            notes: `${phase.notes} Reviewed manually through Studio Timeline.`,
+          }
+        : phase,
     )
     statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
   }
