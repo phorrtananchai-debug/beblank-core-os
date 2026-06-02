@@ -1,4 +1,14 @@
 export type SourceMode = 'mock' | 'live' | 'fallback'
+export type DataSourceMode = SourceMode | 'empty'
+
+export interface DataProviderStatus {
+  source: string
+  mode: DataSourceMode
+  lastUpdated: string
+  stale: boolean
+  error?: string
+  fallbackUsed: boolean
+}
 
 export interface SourceStatus {
   sourceName: string

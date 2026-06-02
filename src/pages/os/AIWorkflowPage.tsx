@@ -1,6 +1,7 @@
 ﻿import { NavLink } from 'react-router-dom'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
+import { EmptyState } from '../../components/shared/EmptyState'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
@@ -40,6 +41,7 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
   const pendingImports = data.aiImports.filter((item) => item.reviewStatus === 'pending')
   const openObservations = data.aiObservations.filter((item) => item.reviewStatus === 'open')
   const activeMemories = data.aiMemories.filter((item) => item.reviewStatus === 'active')
+  const aiIsEmpty = data.aiExports.length === 0 && data.aiImports.length === 0 && data.aiMemories.length === 0 && data.aiDigests.length === 0
 
   const queueApproveImport = (item: AIImportRecord) => createActionRequest({ module: 'ai', actionType: 'ai.approveImportReview', description: `Approve AI import review: ${item.title}`, payload: { importId: item.id } })
   const queueRejectImport = (item: AIImportRecord) => createActionRequest({ module: 'ai', actionType: 'ai.rejectImportReview', description: `Reject AI import review: ${item.title}`, payload: { importId: item.id } })
@@ -70,6 +72,10 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
         </nav>
         <div className="mt-5 grid gap-3 md:grid-cols-5"><SourceStatusBadge status={sourceStatuses.aiWorkflow} /><Metric label="exports" value={data.aiExports.length} /><Metric label="pending imports" value={pendingImports.length} /><Metric label="memories" value={activeMemories.length} /><Metric label="observations" value={openObservations.length} /></div>
       </header>
+
+      {aiIsEmpty ? (
+        <EmptyState title="AI provider has no rows" body="AI workflow routes can render safely without mock or live AI rows. Future Apps Script/Sheet imports can hydrate this provider without changing page ownership." />
+      ) : null}
 
       {view === 'overview' ? <Overview digests={data.aiDigests} observations={data.aiObservations} exports={data.aiExports} imports={data.aiImports} onApproveDigest={queueApproveDigest} onArchiveObservation={queueArchiveObservation} /> : null}
       {view === 'context' ? <ContextView exports={data.aiExports} observations={data.aiObservations} /> : null}

@@ -1,10 +1,11 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { generateId } from '../../app/utils'
-import { mockOsData, mockSourceStatuses } from '../../data/mockData'
 import { mockSheetWriteAdapter, validateActionRequest } from '../adapters/mockSheetWriteAdapter'
+import { createInitialOsDataFromProviders } from '../data/providers'
 import type {
   ActionRequest,
   ChangeLogRecord,
+  DataProviderStatus,
   OsData,
   SnapshotRecord,
   SourceStatus,
@@ -13,6 +14,7 @@ import type {
 interface OsContextValue {
   data: OsData
   sourceStatuses: Record<string, SourceStatus>
+  providerStatuses: Record<string, DataProviderStatus>
   pendingApprovals: ActionRequest[]
   changeLogs: ChangeLogRecord[]
   snapshots: SnapshotRecord[]
@@ -23,10 +25,12 @@ interface OsContextValue {
 }
 
 const OsContext = createContext<OsContextValue | undefined>(undefined)
+const initialProviderState = createInitialOsDataFromProviders()
 
 export const OsProvider = ({ children }: { children: React.ReactNode }) => {
-  const [data, setData] = useState<OsData>(mockOsData)
-  const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(mockSourceStatuses)
+  const [data, setData] = useState<OsData>(initialProviderState.data)
+  const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(initialProviderState.sourceStatuses)
+  const [providerStatuses] = useState<Record<string, DataProviderStatus>>(initialProviderState.providerStatuses)
   const [pendingApprovals, setPendingApprovals] = useState<ActionRequest[]>([])
   const [changeLogs, setChangeLogs] = useState<ChangeLogRecord[]>([])
   const [snapshots, setSnapshots] = useState<SnapshotRecord[]>([])
@@ -82,6 +86,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       data,
       sourceStatuses,
+      providerStatuses,
       pendingApprovals,
       changeLogs,
       snapshots,
@@ -90,7 +95,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       rejectActionRequest,
       queueSuggestionImport,
     }),
-    [data, sourceStatuses, pendingApprovals, changeLogs, snapshots],
+    [data, sourceStatuses, providerStatuses, pendingApprovals, changeLogs, snapshots],
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>

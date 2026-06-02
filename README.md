@@ -104,3 +104,13 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## Mock Drain Strategy
+- Mock data is no longer owned by individual pages or UI components.
+- Domain providers now control source mode for Studio, Finance, AI, and Connectors.
+- Supported provider modes are `mock`, `live`, `fallback`, and `empty`.
+- Pages render through provider-fed OS state and include empty states for future live-source outages.
+- Live adapters can replace mock adapters later without changing page ownership.
+- Apps Script read/write bridge, Finnhub manual refresh, and Google Sheet row contracts are scaffolded for future implementation.
+- Do not destructively remove mock data until live Sheet/App Script/Finnhub sources are stable.
+- All writes must still pass through `ActionRequest -> Approval -> Adapter/Bridge -> ChangeLog -> Snapshot`.

@@ -1,14 +1,16 @@
 ﻿import { ChangeLogList } from '../../components/shared/ChangeLogList'
+import { EmptyState } from '../../components/shared/EmptyState'
 import { MockSheetSyncStatus } from '../../components/shared/MockSheetSyncStatus'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
-import { futureConnectors } from '../../data/mockData'
 import { useOs } from '../../core/os/OsContext'
 import type { SyncQueueItem } from '../../types/models'
 
 export const SettingsPage = () => {
-  const { data, sourceStatuses, pendingApprovals, changeLogs, snapshots, createActionRequest, approveActionRequest, rejectActionRequest } = useOs()
+  const { data, sourceStatuses, providerStatuses, pendingApprovals, changeLogs, snapshots, createActionRequest, approveActionRequest, rejectActionRequest } = useOs()
+  const connectorIsEmpty = data.connectors.length === 0 && data.sheetSources.length === 0 && data.syncQueue.length === 0
+  const futureConnectorLabels = data.connectors.filter((connector) => connector.status === 'future').map((connector) => connector.name)
 
   const queueBridgeAction = (item: SyncQueueItem) => {
     const actionType =
@@ -98,7 +100,12 @@ export const SettingsPage = () => {
         <aside className="intelligence-rail space-y-5"><PendingApprovalPanel items={pendingApprovals} onApprove={approveActionRequest} onReject={rejectActionRequest} /><div className="rounded-[30px] border border-black/[0.05] bg-white/85 p-5"><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">No credentials</p><p className="mt-3 text-sm leading-6 text-[#666666]">This PR commits no secrets and no deployment URLs. All connector records are architecture scaffolds and mock/fallback states.</p></div></aside>
       </section>
 
-      <section className="panel"><h3 className="text-lg font-semibold">Future Connector Placeholders</h3><div className="mt-3 flex flex-wrap gap-2">{futureConnectors.map((item) => <span key={item} className="rounded-full border border-[#ddcfbb] bg-[#fff8ed] px-3 py-1 text-xs font-medium">{item}</span>)}</div></section>
+      {connectorIsEmpty ? (
+        <EmptyState title="Connector provider has no rows" body="Connector settings can render safely while waiting for live registry rows. Mock fallback can be restored without page-owned data imports." />
+      ) : null}
+
+      <section className="panel"><h3 className="text-lg font-semibold">Provider Source Modes</h3><div className="mt-3 grid gap-3 md:grid-cols-4">{Object.entries(providerStatuses).map(([key, status]) => <MiniRow key={key} title={status.source} meta={`${status.mode} / updated ${status.lastUpdated} / fallback ${status.fallbackUsed ? 'yes' : 'no'}`} status={status.stale ? 'stale' : 'fresh'} />)}</div></section>
+      <section className="panel"><h3 className="text-lg font-semibold">Future Connector Placeholders</h3><div className="mt-3 flex flex-wrap gap-2">{futureConnectorLabels.map((item) => <span key={item} className="rounded-full border border-[#ddcfbb] bg-[#fff8ed] px-3 py-1 text-xs font-medium">{item}</span>)}</div></section>
       <MockSheetSyncStatus statuses={Object.values(sourceStatuses)} />
       <section className="grid gap-5 xl:grid-cols-2"><ChangeLogList items={changeLogs} /><SnapshotLog items={snapshots} /></section>
     </section>
