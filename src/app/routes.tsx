@@ -7,7 +7,7 @@ import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
 import { InvestmentsPage } from '../pages/os/InvestmentsPage'
 import { SettingsPage } from '../pages/os/SettingsPage'
-import { StudioPage } from '../pages/os/StudioPage'
+import { StudioWorkspacePage } from '../pages/os/StudioWorkspacePage'
 import { TradingLabPage } from '../pages/os/TradingLabPage'
 import { AboutPage } from '../pages/public/AboutPage'
 import { CareersPage } from '../pages/public/CareersPage'
@@ -45,7 +45,14 @@ export const AppRoutes = () => {
         }
       >
         <Route index element={<CommandCenterPage />} />
-        <Route path="studio" element={<StudioPage />} />
+        <Route path="studio" element={<StudioWorkspacePage view="overview" />} />
+        <Route path="studio/projects" element={<StudioWorkspacePage view="projects" />} />
+        <Route path="studio/timeline" element={<StudioWorkspacePage view="timeline" />} />
+        <Route path="studio/site-watch" element={<StudioWorkspacePage view="site-watch" />} />
+        <Route path="studio/documents" element={<StudioWorkspacePage view="documents" />} />
+        <Route path="studio/artwork" element={<StudioWorkspacePage view="artwork" />} />
+        <Route path="studio/briefs" element={<StudioWorkspacePage view="briefs" />} />
+        <Route path="studio/reviews" element={<StudioWorkspacePage view="reviews" />} />
         <Route path="finance" element={<FinancePage />} />
         <Route path="finance/investments" element={<InvestmentsPage />} />
         <Route path="finance/family-office" element={<FamilyOfficePage />} />

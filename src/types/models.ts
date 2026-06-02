@@ -60,6 +60,11 @@ export interface Project {
   name: string
   status: 'active' | 'paused' | 'planning'
   owner: string
+  client?: string
+  location?: string
+  phase?: string
+  timelineStatus?: 'steady' | 'watch' | 'at-risk'
+  operationalNotes?: string
 }
 
 export interface Task {
@@ -83,6 +88,10 @@ export interface DocumentRecord {
   title: string
   version: string
   updatedAt: string
+  packageType?: string
+  approvalState?: 'draft' | 'review' | 'issued' | 'approved'
+  issueDate?: string
+  linkedScopeIds?: string[]
 }
 
 export interface SiteIssue {
@@ -90,6 +99,64 @@ export interface SiteIssue {
   projectId: string
   issue: string
   severity: 'low' | 'medium' | 'high'
+  status?: 'open' | 'review' | 'resolved'
+}
+
+export interface WorkScopeSection {
+  id: string
+  projectId: string
+  code: string
+  group: string
+  title: string
+  phase: string
+  operationalStatus: 'planned' | 'active' | 'blocked' | 'complete'
+  reviewStatus: 'draft' | 'needs-review' | 'approved'
+  linkedApprovalIds: string[]
+}
+
+export interface SiteWatchUpdate {
+  id: string
+  projectId: string
+  title: string
+  observedAt: string
+  severity: 'low' | 'medium' | 'high'
+  status: 'open' | 'review' | 'resolved'
+  note: string
+  imagePlaceholder: string
+}
+
+export interface ArtworkRecord {
+  id: string
+  projectId: string
+  briefId: string
+  title: string
+  group: string
+  status: 'concept' | 'review' | 'approved'
+  previewTone: 'stone' | 'paper' | 'ink' | 'warm'
+  operationalNotes: string
+}
+
+export interface CreativeBrief {
+  id: string
+  projectId: string
+  title: string
+  direction: string
+  references: string[]
+  moodKeywords: string[]
+  status: 'draft' | 'review' | 'approved'
+  linkedArtworkIds: string[]
+  linkedReviewIds: string[]
+  aiSummary: string
+}
+
+export interface StudioReview {
+  id: string
+  projectId: string
+  type: 'approval' | 'revision' | 'drawing' | 'ai-suggestion' | 'site-review'
+  title: string
+  linkedRecordId: string
+  status: 'pending' | 'approved' | 'resolved'
+  dueAt: string
 }
 
 export interface FinanceAsset {
@@ -150,6 +217,11 @@ export interface OsData {
   timeline: TimelineItem[]
   documents: DocumentRecord[]
   siteIssues: SiteIssue[]
+  workScopeSections: WorkScopeSection[]
+  siteWatchUpdates: SiteWatchUpdate[]
+  artworkRecords: ArtworkRecord[]
+  creativeBriefs: CreativeBrief[]
+  studioReviews: StudioReview[]
   financeAssets: FinanceAsset[]
   holdings: Holding[]
   thaiNavAssets: ThaiNavAsset[]
