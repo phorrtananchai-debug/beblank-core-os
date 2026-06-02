@@ -10,6 +10,7 @@ import type {
   TimelineItem,
   TransactionRecord,
   TradingSignal,
+  WorkScopeSection,
 } from '../../types/models'
 
 export interface AdapterResult {
@@ -23,6 +24,12 @@ const cloneData = (data: OsData): OsData => ({
   ...data,
   tasks: [...data.tasks],
   timeline: [...data.timeline],
+  documents: [...data.documents],
+  siteIssues: [...data.siteIssues],
+  workScopeSections: [...data.workScopeSections],
+  siteWatchUpdates: [...data.siteWatchUpdates],
+  creativeBriefs: [...data.creativeBriefs],
+  studioReviews: [...data.studioReviews],
   transactions: [...data.transactions],
   tradingSignals: [...data.tradingSignals],
   aiSuggestions: [...data.aiSuggestions],
@@ -65,6 +72,54 @@ export const mockSheetWriteAdapter = (
       state: 'planned',
     }
     nextData.timeline.unshift(item)
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.approveWorkScopeRevision') {
+    const scopeId = String(request.payload.scopeId ?? '')
+    nextData.workScopeSections = nextData.workScopeSections.map((section): WorkScopeSection =>
+      section.id === scopeId
+        ? { ...section, reviewStatus: 'approved', operationalStatus: 'active' }
+        : section,
+    )
+    nextData.studioReviews = nextData.studioReviews.map((review) =>
+      review.linkedRecordId === scopeId ? { ...review, status: 'approved' } : review,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.issueDocumentPackage') {
+    const documentId = String(request.payload.documentId ?? '')
+    nextData.documents = nextData.documents.map((document) =>
+      document.id === documentId
+        ? { ...document, approvalState: 'issued', updatedAt: now.slice(0, 10) }
+        : document,
+    )
+    nextData.studioReviews = nextData.studioReviews.map((review) =>
+      review.linkedRecordId === documentId ? { ...review, status: 'approved' } : review,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.resolveSiteWatch') {
+    const siteWatchId = String(request.payload.siteWatchId ?? '')
+    nextData.siteWatchUpdates = nextData.siteWatchUpdates.map((update) =>
+      update.id === siteWatchId ? { ...update, status: 'resolved' } : update,
+    )
+    nextData.studioReviews = nextData.studioReviews.map((review) =>
+      review.linkedRecordId === siteWatchId ? { ...review, status: 'resolved' } : review,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.approveCreativeBrief') {
+    const briefId = String(request.payload.briefId ?? '')
+    nextData.creativeBriefs = nextData.creativeBriefs.map((brief) =>
+      brief.id === briefId ? { ...brief, status: 'approved' } : brief,
+    )
+    nextData.studioReviews = nextData.studioReviews.map((review) =>
+      review.linkedRecordId === briefId ? { ...review, status: 'approved' } : review,
+    )
     statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
   }
 
