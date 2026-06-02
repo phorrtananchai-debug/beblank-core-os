@@ -1,5 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { generateId } from '../../app/utils'
+import { isKarunBridgeConfigured } from '../connectors/appsScript/config'
+import { readKarunPhuketBridge } from '../connectors/appsScript/karunReadConnector'
 import { mockSheetWriteAdapter, validateActionRequest } from '../adapters/mockSheetWriteAdapter'
 import { createInitialOsDataFromProviders } from '../data/providers'
 import type {
@@ -15,6 +17,7 @@ interface OsContextValue {
   data: OsData
   sourceStatuses: Record<string, SourceStatus>
   providerStatuses: Record<string, DataProviderStatus>
+  refreshKarunBridge: () => Promise<void>
   pendingApprovals: ActionRequest[]
   changeLogs: ChangeLogRecord[]
   snapshots: SnapshotRecord[]
@@ -31,6 +34,14 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<OsData>(initialProviderState.data)
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(initialProviderState.sourceStatuses)
   const [providerStatuses] = useState<Record<string, DataProviderStatus>>(initialProviderState.providerStatuses)
+  const [karunBridgeStatus, setKarunBridgeStatus] = useState<DataProviderStatus>({
+    source: 'Karun Phuket Apps Script Read Bridge',
+    mode: isKarunBridgeConfigured ? 'live' : 'fallback',
+    lastUpdated: initialProviderState.sourceStatuses.appsScriptBridge.lastSyncedAt,
+    stale: true,
+    error: isKarunBridgeConfigured ? undefined : 'VITE_APPS_SCRIPT_KARUN_ENDPOINT is not configured.',
+    fallbackUsed: !isKarunBridgeConfigured,
+  })
   const [pendingApprovals, setPendingApprovals] = useState<ActionRequest[]>([])
   const [changeLogs, setChangeLogs] = useState<ChangeLogRecord[]>([])
   const [snapshots, setSnapshots] = useState<SnapshotRecord[]>([])
@@ -68,6 +79,74 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     setPendingApprovals((current) => current.filter((item) => item.id !== requestId))
   }
 
+  const refreshKarunBridge = async () => {
+    setKarunBridgeStatus((current) => ({ ...current, mode: isKarunBridgeConfigured ? 'live' : 'fallback', stale: true }))
+    const response = await readKarunPhuketBridge()
+    const now = new Date().toISOString()
+
+    if (!response.ok || !response.result) {
+      const error = response.error ?? 'Karun bridge refresh failed.'
+      setKarunBridgeStatus({
+        source: 'Karun Phuket Apps Script Read Bridge',
+        mode: response.configured ? 'fallback' : 'fallback',
+        lastUpdated: now,
+        stale: true,
+        error,
+        fallbackUsed: true,
+      })
+      setSourceStatuses((current) => ({
+        ...current,
+        appsScriptBridge: {
+          ...current.appsScriptBridge,
+          isStale: true,
+          lastSyncedAt: now,
+          mode: 'fallback',
+          health: response.configured ? 'warning' : 'disconnected',
+          syncState: response.configured ? 'failed' : 'review-required',
+          bridgeWarning: error,
+        },
+        studio: {
+          ...current.studio,
+          mode: 'fallback',
+          bridgeWarning: `Karun bridge fallback used: ${error}`,
+        },
+      }))
+      return
+    }
+
+    const normalized = response.result
+    setData((current) => ({
+      ...current,
+      projects: normalized.project ? current.projects.map((project) => project.id === normalized.project?.id ? { ...project, ...normalized.project } : project) : current.projects,
+      studioTimelinePhases: normalized.timelinePhases.length ? [...normalized.timelinePhases, ...current.studioTimelinePhases.filter((phase) => phase.projectId !== 'p1')] : current.studioTimelinePhases,
+      workScopeSections: normalized.workScopeSections.length ? [...normalized.workScopeSections, ...current.workScopeSections.filter((scope) => scope.projectId !== 'p1')] : current.workScopeSections,
+      siteWatchUpdates: normalized.siteWatchUpdates.length ? [...normalized.siteWatchUpdates, ...current.siteWatchUpdates.filter((update) => update.projectId !== 'p1')] : current.siteWatchUpdates,
+      documents: normalized.documents.length ? [...normalized.documents, ...current.documents.filter((document) => document.projectId !== 'p1')] : current.documents,
+      studioReviews: normalized.studioReviews.length ? [...normalized.studioReviews, ...current.studioReviews.filter((review) => review.projectId !== 'p1')] : current.studioReviews,
+    }))
+    setSourceStatuses((current) => ({
+      ...current,
+      appsScriptBridge: normalized.sourceStatus,
+      studio: {
+        ...current.studio,
+        mode: 'live',
+        isStale: normalized.sourceStatus.isStale,
+        lastSyncedAt: normalized.sourceStatus.lastSyncedAt,
+        health: normalized.warnings.length ? 'warning' : 'healthy',
+        syncState: 'idle',
+        bridgeWarning: normalized.warnings.length ? normalized.warnings.join(' ') : undefined,
+      },
+    }))
+    setKarunBridgeStatus({
+      source: normalized.sourceStatus.sourceName,
+      mode: 'live',
+      lastUpdated: normalized.sourceStatus.lastSyncedAt,
+      stale: normalized.sourceStatus.isStale,
+      error: normalized.warnings.length ? normalized.warnings.join(' ') : undefined,
+      fallbackUsed: false,
+    })
+  }
+
   const queueSuggestionImport: OsContextValue['queueSuggestionImport'] = (
     module,
     title,
@@ -86,7 +165,8 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       data,
       sourceStatuses,
-      providerStatuses,
+      providerStatuses: { ...providerStatuses, karunBridge: karunBridgeStatus },
+      refreshKarunBridge,
       pendingApprovals,
       changeLogs,
       snapshots,
@@ -95,7 +175,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       rejectActionRequest,
       queueSuggestionImport,
     }),
-    [data, sourceStatuses, providerStatuses, pendingApprovals, changeLogs, snapshots],
+    [data, sourceStatuses, providerStatuses, karunBridgeStatus, pendingApprovals, changeLogs, snapshots],
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>
