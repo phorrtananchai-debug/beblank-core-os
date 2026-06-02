@@ -21,6 +21,12 @@ export const SourceStatusBadge = ({ status }: { status: SourceStatus }) => {
       <div className={`mt-1 text-xs font-medium ${status.isStale ? 'text-amber-700' : 'text-emerald-700'}`}>
         {status.isStale ? 'Stale data detected' : 'Fresh mock sync'}
       </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {status.health ? <span className="rounded-full bg-[#faf9f8] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-[#6e675d]">{status.health}</span> : null}
+        {status.syncState ? <span className="rounded-full bg-[#faf9f8] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-[#6e675d]">{status.syncState}</span> : null}
+        {status.authority ? <span className="rounded-full bg-[#faf9f8] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-[#6e675d]">{status.authority}</span> : null}
+      </div>
+      {status.bridgeWarning ? <p className="mt-2 text-xs leading-5 text-[#8a6a3f]">{status.bridgeWarning}</p> : null}
     </div>
   )
 }
