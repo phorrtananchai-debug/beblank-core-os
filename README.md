@@ -114,3 +114,14 @@ npm run build
 - Apps Script read/write bridge, Finnhub manual refresh, and Google Sheet row contracts are scaffolded for future implementation.
 - Do not destructively remove mock data until live Sheet/App Script/Finnhub sources are stable.
 - All writes must still pass through `ActionRequest -> Approval -> Adapter/Bridge -> ChangeLog -> Snapshot`.
+
+## Apps Script Read Bridge v1
+- PR #11 introduces the first read-only Apps Script bridge scaffold for the Karun Phuket workflow.
+- Configure `VITE_APPS_SCRIPT_KARUN_ENDPOINT` in a local `.env` file to test a real Apps Script read endpoint.
+- `.env.example` documents the key, but no endpoint values or credentials are committed.
+- The app works when the env key is missing and shows the bridge as unconfigured/fallback instead of crashing.
+- Manual refresh only: use `Refresh Karun Bridge` in Settings to request a read.
+- No auto polling, hidden sync loops, write-back, or destructive actions are implemented.
+- Bridge payloads are normalized into Studio project, timeline, WorkScope, site watch, document, and review rows when present.
+- If the endpoint fails or returns malformed/partial data, the OS keeps mock fallback data and surfaces the error through provider/source status.
+- Future write-back should reuse the existing approval-first flow before any Apps Script write adapter is enabled.

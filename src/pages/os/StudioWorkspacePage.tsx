@@ -53,6 +53,7 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
   const {
     data,
     sourceStatuses,
+    providerStatuses,
     pendingApprovals,
     changeLogs,
     snapshots,
@@ -157,10 +158,11 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           ))}
         </nav>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
           <SourceStatusBadge status={sourceStatuses.studio} />
           <Metric label="Projects" value={data.projects.length} />
           <Metric label="Pending reviews" value={pendingStudioReviews.length} />
+          <Metric label="Karun bridge" value={providerStatuses.karunBridge?.fallbackUsed ? 'fallback' : providerStatuses.karunBridge?.mode ?? 'mock'} />
         </div>
       </header>
 

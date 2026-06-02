@@ -8,7 +8,7 @@ import { useOs } from '../../core/os/OsContext'
 import type { SyncQueueItem } from '../../types/models'
 
 export const SettingsPage = () => {
-  const { data, sourceStatuses, providerStatuses, pendingApprovals, changeLogs, snapshots, createActionRequest, approveActionRequest, rejectActionRequest } = useOs()
+  const { data, sourceStatuses, providerStatuses, pendingApprovals, changeLogs, snapshots, createActionRequest, approveActionRequest, rejectActionRequest, refreshKarunBridge } = useOs()
   const connectorIsEmpty = data.connectors.length === 0 && data.sheetSources.length === 0 && data.syncQueue.length === 0
   const futureConnectorLabels = data.connectors.filter((connector) => connector.status === 'future').map((connector) => connector.name)
 
@@ -98,6 +98,21 @@ export const SettingsPage = () => {
         </main>
 
         <aside className="intelligence-rail space-y-5"><PendingApprovalPanel items={pendingApprovals} onApprove={approveActionRequest} onReject={rejectActionRequest} /><div className="rounded-[30px] border border-black/[0.05] bg-white/85 p-5"><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">No credentials</p><p className="mt-3 text-sm leading-6 text-[#666666]">This PR commits no secrets and no deployment URLs. All connector records are architecture scaffolds and mock/fallback states.</p></div></aside>
+      </section>
+
+      <section className="panel panel-float">
+        <div className="panel-header">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Read-only bridge</p>
+            <h3>Karun Phuket Apps Script read bridge</h3>
+          </div>
+          <button className="btn-primary" type="button" onClick={refreshKarunBridge}>Refresh Karun Bridge</button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <MiniRow title={providerStatuses.karunBridge?.source ?? 'Karun bridge'} meta={`${providerStatuses.karunBridge?.mode ?? 'fallback'} / fallback ${providerStatuses.karunBridge?.fallbackUsed ? 'yes' : 'no'}`} status={providerStatuses.karunBridge?.stale ? 'stale' : 'fresh'} />
+          <MiniRow title="Endpoint config" meta={providerStatuses.karunBridge?.error ?? 'Configured endpoint can be refreshed manually.'} status={providerStatuses.karunBridge?.error ? 'unconfigured' : 'configured'} />
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[#666666]">Read-only manual refresh. No polling, no write-back, no credentials committed. Missing env falls back safely to mock provider data.</p>
       </section>
 
       {connectorIsEmpty ? (
