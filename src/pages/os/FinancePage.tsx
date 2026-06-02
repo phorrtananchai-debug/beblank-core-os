@@ -1,41 +1,52 @@
-import { Link } from 'react-router-dom'
+﻿import { Link } from 'react-router-dom'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
 import { useOs } from '../../core/os/OsContext'
 
+const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
+
 export const FinancePage = () => {
   const { data, sourceStatuses } = useOs()
 
+  const portfolioValue = data.holdings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
+  const reserveValue = data.reserveRows.reduce((sum, reserve) => sum + reserve.currentAmountTHB, 0)
+  const sandboxExposure = data.sandboxPositions.reduce((sum, position) => sum + position.units * position.entryPriceTHB, 0)
+  const driftCount = data.holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2).length
+
   const cards = [
-    { title: 'Investments / Stocks', to: '/os/finance/investments', detail: `${data.holdings.length} holdings` },
-    { title: 'Family Office Finance', to: '/os/finance/family-office', detail: `${data.familyFinanceRecords.length} records` },
-    { title: 'Trading Lab', to: '/os/finance/trading-lab', detail: `${data.tradingSignals.length} signals` },
+    { title: 'Investments', to: '/os/finance/investments', detail: 'Long-term allocation, DCA, dividends, holdings.', metric: thb(portfolioValue), note: `${driftCount} allocation reviews` },
+    { title: 'Family Office', to: '/os/finance/family-office', detail: 'Reserve, obligations, ledger, runway, project cash.', metric: thb(reserveValue), note: `${data.financeLedgerRows.length} ledger rows` },
+    { title: 'Trading Lab', to: '/os/finance/trading-lab', detail: 'Paper-only signals, watchlist, sandbox strategy notes.', metric: thb(sandboxExposure), note: 'no broker execution' },
   ]
 
   return (
-    <section className="space-y-5">
-      <header>
-        <h2 className="text-3xl font-semibold">Finance</h2>
-        <p className="text-sm text-[#615a50]">THB-first investments, family-office back office, and paper-only trading lab.</p>
+    <section className="space-y-7">
+      <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Finance OS / human-controlled wealth operations</p>
+        <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Calm money systems, Sheet-first.</h2>
+        <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Investments, family-office finance, and a paper-only trading lab. No realtime terminal, no broker execution, no auto trading.</p>
+        <div className="mt-6 grid gap-3 md:grid-cols-3"><SourceStatusBadge status={sourceStatuses.investments} /><SourceStatusBadge status={sourceStatuses.familyOffice} /><SourceStatusBadge status={sourceStatuses.tradingLab} /></div>
       </header>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <SourceStatusBadge status={sourceStatuses.investments} />
-        <SourceStatusBadge status={sourceStatuses.familyOffice} />
-        <SourceStatusBadge status={sourceStatuses.tradingLab} />
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-3">
         {cards.map((card) => (
-          <Link key={card.to} to={card.to} className="rounded-3xl border border-[#e1d8cb] bg-[#fffaf1] p-4">
-            <h3 className="text-lg font-semibold">{card.title}</h3>
-            <p className="mt-2 text-sm text-[#625b52]">{card.detail}</p>
+          <Link key={card.to} to={card.to} className="panel panel-float block transition duration-300 hover:-translate-y-1">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{card.note}</p>
+            <h3 className="mt-4 text-2xl font-bold tracking-tight">{card.title}</h3>
+            <p className="mt-3 text-sm leading-6 text-[#666666]">{card.detail}</p>
+            <p className="mt-6 text-3xl font-extrabold tracking-tight">{card.metric}</p>
           </Link>
         ))}
       </div>
 
-      <ModuleAISummaryPanel moduleName="Finance" suggestions={data.aiSuggestions} />
+      <section className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
+        <div className="panel"><div className="panel-header"><h3>Foundation posture</h3><span className="pill">manual-first</span></div><div className="grid gap-3 md:grid-cols-3"><Mini label="DCA rows" value={data.dcaRecords.length} /><Mini label="Dividend rows" value={data.dividendRecords.length} /><Mini label="Reserve rows" value={data.reserveRows.length} /><Mini label="Watchlist" value={data.tradingWatchlist.length} /><Mini label="Paper records" value={data.paperTradeRecords.length} /><Mini label="Snapshots" value={data.financeSnapshots.length} /></div></div>
+        <ModuleAISummaryPanel moduleName="Finance" suggestions={data.aiSuggestions} />
+      </section>
     </section>
   )
 }
 
+const Mini = ({ label, value }: { label: string; value: number | string }) => (
+  <div className="rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-4"><p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p><p className="mt-2 text-xl font-bold">{value}</p></div>
+)

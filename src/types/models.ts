@@ -175,15 +175,34 @@ export interface StudioReview {
 export interface FinanceAsset {
   id: string
   name: string
+  symbol?: string
   currency: 'THB' | 'USD'
-  category: 'stock' | 'fund' | 'cash'
+  category: 'stock' | 'etf' | 'fund' | 'cash'
+  region?: 'US' | 'TH' | 'Global'
+  sourceStatus?: SourceStatus
+  lastUpdated?: string
+  notes?: string
+  tags?: string[]
 }
 
 export interface Holding {
   id: string
+  accountId?: string
   assetId: string
+  units?: number
   quantity: number
   averageCost: number
+  marketValueTHB?: number
+  allocationPercent?: number
+  targetAllocationPercent?: number
+  currentPosture?: 'core' | 'growth' | 'income' | 'reserve' | 'watch'
+  dcaStatus?: 'active' | 'paused' | 'review'
+  dividendStatus?: 'none' | 'expected' | 'received' | 'review'
+  sourceStatus?: SourceStatus
+  lastUpdated?: string
+  notes?: string
+  risk?: 'low' | 'medium' | 'high'
+  tags?: string[]
 }
 
 export interface ThaiNavAsset {
@@ -195,26 +214,44 @@ export interface ThaiNavAsset {
 
 export interface TransactionRecord {
   id: string
+  accountId?: string
+  assetId?: string
   description: string
   amountTHB: number
   type: 'buy' | 'sell' | 'income' | 'expense'
   occurredAt: string
+  sourceStatus?: SourceStatus
+  lastUpdated?: string
+  notes?: string
+  risk?: 'low' | 'medium' | 'high'
+  tags?: string[]
 }
 
 export interface FamilyFinanceRecord {
   id: string
+  accountId?: string
   bucket: 'cashflow' | 'bill' | 'debt' | 'expense' | 'reserve'
   label: string
   amountTHB: number
   dueDate?: string
+  sourceStatus?: SourceStatus
+  lastUpdated?: string
+  notes?: string
+  risk?: 'low' | 'medium' | 'high'
+  tags?: string[]
 }
 
 export interface TradingSignal {
   id: string
+  accountId?: string
   symbol: string
   signal: 'watch' | 'enter' | 'exit'
   confidence: number
   note: string
+  sourceStatus?: SourceStatus
+  lastUpdated?: string
+  risk?: 'low' | 'medium' | 'high'
+  tags?: string[]
 }
 
 export interface TradingStrategyNote {
@@ -222,6 +259,125 @@ export interface TradingStrategyNote {
   title: string
   note: string
   riskLevel: 'low' | 'medium' | 'high'
+  status?: 'active' | 'archived'
+  sourceStatus?: SourceStatus
+  lastUpdated?: string
+  tags?: string[]
+}
+
+export interface DcaRecord {
+  id: string
+  accountId: string
+  assetId: string
+  cadence: 'weekly' | 'monthly' | 'quarterly'
+  plannedAmountTHB: number
+  status: 'planned' | 'approved' | 'paused' | 'review'
+  nextRunDate: string
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
+}
+
+export interface DividendRecord {
+  id: string
+  accountId: string
+  assetId: string
+  expectedAmountTHB: number
+  payDate: string
+  status: 'expected' | 'received' | 'review'
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
+}
+
+export interface FinanceSnapshot {
+  id: string
+  module: 'investments' | 'family-office' | 'trading-lab'
+  title: string
+  valueTHB: number
+  posture: string
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
+}
+
+export interface FinanceLedgerRow {
+  id: string
+  accountId: string
+  category: 'studio-income' | 'project-payment' | 'subscription' | 'equipment' | 'debt' | 'reserve-transfer' | 'expense'
+  label: string
+  amountTHB: number
+  direction: 'inflow' | 'outflow'
+  occurredAt: string
+  status: 'planned' | 'cleared' | 'review'
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
+}
+
+export interface ReserveRow {
+  id: string
+  accountId: string
+  label: string
+  currentAmountTHB: number
+  targetAmountTHB: number
+  status: 'healthy' | 'watch' | 'low'
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
+}
+
+export interface TradingWatchlistItem {
+  id: string
+  accountId: string
+  symbol: string
+  thesis: string
+  status: 'watching' | 'paper-active' | 'paused'
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
+}
+
+export interface SandboxPosition {
+  id: string
+  accountId: string
+  symbol: string
+  units: number
+  entryPriceTHB: number
+  thesis: string
+  status: 'open' | 'closed' | 'review'
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
+}
+
+export interface PaperTradeRecord {
+  id: string
+  accountId: string
+  symbol: string
+  action: 'watch' | 'paper-buy' | 'paper-sell' | 'note'
+  amountTHB: number
+  occurredAt: string
+  status: 'draft' | 'approved' | 'archived'
+  sourceStatus: SourceStatus
+  lastUpdated: string
+  notes: string
+  risk: 'low' | 'medium' | 'high'
+  tags: string[]
 }
 
 export interface OsData {
@@ -243,6 +399,14 @@ export interface OsData {
   familyFinanceRecords: FamilyFinanceRecord[]
   tradingSignals: TradingSignal[]
   tradingStrategyNotes: TradingStrategyNote[]
+  dcaRecords: DcaRecord[]
+  dividendRecords: DividendRecord[]
+  financeSnapshots: FinanceSnapshot[]
+  financeLedgerRows: FinanceLedgerRow[]
+  reserveRows: ReserveRow[]
+  tradingWatchlist: TradingWatchlistItem[]
+  sandboxPositions: SandboxPosition[]
+  paperTradeRecords: PaperTradeRecord[]
   aiContexts: AIContext[]
   aiSuggestions: AISuggestion[]
 }
