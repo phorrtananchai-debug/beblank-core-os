@@ -32,9 +32,22 @@ const cloneData = (data: OsData): OsData => ({
   siteWatchUpdates: [...data.siteWatchUpdates],
   creativeBriefs: [...data.creativeBriefs],
   studioReviews: [...data.studioReviews],
+  financeAssets: [...data.financeAssets],
+  holdings: [...data.holdings],
+  thaiNavAssets: [...data.thaiNavAssets],
   transactions: [...data.transactions],
+  familyFinanceRecords: [...data.familyFinanceRecords],
   tradingSignals: [...data.tradingSignals],
+  tradingStrategyNotes: [...data.tradingStrategyNotes],
   aiSuggestions: [...data.aiSuggestions],
+  dcaRecords: [...data.dcaRecords],
+  dividendRecords: [...data.dividendRecords],
+  financeSnapshots: [...data.financeSnapshots],
+  financeLedgerRows: [...data.financeLedgerRows],
+  reserveRows: [...data.reserveRows],
+  tradingWatchlist: [...data.tradingWatchlist],
+  sandboxPositions: [...data.sandboxPositions],
+  paperTradeRecords: [...data.paperTradeRecords],
 })
 
 export const validateActionRequest = (request: ActionRequest): string[] => {
@@ -152,6 +165,65 @@ export const mockSheetWriteAdapter = (
     statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
   }
 
+  if (request.actionType === 'finance.approveDcaContribution') {
+    const dcaId = String(request.payload.dcaId ?? '')
+    nextData.dcaRecords = nextData.dcaRecords.map((record) =>
+      record.id === dcaId ? { ...record, status: 'approved', lastUpdated: now.slice(0, 10) } : record,
+    )
+    const record = nextData.dcaRecords.find((item) => item.id === dcaId)
+    if (record) {
+      nextData.transactions.unshift({
+        id: generateId('tx'),
+        accountId: record.accountId,
+        assetId: record.assetId,
+        description: `Approved DCA contribution: ${record.assetId}`,
+        amountTHB: record.plannedAmountTHB,
+        type: 'buy',
+        occurredAt: now.slice(0, 10),
+        sourceStatus: statusMap.investments,
+        lastUpdated: now.slice(0, 10),
+        notes: 'Created from approved DCA mock action.',
+        risk: record.risk,
+        tags: ['dca', 'approved'],
+      })
+    }
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.resolveAllocationDrift') {
+    const holdingId = String(request.payload.holdingId ?? '')
+    nextData.holdings = nextData.holdings.map((holding) =>
+      holding.id === holdingId ? { ...holding, dcaStatus: 'paused', notes: `${holding.notes ?? ''} Drift reviewed manually.` } : holding,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.approveReserveTransfer') {
+    const reserveId = String(request.payload.reserveId ?? '')
+    const amountTHB = Number(request.payload.amountTHB ?? 0)
+    nextData.reserveRows = nextData.reserveRows.map((reserve) =>
+      reserve.id === reserveId
+        ? { ...reserve, currentAmountTHB: reserve.currentAmountTHB + amountTHB, status: reserve.currentAmountTHB + amountTHB >= reserve.targetAmountTHB ? 'healthy' : 'watch', lastUpdated: now.slice(0, 10) }
+        : reserve,
+    )
+    nextData.financeLedgerRows.unshift({
+      id: generateId('ledger'),
+      accountId: 'acct-cash-reserve',
+      category: 'reserve-transfer',
+      label: 'Approved reserve transfer',
+      amountTHB,
+      direction: 'inflow',
+      occurredAt: now.slice(0, 10),
+      status: 'cleared',
+      sourceStatus: statusMap.familyOffice,
+      lastUpdated: now.slice(0, 10),
+      notes: 'Created from approved reserve transfer mock action.',
+      risk: 'low',
+      tags: ['reserve', 'approved'],
+    })
+    statusMap.familyOffice = { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false }
+  }
+
   if (request.actionType === 'trading.addSignal') {
     const signal: TradingSignal = {
       id: generateId('signal'),
@@ -161,6 +233,26 @@ export const mockSheetWriteAdapter = (
       note: String(request.payload.note ?? 'Manual import from notebook'),
     }
     nextData.tradingSignals.unshift(signal)
+    statusMap.tradingLab = { ...statusMap.tradingLab, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'trading.approvePaperTradeNote') {
+    const paperTradeId = String(request.payload.paperTradeId ?? '')
+    const positionId = String(request.payload.positionId ?? '')
+    nextData.paperTradeRecords = nextData.paperTradeRecords.map((record) =>
+      record.id === paperTradeId ? { ...record, status: 'approved', lastUpdated: now.slice(0, 10) } : record,
+    )
+    nextData.sandboxPositions = nextData.sandboxPositions.map((position) =>
+      position.id === positionId ? { ...position, status: 'open', lastUpdated: now.slice(0, 10) } : position,
+    )
+    statusMap.tradingLab = { ...statusMap.tradingLab, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'trading.archiveStrategyNote') {
+    const noteId = String(request.payload.noteId ?? '')
+    nextData.tradingStrategyNotes = nextData.tradingStrategyNotes.map((note) =>
+      note.id === noteId ? { ...note, status: 'archived', lastUpdated: now.slice(0, 10) } : note,
+    )
     statusMap.tradingLab = { ...statusMap.tradingLab, lastSyncedAt: now, isStale: false }
   }
 
