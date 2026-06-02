@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
+import { EmptyState } from '../../components/shared/EmptyState'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
@@ -162,6 +163,10 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           <Metric label="Pending reviews" value={pendingStudioReviews.length} />
         </div>
       </header>
+
+      {data.projects.length === 0 ? (
+        <EmptyState title="Studio provider has no rows" body="Studio is rendering safely without project rows. Mock fallback can be restored or a live Apps Script read provider can supply Sheet rows later." />
+      ) : null}
 
       {view === 'overview' ? (
         <Overview
@@ -439,6 +444,10 @@ const TimelineView = ({
     ...reviews.map((review) => ({ id: review.id, date: review.dueAt, title: review.title, meta: `${projectName(projects, review.projectId)} / ${review.type}` })),
     ...siteWatch.map((update) => ({ id: update.id, date: update.observedAt.slice(0, 10), title: update.title, meta: `${projectName(projects, update.projectId)} / site watch` })),
   ].sort((a, b) => a.date.localeCompare(b.date))
+
+  if (phases.length === 0) {
+    return <EmptyState title="Timeline provider has no phase rows" body="The planning board can render an empty state while waiting for Sheet-backed timeline phases or mock fallback data." />
+  }
 
   return (
     <section className="space-y-6">

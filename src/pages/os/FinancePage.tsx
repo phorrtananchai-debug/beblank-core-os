@@ -1,4 +1,5 @@
 ﻿import { Link } from 'react-router-dom'
+import { EmptyState } from '../../components/shared/EmptyState'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
 import { useOs } from '../../core/os/OsContext'
@@ -12,6 +13,7 @@ export const FinancePage = () => {
   const reserveValue = data.reserveRows.reduce((sum, reserve) => sum + reserve.currentAmountTHB, 0)
   const sandboxExposure = data.sandboxPositions.reduce((sum, position) => sum + position.units * position.entryPriceTHB, 0)
   const driftCount = data.holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2).length
+  const financeIsEmpty = data.holdings.length === 0 && data.reserveRows.length === 0 && data.tradingWatchlist.length === 0
 
   const cards = [
     { title: 'Investments', to: '/os/finance/investments', detail: 'Long-term allocation, DCA, dividends, holdings.', metric: thb(portfolioValue), note: `${driftCount} allocation reviews` },
@@ -27,6 +29,10 @@ export const FinancePage = () => {
         <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Investments, family-office finance, and a paper-only trading lab. No realtime terminal, no broker execution, no auto trading.</p>
         <div className="mt-6 grid gap-3 md:grid-cols-3"><SourceStatusBadge status={sourceStatuses.investments} /><SourceStatusBadge status={sourceStatuses.familyOffice} /><SourceStatusBadge status={sourceStatuses.tradingLab} /></div>
       </header>
+
+      {financeIsEmpty ? (
+        <EmptyState title="Finance provider has no rows" body="Finance routes stay stable with empty provider data. Live Finnhub and Sheet adapters can be introduced later while mock fallback remains available." />
+      ) : null}
 
       <div className="grid gap-5 md:grid-cols-3">
         {cards.map((card) => (
