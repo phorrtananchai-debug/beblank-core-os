@@ -48,6 +48,12 @@ const cloneData = (data: OsData): OsData => ({
   tradingWatchlist: [...data.tradingWatchlist],
   sandboxPositions: [...data.sandboxPositions],
   paperTradeRecords: [...data.paperTradeRecords],
+  aiExports: [...data.aiExports],
+  aiImports: [...data.aiImports],
+  aiReviews: [...data.aiReviews],
+  aiMemories: [...data.aiMemories],
+  aiDigests: [...data.aiDigests],
+  aiObservations: [...data.aiObservations],
 })
 
 export const validateActionRequest = (request: ActionRequest): string[] => {
@@ -260,6 +266,79 @@ export const mockSheetWriteAdapter = (
     const suggestionId = String(request.payload.suggestionId ?? '')
     nextData.aiSuggestions = nextData.aiSuggestions.map((item): AISuggestion =>
       item.id === suggestionId ? { ...item, status: 'approved' } : item,
+    )
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'ai.approveImportReview') {
+    const importId = String(request.payload.importId ?? '')
+    nextData.aiImports = nextData.aiImports.map((item) =>
+      item.id === importId ? { ...item, reviewStatus: 'approved', approvedBy: request.requestedBy } : item,
+    )
+    nextData.aiReviews = nextData.aiReviews.map((item) =>
+      item.sourceIds.includes(importId) ? { ...item, reviewStatus: 'approved', approvedBy: request.requestedBy } : item,
+    )
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'ai.rejectImportReview') {
+    const importId = String(request.payload.importId ?? '')
+    nextData.aiImports = nextData.aiImports.map((item) =>
+      item.id === importId ? { ...item, reviewStatus: 'rejected', approvedBy: request.requestedBy } : item,
+    )
+    nextData.aiReviews = nextData.aiReviews.map((item) =>
+      item.sourceIds.includes(importId) ? { ...item, reviewStatus: 'rejected', approvedBy: request.requestedBy } : item,
+    )
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'ai.archiveMemory') {
+    const memoryId = String(request.payload.memoryId ?? '')
+    nextData.aiMemories = nextData.aiMemories.map((item) =>
+      item.id === memoryId ? { ...item, reviewStatus: 'archived' } : item,
+    )
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'ai.applyBriefRefinement') {
+    const importId = String(request.payload.importId ?? '')
+    const linkedImport = nextData.aiImports.find((item) => item.id === importId)
+    nextData.aiImports = nextData.aiImports.map((item) =>
+      item.id === importId ? { ...item, reviewStatus: 'approved', approvedBy: request.requestedBy } : item,
+    )
+    if (linkedImport) {
+      nextData.aiMemories.unshift({
+        id: generateId('aimem'),
+        module: linkedImport.module,
+        sourceIds: [linkedImport.id, ...linkedImport.sourceIds],
+        snapshotId: linkedImport.snapshotId,
+        createdAt: now,
+        sourceStatus: statusMap.aiWorkflow,
+        title: `Applied refinement: ${linkedImport.title}`,
+        body: linkedImport.diffPreview,
+        memoryType: 'decision',
+        confidence: linkedImport.confidence,
+        reviewStatus: 'active',
+        approvedBy: request.requestedBy,
+        notes: 'Created from approved AI brief refinement mock action.',
+        tags: ['ai-review', 'brief-refinement'],
+      })
+    }
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'ai.approveDigest') {
+    const digestId = String(request.payload.digestId ?? '')
+    nextData.aiDigests = nextData.aiDigests.map((item) =>
+      item.id === digestId ? { ...item, reviewStatus: 'approved', approvedBy: request.requestedBy } : item,
+    )
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'ai.archiveObservation') {
+    const observationId = String(request.payload.observationId ?? '')
+    nextData.aiObservations = nextData.aiObservations.map((item) =>
+      item.id === observationId ? { ...item, reviewStatus: 'archived', approvedBy: request.requestedBy } : item,
     )
     statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
   }

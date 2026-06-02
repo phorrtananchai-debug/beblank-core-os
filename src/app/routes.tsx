@@ -57,7 +57,13 @@ export const AppRoutes = () => {
         <Route path="finance/investments" element={<InvestmentsPage />} />
         <Route path="finance/family-office" element={<FamilyOfficePage />} />
         <Route path="finance/trading-lab" element={<TradingLabPage />} />
-        <Route path="ai-workflow" element={<AIWorkflowPage />} />
+        <Route path="ai" element={<AIWorkflowPage view="overview" />} />
+        <Route path="ai/context" element={<AIWorkflowPage view="context" />} />
+        <Route path="ai/reviews" element={<AIWorkflowPage view="reviews" />} />
+        <Route path="ai/memory" element={<AIWorkflowPage view="memory" />} />
+        <Route path="ai/exports" element={<AIWorkflowPage view="exports" />} />
+        <Route path="ai/imports" element={<AIWorkflowPage view="imports" />} />
+        <Route path="ai-workflow" element={<AIWorkflowPage view="overview" />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
