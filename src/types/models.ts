@@ -54,6 +54,106 @@ export interface AISuggestion {
   status: 'imported' | 'approved' | 'rejected'
 }
 
+export interface AIExportRecord {
+  id: string
+  module: 'studio' | 'finance' | 'timeline' | 'trading-lab' | 'combined'
+  title: string
+  sourceIds: string[]
+  snapshotId?: string
+  createdAt: string
+  sourceStatus: SourceStatus
+  summary: string
+  jsonPreview: string
+  handoffNotes: string
+  confidence: number
+  reviewStatus: 'draft' | 'exported' | 'archived'
+  approvedBy?: string
+  notes: string
+  tags: string[]
+}
+
+export interface AIImportRecord {
+  id: string
+  module: string
+  sourceIds: string[]
+  snapshotId?: string
+  createdAt: string
+  sourceStatus: SourceStatus
+  title: string
+  suggestionJson: string
+  diffPreview: string
+  confidence: number
+  reviewStatus: 'pending' | 'approved' | 'rejected'
+  approvedBy?: string
+  notes: string
+  tags: string[]
+}
+
+export interface AIReviewRecord {
+  id: string
+  module: string
+  sourceIds: string[]
+  snapshotId?: string
+  createdAt: string
+  sourceStatus: SourceStatus
+  title: string
+  reviewStatus: 'pending' | 'approved' | 'rejected' | 'archived'
+  confidence: number
+  approvedBy?: string
+  notes: string
+  tags: string[]
+}
+
+export interface AIMemoryRecord {
+  id: string
+  module: string
+  sourceIds: string[]
+  snapshotId?: string
+  createdAt: string
+  sourceStatus: SourceStatus
+  title: string
+  body: string
+  memoryType: 'note' | 'observation' | 'decision' | 'review-history'
+  confidence: number
+  reviewStatus: 'active' | 'archived'
+  approvedBy?: string
+  notes: string
+  tags: string[]
+}
+
+export interface AIDigestRecord {
+  id: string
+  module: 'daily' | 'finance' | 'studio' | 'timeline' | 'trading-lab'
+  sourceIds: string[]
+  snapshotId?: string
+  createdAt: string
+  sourceStatus: SourceStatus
+  title: string
+  summary: string
+  confidence: number
+  reviewStatus: 'draft' | 'approved' | 'archived'
+  approvedBy?: string
+  notes: string
+  tags: string[]
+}
+
+export interface AIObservationRecord {
+  id: string
+  module: string
+  sourceIds: string[]
+  snapshotId?: string
+  createdAt: string
+  sourceStatus: SourceStatus
+  title: string
+  observation: string
+  severity: 'low' | 'medium' | 'high'
+  confidence: number
+  reviewStatus: 'open' | 'reviewed' | 'archived'
+  approvedBy?: string
+  notes: string
+  tags: string[]
+}
+
 export interface Project {
   id: string
   slug: string
@@ -409,5 +509,11 @@ export interface OsData {
   paperTradeRecords: PaperTradeRecord[]
   aiContexts: AIContext[]
   aiSuggestions: AISuggestion[]
+  aiExports: AIExportRecord[]
+  aiImports: AIImportRecord[]
+  aiReviews: AIReviewRecord[]
+  aiMemories: AIMemoryRecord[]
+  aiDigests: AIDigestRecord[]
+  aiObservations: AIObservationRecord[]
 }
 

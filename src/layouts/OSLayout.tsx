@@ -12,7 +12,7 @@ const links = [
   { to: '/os/finance/investments', label: 'Investments' },
   { to: '/os/finance/family-office', label: 'Family Office' },
   { to: '/os/finance/trading-lab', label: 'Trading Lab' },
-  { to: '/os/ai-workflow', label: 'AI Workflow' },
+  { to: '/os/ai', label: 'AI Workflow' },
   { to: '/os/settings', label: 'Settings' },
 ]
 
