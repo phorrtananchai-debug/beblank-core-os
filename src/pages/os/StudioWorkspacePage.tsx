@@ -1,3 +1,4 @@
+import { useMemo, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
@@ -13,6 +14,7 @@ import type {
   Project,
   SiteWatchUpdate,
   StudioReview,
+  StudioTimelinePhase,
   WorkScopeSection,
 } from '../../types/models'
 
@@ -102,6 +104,15 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
     })
   }
 
+  const queueTimelinePhaseReview = (phase: StudioTimelinePhase) => {
+    createActionRequest({
+      module: 'studio',
+      actionType: 'studio.markTimelinePhaseReviewed',
+      description: `Mark ${projectName(data.projects, phase.projectId)} ${phase.phase} phase reviewed`,
+      payload: { phaseId: phase.id },
+    })
+  }
+
   return (
     <section className="studio-workspace-space space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
@@ -179,7 +190,17 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
       ) : null}
 
       {view === 'timeline' ? (
-        <TimelineView projects={data.projects} timeline={data.timeline} reviews={data.studioReviews} siteWatch={data.siteWatchUpdates} />
+        <TimelineView
+          pendingApprovals={pendingApprovals}
+          phases={data.studioTimelinePhases}
+          projects={data.projects}
+          reviews={data.studioReviews}
+          siteWatch={data.siteWatchUpdates}
+          timeline={data.timeline}
+          onApprove={approveActionRequest}
+          onPhaseReview={queueTimelinePhaseReview}
+          onReject={rejectActionRequest}
+        />
       ) : null}
 
       {view === 'site-watch' ? (
@@ -351,16 +372,68 @@ const ProjectsView = ({
 )
 
 const TimelineView = ({
+  onApprove,
+  onPhaseReview,
+  onReject,
+  pendingApprovals,
+  phases,
   projects,
   reviews,
   siteWatch,
   timeline,
 }: {
+  onApprove: (requestId: string) => void
+  onPhaseReview: (phase: StudioTimelinePhase) => void
+  onReject: (requestId: string) => void
+  pendingApprovals: Parameters<typeof PendingApprovalPanel>[0]['items']
+  phases: StudioTimelinePhase[]
   projects: Project[]
   reviews: StudioReview[]
   siteWatch: SiteWatchUpdate[]
   timeline: Array<{ id: string; projectId: string; label: string; dueDate: string; state: string }>
 }) => {
+  const [projectFilter, setProjectFilter] = useState('all')
+  const [phaseFilter, setPhaseFilter] = useState('all')
+  const [riskFilter, setRiskFilter] = useState('all')
+  const [viewWindow, setViewWindow] = useState<'month' | 'quarter'>('quarter')
+
+  const windowStart = new Date(viewWindow === 'month' ? '2026-06-01T00:00:00.000Z' : '2026-06-01T00:00:00.000Z')
+  const windowEnd = new Date(viewWindow === 'month' ? '2026-06-30T00:00:00.000Z' : '2026-08-31T00:00:00.000Z')
+  const totalDays = daysBetween(windowStart, windowEnd) + 1
+  const todayOffset = clamp((daysBetween(windowStart, new Date('2026-06-03T00:00:00.000Z')) / totalDays) * 100, 0, 100)
+
+  const visiblePhases = useMemo(
+    () =>
+      phases.filter((phase) => {
+        const matchesProject = projectFilter === 'all' || phase.projectId === projectFilter
+        const matchesPhase = phaseFilter === 'all' || phase.phase === phaseFilter
+        const matchesRisk = riskFilter === 'all' || phase.risk === riskFilter || phase.status === riskFilter
+        return matchesProject && matchesPhase && matchesRisk
+      }),
+    [phaseFilter, phases, projectFilter, riskFilter],
+  )
+
+  const projectRows = projects
+    .filter((project) => visiblePhases.some((phase) => phase.projectId === project.id))
+    .map((project) => ({
+      project,
+      phases: visiblePhases.filter((phase) => phase.projectId === project.id),
+      milestones: [
+        ...timeline
+          .filter((event) => event.projectId === project.id)
+          .map((event) => ({ id: event.id, date: event.dueDate, label: event.label, state: event.state })),
+        ...reviews
+          .filter((review) => review.projectId === project.id)
+          .map((review) => ({ id: review.id, date: review.dueAt, label: review.title, state: review.status })),
+      ],
+    }))
+
+  const constructionConflicts = getOverlappingPhases(phases.filter((phase) => phase.phase === 'construction'))
+  const reviewWeeks = reviews.filter((review) => review.status === 'pending')
+  const clusteredHandover = phases.filter((phase) => ['handover', 'opening'].includes(phase.phase))
+  const blockedPhases = phases.filter((phase) => phase.status === 'blocked' || phase.blockerIds.length > 0)
+  const stalePhases = phases.filter((phase) => phase.sourceStatus.isStale)
+
   const events = [
     ...timeline.map((event) => ({ id: event.id, date: event.dueDate, title: event.label, meta: `${projectName(projects, event.projectId)} / ${event.state}` })),
     ...reviews.map((review) => ({ id: review.id, date: review.dueAt, title: review.title, meta: `${projectName(projects, review.projectId)} / ${review.type}` })),
@@ -368,25 +441,303 @@ const TimelineView = ({
   ].sort((a, b) => a.date.localeCompare(b.date))
 
   return (
-    <section className="panel">
-      <div className="panel-header">
-        <h3>Studio operational timeline</h3>
-        <span className="pill">{events.length} events</span>
-      </div>
-      <div className="space-y-4">
-        {events.map((event) => (
-          <div key={event.id} className="grid gap-4 border-b border-black/[0.05] pb-4 last:border-b-0 md:grid-cols-[8rem_1fr]">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{event.date}</p>
+    <section className="space-y-6">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="panel panel-float overflow-hidden">
+          <div className="panel-header">
             <div>
-              <p className="text-sm font-semibold">{event.title}</p>
-              <p className="mt-1 text-xs text-[#777777]">{event.meta}</p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
+                Studio Timeline / overlap planning
+              </p>
+              <h3>Calendar planning board</h3>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#666666]">
+                A calm architectural planning surface for design, construction, handover, opening, blockers, and workload overlap.
+              </p>
+            </div>
+            <span className="pill">{visiblePhases.length} phase rows</span>
+          </div>
+
+          <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_1fr_1fr_auto]">
+            <TimelineSelect label="project" value={projectFilter} onChange={setProjectFilter}>
+              <option value="all">All projects</option>
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </TimelineSelect>
+            <TimelineSelect label="phase" value={phaseFilter} onChange={setPhaseFilter}>
+              <option value="all">All phases</option>
+              {timelinePhaseLabels.map((phase) => <option key={phase} value={phase}>{phase}</option>)}
+            </TimelineSelect>
+            <TimelineSelect label="risk/status" value={riskFilter} onChange={setRiskFilter}>
+              <option value="all">All risks</option>
+              <option value="high">High risk</option>
+              <option value="medium">Medium risk</option>
+              <option value="blocked">Blocked</option>
+              <option value="active">Active</option>
+            </TimelineSelect>
+            <div className="flex items-end gap-2">
+              <button className={viewWindow === 'month' ? 'btn-primary' : 'btn-secondary'} type="button" onClick={() => setViewWindow('month')}>
+                This month
+              </button>
+              <button className={viewWindow === 'quarter' ? 'btn-primary' : 'btn-secondary'} type="button" onClick={() => setViewWindow('quarter')}>
+                Q view
+              </button>
             </div>
           </div>
-        ))}
+
+          <div className="overflow-x-auto pb-2">
+            <div className="min-w-[980px] rounded-[30px] border border-black/[0.05] bg-[#faf9f8] p-4">
+              <div className="grid grid-cols-[190px_1fr] gap-4">
+                <div />
+                <div className="relative grid grid-cols-6 gap-2">
+                  {buildAxisLabels(viewWindow).map((label) => (
+                    <div key={label} className="rounded-2xl bg-white/70 px-3 py-2 text-center font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">
+                      {label}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
+                  Today / 03 Jun
+                </div>
+                <div className="relative h-5">
+                  <div className="absolute top-0 h-full w-px bg-[#111111]" style={{ left: `${todayOffset}%` }} />
+                  <div className="absolute -top-1 rounded-full bg-[#111111] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em] text-white" style={{ left: `${todayOffset}%`, transform: 'translateX(-50%)' }}>
+                    today
+                  </div>
+                </div>
+
+                {projectRows.map(({ milestones, project, phases: rowPhases }) => (
+                  <ProjectTimelineRow
+                    key={project.id}
+                    milestones={milestones}
+                    onPhaseReview={onPhaseReview}
+                    phases={rowPhases}
+                    project={project}
+                    totalDays={totalDays}
+                    windowStart={windowStart}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside className="intelligence-rail space-y-5">
+          <div className="rounded-[30px] border border-black/[0.05] bg-[#111111] p-5 text-white">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">
+              Jarvis B timeline read
+            </p>
+            <p className="mt-4 text-sm leading-6 text-white/75">
+              Karun Phuket construction, Karun Central build-out, and BKK Office procurement create the main July load. Keep approvals manual and review blockers before shifting dates.
+            </p>
+          </div>
+          <TimelineSignal label="Construction overlap" value={constructionConflicts.length} tone="risk" detail="Windows that share build pressure." />
+          <TimelineSignal label="Pending review load" value={reviewWeeks.length} tone="watch" detail="Approvals that can block phase movement." />
+          <TimelineSignal label="Handover / opening cluster" value={clusteredHandover.length} tone="watch" detail="Dates near final public/studio pressure." />
+          <TimelineSignal label="Blocked phases" value={blockedPhases.length} tone="risk" detail="Phases with blockers or blocked status." />
+          <TimelineSignal label="Stale source rows" value={stalePhases.length} tone="risk" detail="Mock source rows requiring sync review." />
+        </aside>
       </div>
+
+      <section className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
+        <div className="panel">
+          <div className="panel-header">
+            <div>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Secondary feed</p>
+              <h3>Recent timeline events</h3>
+            </div>
+            <span className="pill">{events.length} events</span>
+          </div>
+          <div className="space-y-4">
+            {events.map((event) => (
+              <div key={event.id} className="grid gap-4 border-b border-black/[0.05] pb-4 last:border-b-0 md:grid-cols-[8rem_1fr]">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{event.date}</p>
+                <div>
+                  <p className="text-sm font-semibold">{event.title}</p>
+                  <p className="mt-1 text-xs text-[#777777]">{event.meta}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <PendingApprovalPanel items={pendingApprovals} onApprove={onApprove} onReject={onReject} />
+      </section>
     </section>
   )
 }
+
+const timelinePhaseLabels: StudioTimelinePhase['phase'][] = [
+  'briefing',
+  'design',
+  'drawing',
+  'approval',
+  'procurement',
+  'construction',
+  'handover',
+  'opening',
+]
+
+const phaseTone: Record<StudioTimelinePhase['phase'], string> = {
+  briefing: 'bg-[#e9dfcf] text-[#3d352c]',
+  design: 'bg-[#d9d5cc] text-[#2f302d]',
+  drawing: 'bg-[#cfd8d1] text-[#26332b]',
+  approval: 'bg-[#ead9c5] text-[#4c321a]',
+  procurement: 'bg-[#e7e0b8] text-[#403b18]',
+  construction: 'bg-[#111111] text-white',
+  handover: 'bg-[#d7c4ad] text-[#382716]',
+  opening: 'bg-[#f1a86a] text-[#2f1606]',
+}
+
+const riskRing: Record<StudioTimelinePhase['risk'], string> = {
+  low: 'ring-black/[0.05]',
+  medium: 'ring-[#d97706]/35',
+  high: 'ring-[#c2410c]/45',
+}
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value))
+
+const daysBetween = (start: Date, end: Date) => {
+  const day = 24 * 60 * 60 * 1000
+  return Math.round((Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate()) - Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate())) / day)
+}
+
+const buildAxisLabels = (viewWindow: 'month' | 'quarter') =>
+  viewWindow === 'month'
+    ? ['Jun 01', 'Jun 06', 'Jun 11', 'Jun 16', 'Jun 21', 'Jun 26']
+    : ['Jun', 'Late Jun', 'Jul', 'Late Jul', 'Aug', 'Late Aug']
+
+const getPhasePosition = (phase: StudioTimelinePhase, windowStart: Date, totalDays: number) => {
+  const start = new Date(`${phase.startDate}T00:00:00.000Z`)
+  const end = new Date(`${phase.endDate}T00:00:00.000Z`)
+  const left = clamp((daysBetween(windowStart, start) / totalDays) * 100, 0, 100)
+  const width = clamp(((daysBetween(start, end) + 1) / totalDays) * 100, 2.5, 100 - left)
+  return { left, width }
+}
+
+const getOverlappingPhases = (phases: StudioTimelinePhase[]) =>
+  phases.filter((phase, index) => {
+    const start = new Date(phase.startDate)
+    const end = new Date(phase.endDate)
+    return phases.some((candidate, candidateIndex) => {
+      if (candidateIndex === index || candidate.projectId === phase.projectId) return false
+      const candidateStart = new Date(candidate.startDate)
+      const candidateEnd = new Date(candidate.endDate)
+      return start <= candidateEnd && candidateStart <= end
+    })
+  })
+
+const TimelineSelect = ({
+  children,
+  label,
+  onChange,
+  value,
+}: {
+  children: ReactNode
+  label: string
+  onChange: (value: string) => void
+  value: string
+}) => (
+  <label className="rounded-[22px] border border-black/[0.05] bg-white/75 px-4 py-3">
+    <span className="block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</span>
+    <select
+      className="mt-2 w-full bg-transparent text-sm font-semibold text-[#111111] outline-none"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      {children}
+    </select>
+  </label>
+)
+
+const ProjectTimelineRow = ({
+  milestones,
+  onPhaseReview,
+  phases,
+  project,
+  totalDays,
+  windowStart,
+}: {
+  milestones: Array<{ id: string; date: string; label: string; state: string }>
+  onPhaseReview: (phase: StudioTimelinePhase) => void
+  phases: StudioTimelinePhase[]
+  project: Project
+  totalDays: number
+  windowStart: Date
+}) => (
+  <>
+    <div className="rounded-[24px] border border-black/[0.05] bg-white/80 p-4">
+      <p className="text-sm font-bold">{project.name}</p>
+      <p className="mt-1 text-xs text-[#777777]">{project.location} / {project.phase}</p>
+      <p className={`mt-3 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] ${statusClass(project.timelineStatus ?? 'steady')}`}>
+        {project.timelineStatus ?? 'steady'}
+      </p>
+    </div>
+    <div className="relative min-h-[164px] rounded-[24px] border border-black/[0.04] bg-white/55 p-3">
+      <div className="absolute inset-y-3 left-0 right-0 grid grid-cols-6 px-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="border-l border-black/[0.04] first:border-l-0" />
+        ))}
+      </div>
+      {phases.map((phase, index) => {
+        const { left, width } = getPhasePosition(phase, windowStart, totalDays)
+        const top = 12 + index * 42
+        return (
+          <button
+            key={phase.id}
+            className={`absolute rounded-full px-3 py-2 text-left text-[10px] font-bold shadow-[0_14px_28px_rgba(0,0,0,0.10)] ring-2 transition duration-300 hover:-translate-y-0.5 ${phaseTone[phase.phase]} ${riskRing[phase.risk]}`}
+            style={{ left: `${left}%`, top, width: `${width}%` }}
+            type="button"
+            onClick={() => onPhaseReview(phase)}
+            title={`${phase.phase}: ${phase.startDate} to ${phase.endDate}`}
+          >
+            <span className="block truncate uppercase tracking-[0.08em]">{phase.phase}</span>
+            <span className="block truncate font-mono text-[8px] opacity-70">{phase.startDate} - {phase.endDate}</span>
+            <span className="block truncate font-mono text-[8px] opacity-70">{phase.status} / {phase.risk}{phase.sourceStatus.isStale ? ' / stale' : ''}</span>
+          </button>
+        )
+      })}
+      {milestones.map((milestone) => {
+        const left = clamp((daysBetween(windowStart, new Date(`${milestone.date}T00:00:00.000Z`)) / totalDays) * 100, 0, 100)
+        return (
+          <span
+            key={milestone.id}
+            className={`absolute bottom-3 h-3 w-3 rotate-45 rounded-[3px] border border-white shadow-[0_8px_14px_rgba(0,0,0,0.14)] ${milestone.state === 'at-risk' || milestone.state === 'pending' ? 'bg-[#c2410c]' : 'bg-[#111111]'}`}
+            style={{ left: `${left}%` }}
+            title={milestone.label}
+          />
+        )
+      })}
+      {phases.some((phase) => phase.status === 'blocked' || phase.risk === 'high') ? (
+        <span className="absolute bottom-3 right-3 rounded-full bg-[#fff7ed] px-3 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#c2410c]">
+          conflict / blocker
+        </span>
+      ) : null}
+    </div>
+  </>
+)
+
+const TimelineSignal = ({
+  detail,
+  label,
+  tone,
+  value,
+}: {
+  detail: string
+  label: string
+  tone: 'risk' | 'watch'
+  value: number
+}) => (
+  <div className="surface-hover rounded-[26px] border border-black/[0.05] bg-white/85 p-5">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
+        <p className="mt-3 text-sm leading-6 text-[#666666]">{detail}</p>
+      </div>
+      <span className={`rounded-full px-3 py-2 font-mono text-[11px] font-bold ${tone === 'risk' ? 'bg-[#fff7ed] text-[#c2410c]' : 'bg-[#f6f0df] text-[#9a6a1f]'}`}>
+        {value}
+      </span>
+    </div>
+  </div>
+)
 
 const SiteWatchView = ({
   projects,
