@@ -84,6 +84,12 @@ export const CommandCenterPage = () => {
     })),
   ]
 
+  const studioFragments = [
+    { label: 'material trace', tone: 'stone', caption: 'marble lot / sample variance' },
+    { label: 'site frame', tone: 'paper', caption: 'HVAC alignment / field note' },
+    { label: 'render crop', tone: 'ink', caption: 'client review packet' },
+  ]
+
   const queueTodayFocusReview = () => {
     createActionRequest({
       module: 'studio',
@@ -94,8 +100,8 @@ export const CommandCenterPage = () => {
   }
 
   return (
-    <section className="space-y-6">
-      <header className="rounded-[32px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-8">
+    <section className="command-center-space space-y-8">
+      <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">
@@ -108,9 +114,9 @@ export const CommandCenterPage = () => {
               Studio work, finance posture, AI notes, approvals, source health, and recent operating activity in one calm private workspace.
             </p>
           </div>
-          <div className="rounded-[28px] border border-black/[0.06] bg-white p-5">
+          <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
-              AI Daily Brief
+              Jarvis B / Daily Brief
             </p>
             <p className="mt-4 text-xl font-semibold leading-snug">{primarySuggestion?.title ?? 'No daily brief yet'}</p>
             <p className="mt-3 text-sm leading-6 text-[#666666]">
@@ -121,21 +127,34 @@ export const CommandCenterPage = () => {
             </p>
           </div>
         </div>
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
+        <div className="today-context-strip mt-8 grid gap-3 rounded-[28px] border border-black/[0.04] bg-white/55 p-3 md:grid-cols-4">
+          {[
+            ['Operating state', alerts.length > 0 ? `${alerts.length} items watching` : 'clear field'],
+            ['Focus mode', `${todayFocus.length} open loops`],
+            ['Source posture', Object.values(sourceStatuses).some((status) => status.isStale) ? 'one stale source' : 'sources calm'],
+            ['AI stance', primarySuggestion?.status ?? 'waiting'],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-2xl bg-[#faf9f8]/80 px-4 py-3">
+              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
+              <p className="mt-2 text-sm font-semibold">{value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
           <SourceStatusBadge status={sourceStatuses.commandCenter} />
           <SourceStatusBadge status={sourceStatuses.studio} />
           <SourceStatusBadge status={sourceStatuses.aiWorkflow} />
         </div>
       </header>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <main className="space-y-5">
-          <section className="grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
-            <article className="panel">
+      <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_370px]">
+        <main className="space-y-7">
+          <section className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr]">
+            <article className="panel panel-float reveal-soft">
               <div className="panel-header">
                 <div>
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Today Focus</p>
-                  <h3>Manual review queue</h3>
+                  <h3>Focus queue</h3>
                 </div>
                 <button className="btn-primary" type="button" onClick={queueTodayFocusReview}>
                   Queue Focus Review
@@ -156,18 +175,18 @@ export const CommandCenterPage = () => {
               </p>
             </article>
 
-            <article className="panel">
+            <article className="panel panel-float reveal-soft reveal-delay-1">
               <div className="panel-header">
                 <div>
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Work</p>
-                  <h3>Active projects and queue</h3>
+                  <h3>Project pulse</h3>
                 </div>
                 <span className="pill">{activeProjects.length} active</span>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-5 md:grid-cols-[0.85fr_1fr]">
                 <div className="space-y-3">
                   {activeProjects.map((project) => (
-                    <div key={project.id} className="rounded-2xl border border-black/[0.05] bg-white p-4">
+                    <div key={project.id} className="surface-hover rounded-2xl border border-black/[0.05] bg-white p-4">
                       <p className="text-base font-semibold">{project.name}</p>
                       <p className="mt-1 text-xs text-[#777777]">{project.owner} / {project.status}</p>
                     </div>
@@ -185,11 +204,27 @@ export const CommandCenterPage = () => {
             </article>
           </section>
 
-          <section className="panel">
+          <section className="studio-fragment-board reveal-soft reveal-delay-2">
+            <div>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Presence</p>
+              <h3 className="mt-2 text-xl font-semibold">Pinned traces from the workspace</h3>
+            </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {studioFragments.map((fragment) => (
+                <article key={fragment.label} className="studio-fragment surface-hover">
+                  <div className={`studio-fragment-media studio-fragment-${fragment.tone}`} />
+                  <p className="mt-4 text-sm font-semibold uppercase">{fragment.label}</p>
+                  <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{fragment.caption}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel panel-float reveal-soft reveal-delay-3">
             <div className="panel-header">
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Finance</p>
-                <h3>THB-first snapshot</h3>
+                <h3>Calm THB posture</h3>
               </div>
               <span className="pill">manual only</span>
             </div>
@@ -214,11 +249,11 @@ export const CommandCenterPage = () => {
           </section>
 
           <section className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
-            <article className="panel">
+            <article className="panel panel-float reveal-soft reveal-delay-4">
               <div className="panel-header">
                 <div>
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Timeline</p>
-                  <h3>Activity stream</h3>
+                  <h3>Activity rhythm</h3>
                 </div>
                 <span className="pill">{activity.length}</span>
               </div>
@@ -235,11 +270,11 @@ export const CommandCenterPage = () => {
               </div>
             </article>
 
-            <article className="panel">
+            <article className="panel intelligence-card reveal-soft reveal-delay-5">
               <div className="panel-header">
                 <div>
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Embedded AI</p>
-                  <h3>Suggested next actions</h3>
+                  <h3>Quiet next actions</h3>
                 </div>
               </div>
               <div className="space-y-3">
@@ -258,21 +293,27 @@ export const CommandCenterPage = () => {
           </section>
         </main>
 
-        <aside className="space-y-5">
+        <aside className="intelligence-rail space-y-5">
+          <div className="rounded-[30px] border border-black/[0.05] bg-[#111111] p-5 text-white shadow-[0_28px_70px_-52px_rgba(0,0,0,0.8)]">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">Jarvis B is observing</p>
+            <p className="mt-4 text-sm leading-6 text-white/78">
+              Watching approvals, stale sources, studio risks, and imported suggestions. Nothing applies without manual approval.
+            </p>
+          </div>
           <PendingApprovalPanel
             items={pendingApprovals}
             onApprove={approveActionRequest}
             onReject={rejectActionRequest}
           />
 
-          <section className="panel">
+          <section className="panel rail-panel">
             <div className="panel-header">
               <h3>AI Suggestions</h3>
               <span className="pill">{data.aiSuggestions.length}</span>
             </div>
             <div className="space-y-3">
               {data.aiSuggestions.slice(0, 3).map((suggestion) => (
-                <div key={suggestion.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+                <div key={suggestion.id} className="surface-hover rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                   <p className="text-sm font-semibold">{suggestion.title}</p>
                   <p className="mt-2 text-xs leading-5 text-[#666666]">{suggestion.recommendation}</p>
                   <p className="mt-3 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{suggestion.status}</p>
@@ -281,7 +322,7 @@ export const CommandCenterPage = () => {
             </div>
           </section>
 
-          <section className="panel">
+          <section className="panel rail-panel">
             <div className="panel-header">
               <h3>Alerts / Risks</h3>
               <span className="pill">{alerts.length}</span>
@@ -299,7 +340,7 @@ export const CommandCenterPage = () => {
             </div>
           </section>
 
-          <section className="panel">
+          <section className="panel rail-panel">
             <div className="panel-header">
               <h3>Source Status</h3>
             </div>
