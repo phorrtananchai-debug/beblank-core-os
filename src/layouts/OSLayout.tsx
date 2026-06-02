@@ -21,22 +21,30 @@ export const OSLayout = () => {
   const { data, queueSuggestionImport } = useOs()
 
   return (
-    <div className="os-shell min-h-screen bg-[#faf9f8] px-4 py-4 text-[#111111] md:px-6">
-      <div className="mx-auto flex w-full max-w-[1480px] gap-5 rounded-[32px] border border-black/[0.04] bg-[#f3f1ee] p-3 shadow-[0_28px_70px_-48px_rgba(0,0,0,0.28)]">
-        <aside className="sticky top-4 h-[calc(100vh-2rem)] w-[292px] rounded-[32px] border border-black/[0.05] bg-[#fffaf1] p-5 shadow-[0_20px_45px_-34px_rgba(0,0,0,0.34)]">
+    <div className="os-shell min-h-screen overflow-hidden bg-[#faf9f8] px-3 py-3 text-[#111111] md:px-6 md:py-5">
+      <div className="os-ambient-plane" />
+      <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[36px] border border-black/[0.04] bg-[#f2f0ed]/80 p-3 shadow-[0_36px_90px_-56px_rgba(0,0,0,0.34)] backdrop-blur-xl">
+        <aside className="os-sidebar sticky top-5 h-[calc(100vh-2.5rem)] w-[292px] rounded-[34px] border border-black/[0.05] bg-[#fffaf1]/95 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.36)] backdrop-blur-xl">
           <div className="mb-6">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Environment</p>
             <h1 className="mt-2 text-2xl font-bold leading-none tracking-tight">BE BLANK OS</h1>
             <p className="mt-2 text-xs leading-5 text-[#777777]">Sheet-first operating surface</p>
           </div>
-          <nav className="space-y-1">
+          <div className="mb-6 grid grid-cols-3 gap-2">
+            {['sync', 'ai', 'sheet'].map((item) => (
+              <div key={item} className="rounded-2xl border border-black/[0.04] bg-white/55 px-2 py-3 text-center">
+                <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">{item}</p>
+              </div>
+            ))}
+          </div>
+          <nav className="space-y-1.5">
             {links.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `block rounded-2xl px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-black text-white' : 'text-[#55504a] hover:bg-black/[0.04] hover:text-[#111111]'}`
+                  `os-nav-link block rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? 'bg-black text-white shadow-[0_16px_34px_-24px_rgba(0,0,0,0.7)]' : 'text-[#55504a] hover:bg-black/[0.04] hover:text-[#111111]'}`
                 }
               >
                 {link.label}
@@ -48,11 +56,11 @@ export const OSLayout = () => {
           </button>
         </aside>
 
-        <div className="flex-1 space-y-4">
-          <div className="rounded-[32px] border border-black/[0.05] bg-white p-5 md:p-7">
+        <div className="min-w-0 flex-1 space-y-5">
+          <div className="os-workspace-panel rounded-[34px] border border-black/[0.05] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
             <Outlet />
           </div>
-          <div className="grid gap-4 rounded-[32px] border border-black/[0.05] bg-white p-4 xl:grid-cols-3">
+          <div className="os-ai-dock grid gap-4 rounded-[34px] border border-black/[0.05] bg-white/88 p-4 shadow-[0_20px_70px_-58px_rgba(0,0,0,0.32)] xl:grid-cols-3">
             <AIContextExportPanel contexts={data.aiContexts} />
             <AISuggestionImportPanel onImport={queueSuggestionImport} />
             <ModuleAISummaryPanel moduleName="" suggestions={data.aiSuggestions} />
