@@ -182,7 +182,10 @@ export const mockSheetWriteAdapter = (
     const currency = String(request.payload.currency ?? 'THB') === 'USD' ? 'USD' : 'THB'
     const units = Number(request.payload.units ?? 0)
     const averageCost = Number(request.payload.avgCost ?? 0)
-    const manualContribution = Number(request.payload.manualContribution ?? units * averageCost)
+    const manualContributionTHB = Number(request.payload.manualContributionTHB ?? 0)
+    const manualContributionUSD = Number(request.payload.manualContributionUSD ?? 0)
+    const fallbackContribution = Number(request.payload.manualContribution ?? units * averageCost)
+    const manualContribution = manualContributionTHB || (manualContributionUSD ? manualContributionUSD * 36.5 : currency === 'USD' ? fallbackContribution * 36.5 : fallbackContribution)
     const helperPrice = Number(request.payload.currentHelperPrice ?? 0)
     const estimatedValue = helperPrice > 0 ? units * helperPrice : manualContribution
     const assetId = generateId('asset')
@@ -215,7 +218,7 @@ export const mockSheetWriteAdapter = (
       units,
       quantity: units,
       averageCost,
-      marketValueTHB: currency === 'USD' ? Math.round(estimatedValue * 36.5) : Math.round(estimatedValue),
+      marketValueTHB: Math.round(estimatedValue),
       allocationPercent: 0,
       targetAllocationPercent: 0,
       currentPosture: assetType === 'cash' ? 'reserve' : 'watch',
@@ -233,7 +236,7 @@ export const mockSheetWriteAdapter = (
       accountId: 'acct-invest-manual',
       assetId,
       description: `Manual asset input: ${symbol}`,
-      amountTHB: currency === 'USD' ? Math.round(manualContribution * 36.5) : Math.round(manualContribution),
+      amountTHB: Math.round(manualContribution),
       type: 'buy',
       occurredAt: String(request.payload.transactionDate ?? now.slice(0, 10)),
       sourceStatus: { ...statusMap.investments, authority: 'manual', lastSyncedAt: now, isStale: false },
