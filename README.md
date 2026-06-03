@@ -134,3 +134,11 @@ npm run build
 - If a request times out, fails, or returns malformed quote data, the provider falls back safely and surfaces `fallbackUsed`, stale state, and connector error details.
 - The Investments page never fetches Finnhub directly. Manual refresh flows through `ActionRequest -> Approval -> Finance provider -> Finnhub connector -> ChangeLog -> Snapshot/SourceStatus`.
 - This is read-only market data. There is no realtime stream, websocket, background polling, broker connection, auto buy/sell, or trading execution.
+
+## Investments Manual Input + Thai NAV Foundation
+- PR #12.1 clarifies the early Aequitas rule: manual portfolio input is the source of truth.
+- Finnhub is helper/enrichment data for supported US assets only. It must not create holdings or overwrite units, average cost, allocation targets, or manual holding records.
+- Thai NAV assets use manual NAV rows now and a future Google Sheet NAV bridge later. Thai funds, RMF, and local NAV assets do not use Finnhub.
+- Adding a portfolio asset starts as a local draft/preview, then must pass through `ActionRequest -> Approval -> Mock SheetWriteAdapter -> ChangeLog -> Snapshot`.
+- The current Thai NAV foundation includes `K-US500X-A(A)`, `K-US500XRMF`, and a Thai income/dividend placeholder.
+- No write-back, realtime market data, broker execution, auto trading, credentials, or automatic holding creation are added.

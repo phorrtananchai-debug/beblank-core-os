@@ -176,6 +176,76 @@ export const mockSheetWriteAdapter = (
     statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
   }
 
+  if (request.actionType === 'finance.addManualAsset') {
+    const symbol = String(request.payload.symbol ?? 'MANUAL').trim().toUpperCase()
+    const assetType = String(request.payload.assetType ?? 'other')
+    const currency = String(request.payload.currency ?? 'THB') === 'USD' ? 'USD' : 'THB'
+    const units = Number(request.payload.units ?? 0)
+    const averageCost = Number(request.payload.avgCost ?? 0)
+    const manualContribution = Number(request.payload.manualContribution ?? units * averageCost)
+    const helperPrice = Number(request.payload.currentHelperPrice ?? 0)
+    const estimatedValue = helperPrice > 0 ? units * helperPrice : manualContribution
+    const assetId = generateId('asset')
+
+    nextData.financeAssets.unshift({
+      id: assetId,
+      symbol,
+      name: String(request.payload.displayName ?? symbol),
+      currency,
+      category: assetType === 'us-equity-etf' ? 'etf' : assetType === 'cash' ? 'cash' : assetType.includes('thai') ? 'fund' : 'stock',
+      region: assetType.startsWith('thai') ? 'TH' : currency === 'USD' ? 'US' : 'Global',
+      assetType: assetType as 'us-equity-etf' | 'thai-stock' | 'thai-mutual-fund' | 'thai-rmf' | 'cash' | 'other',
+      market: assetType.startsWith('thai') ? 'TH' : currency === 'USD' ? 'US' : 'manual',
+      sourceOfTruth: 'manual',
+      helperSource: String(request.payload.helperSource ?? 'none') as 'finnhub' | 'thai-nav' | 'manual-nav' | 'google-sheet-nav' | 'none',
+      currentHelperPrice: helperPrice || undefined,
+      manualContribution,
+      sourceStatus: { ...statusMap.investments, authority: 'manual', lastSyncedAt: now, isStale: false },
+      createdAt: now,
+      updatedAt: now,
+      lastUpdated: now.slice(0, 10),
+      notes: String(request.payload.notes ?? 'Manual portfolio input. External helper data cannot overwrite this asset.'),
+      tags: String(request.payload.tags ?? 'manual').split(',').map((tag) => tag.trim()).filter(Boolean),
+    })
+
+    nextData.holdings.unshift({
+      id: generateId('hold'),
+      accountId: 'acct-invest-manual',
+      assetId,
+      units,
+      quantity: units,
+      averageCost,
+      marketValueTHB: currency === 'USD' ? Math.round(estimatedValue * 36.5) : Math.round(estimatedValue),
+      allocationPercent: 0,
+      targetAllocationPercent: 0,
+      currentPosture: assetType === 'cash' ? 'reserve' : 'watch',
+      dcaStatus: 'review',
+      dividendStatus: 'review',
+      sourceStatus: { ...statusMap.investments, authority: 'manual', lastSyncedAt: now, isStale: false },
+      lastUpdated: now.slice(0, 10),
+      notes: 'Created from approved manual asset input. Finnhub/Thai NAV helper data is enrichment only.',
+      risk: assetType === 'cash' ? 'low' : 'medium',
+      tags: ['manual-input', assetType],
+    })
+
+    nextData.transactions.unshift({
+      id: generateId('tx'),
+      accountId: 'acct-invest-manual',
+      assetId,
+      description: `Manual asset input: ${symbol}`,
+      amountTHB: currency === 'USD' ? Math.round(manualContribution * 36.5) : Math.round(manualContribution),
+      type: 'buy',
+      occurredAt: String(request.payload.transactionDate ?? now.slice(0, 10)),
+      sourceStatus: { ...statusMap.investments, authority: 'manual', lastSyncedAt: now, isStale: false },
+      lastUpdated: now.slice(0, 10),
+      notes: String(request.payload.notes ?? 'Manual asset transaction row.'),
+      risk: 'low',
+      tags: ['manual-input'],
+    })
+
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false, authority: 'manual' }
+  }
+
   if (request.actionType === 'finance.approveDcaContribution') {
     const dcaId = String(request.payload.dcaId ?? '')
     nextData.dcaRecords = nextData.dcaRecords.map((record) =>

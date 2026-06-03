@@ -388,7 +388,15 @@ export interface FinanceAsset {
   currency: 'THB' | 'USD'
   category: 'stock' | 'etf' | 'fund' | 'cash'
   region?: 'US' | 'TH' | 'Global'
+  assetType?: 'us-equity-etf' | 'thai-stock' | 'thai-mutual-fund' | 'thai-rmf' | 'cash' | 'other'
+  market?: 'US' | 'TH' | 'Global' | 'manual'
+  sourceOfTruth?: 'manual' | 'sheet' | 'imported' | 'helper'
+  helperSource?: 'finnhub' | 'thai-nav' | 'manual-nav' | 'google-sheet-nav' | 'none'
+  currentHelperPrice?: number
+  manualContribution?: number
   sourceStatus?: SourceStatus
+  createdAt?: string
+  updatedAt?: string
   lastUpdated?: string
   notes?: string
   tags?: string[]
@@ -417,7 +425,16 @@ export interface Holding {
 export interface ThaiNavAsset {
   id: string
   symbol: string
+  displayName?: string
   nav: number
+  units?: number
+  valueTHB?: number
+  sourceStatus?: SourceStatus
+  helperSource?: 'manual-nav' | 'google-sheet-nav' | 'fallback'
+  sourceOfTruth?: 'manual' | 'sheet' | 'imported' | 'helper'
+  stale?: boolean
+  notes?: string
+  tags?: string[]
   updatedAt: string
 }
 
