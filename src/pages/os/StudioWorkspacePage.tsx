@@ -515,12 +515,12 @@ const TimelineView = ({
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
                 Studio Timeline / overlap planning
               </p>
-              <h3>Calendar planning board</h3>
+              <h3>Calendar planning board / แผนงานรวม</h3>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#666666]">
-                A calm architectural planning surface for design, construction, handover, opening, blockers, and workload overlap.
+                Linear roadmap สำหรับ design, construction, handover, opening, blockers และ workload overlap.
               </p>
             </div>
-            <span className="pill">{visiblePhases.length} phase rows</span>
+            <span className="pill">{visiblePhases.length} phase rows / แถวงาน</span>
           </div>
 
           <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_1fr_1fr_auto]">
@@ -546,6 +546,26 @@ const TimelineView = ({
               <button className={viewWindow === 'quarter' ? 'btn-primary' : 'btn-secondary'} type="button" onClick={() => setViewWindow('quarter')}>
                 Q view
               </button>
+            </div>
+          </div>
+
+          <div className="mb-5 rounded-[28px] border border-black/[0.05] bg-white/75 p-4">
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Planning Roadmap / ภาพรวมเดือน</p>
+              <span className="pill">overlap visible</span>
+            </div>
+            <div className="flex min-h-24 items-stretch gap-2 overflow-x-auto pb-1">
+              {timelinePhaseLabels.map((phaseLabel) => {
+                const phaseCount = visiblePhases.filter((phase) => phase.phase === phaseLabel).length
+                const riskCount = visiblePhases.filter((phase) => phase.phase === phaseLabel && (phase.risk === 'high' || phase.status === 'blocked')).length
+                return (
+                  <div key={phaseLabel} className="min-w-[130px] flex-1 rounded-[22px] border border-black/[0.04] bg-[#faf9f8] p-3">
+                    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">{phaseLabel}</p>
+                    <p className="mt-3 text-2xl font-bold">{phaseCount}</p>
+                    <p className={`mt-1 text-xs ${riskCount ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{riskCount ? `${riskCount} conflict / review` : 'steady'}</p>
+                  </div>
+                )
+              })}
             </div>
           </div>
 

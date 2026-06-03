@@ -6,14 +6,14 @@ import { AISuggestionImportPanel } from '../components/shared/AISuggestionImport
 import { ModuleAISummaryPanel } from '../components/shared/ModuleAISummaryPanel'
 
 const links = [
-  { to: '/os', label: 'Command Center', end: true },
-  { to: '/os/studio', label: 'Studio' },
-  { to: '/os/finance', label: 'Finance' },
-  { to: '/os/finance/investments', label: 'Investments' },
-  { to: '/os/finance/family-office', label: 'Family Office' },
-  { to: '/os/finance/trading-lab', label: 'Trading Lab' },
-  { to: '/os/ai', label: 'AI Workflow' },
-  { to: '/os/settings', label: 'Settings' },
+  { to: '/os', label: 'Command Center / วันนี้', end: true },
+  { to: '/os/studio', label: 'Studio / งานสตูดิโอ' },
+  { to: '/os/finance', label: 'Finance / การเงิน' },
+  { to: '/os/finance/investments', label: 'Investments / ลงทุน' },
+  { to: '/os/finance/family-office', label: 'Family Office / หลังบ้าน' },
+  { to: '/os/finance/trading-lab', label: 'Trading Lab / Sandbox' },
+  { to: '/os/ai', label: 'AI Workflow / Jarvis B' },
+  { to: '/os/settings', label: 'Settings / Source' },
 ]
 
 export const OSLayout = () => {
@@ -26,9 +26,9 @@ export const OSLayout = () => {
       <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[36px] border border-black/[0.04] bg-[#f2f0ed]/80 p-3 shadow-[0_36px_90px_-56px_rgba(0,0,0,0.34)] backdrop-blur-xl">
         <aside className="os-sidebar sticky top-5 h-[calc(100vh-2.5rem)] w-[292px] rounded-[34px] border border-black/[0.05] bg-[#fffaf1]/95 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.36)] backdrop-blur-xl">
           <div className="mb-6">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Environment</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Environment / ระบบทำงาน</p>
             <h1 className="mt-2 text-2xl font-bold leading-none tracking-tight">BE BLANK OS</h1>
-            <p className="mt-2 text-xs leading-5 text-[#777777]">Sheet-first operating surface</p>
+            <p className="mt-2 text-xs leading-5 text-[#777777]">Sheet-first operating surface สำหรับทีม</p>
           </div>
           <div className="mb-6 grid grid-cols-3 gap-2">
             {['sync', 'ai', 'sheet'].map((item) => (
@@ -52,7 +52,7 @@ export const OSLayout = () => {
             ))}
           </nav>
           <button className="btn-secondary mt-6 w-full" onClick={logout}>
-            Logout
+            Logout / ออกจากระบบ
           </button>
         </aside>
 

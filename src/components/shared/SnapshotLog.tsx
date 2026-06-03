@@ -5,26 +5,20 @@ export const SnapshotLog = ({ items }: { items: SnapshotRecord[] }) => {
   const latest = items[0]
 
   return (
-    <section className="panel">
+    <section className="panel editorial-thai">
       <div className="panel-header">
-        <h3>Snapshot Log</h3>
+        <h3>Snapshot History</h3>
         <span className="pill">{items.length}</span>
       </div>
-      {latest ? (
-        <p className="mb-3 rounded-2xl border border-[#e7e2d8] bg-[#faf8f4] p-3 text-xs text-[#6e675d]">
-          Latest approved apply created a snapshot: {latest.reason} / {formatDateTime(latest.createdAt)}
-        </p>
-      ) : null}
+      {latest ? <p className="mb-3 rounded-2xl border border-[#e7e2d8] bg-[#faf8f4] p-3 text-xs text-[#6e675d]">Snapshot ??????: {latest.reason} / {formatDateTime(latest.createdAt)}</p> : null}
       <div className="space-y-2">
         {items.slice(0, 6).map((item) => (
           <div key={item.id} className="rounded-2xl border border-[#e7e2d8] bg-white px-3 py-2">
             <p className="text-sm font-medium text-[#27231e]">{item.reason}</p>
-            <p className="text-xs text-[#71695f]">
-              {item.module} / {formatDateTime(item.createdAt)}
-            </p>
+            <p className="text-xs text-[#71695f]">{item.module} / {formatDateTime(item.createdAt)}</p>
           </div>
         ))}
-        {items.length === 0 && <p className="text-sm text-[#6e675d]">No snapshots yet. Approve a pending action to create one.</p>}
+        {items.length === 0 && <p className="text-sm text-[#6e675d]">???????? snapshot approve action ??????????? state ????</p>}
       </div>
     </section>
   )

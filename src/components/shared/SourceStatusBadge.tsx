@@ -17,9 +17,9 @@ export const SourceStatusBadge = ({ status }: { status: SourceStatus }) => {
           {status.mode}
         </span>
       </div>
-      <div className="mt-2 text-xs text-[#6e675d]">Last synced: {formatDateTime(status.lastSyncedAt)}</div>
+      <div className="mt-2 text-xs text-[#6e675d]">Last synced / อัปเดตล่าสุด: {formatDateTime(status.lastSyncedAt)}</div>
       <div className={`mt-1 text-xs font-medium ${status.isStale ? 'text-amber-700' : 'text-emerald-700'}`}>
-        {status.isStale ? 'Stale data detected' : 'Fresh mock sync'}
+        {status.isStale ? 'ข้อมูล stale / ต้อง review source' : 'ล่าสุด synced ผ่าน Mock Source'}
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {status.health ? <span className="rounded-full bg-[#faf9f8] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-[#6e675d]">{status.health}</span> : null}

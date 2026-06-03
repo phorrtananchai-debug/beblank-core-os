@@ -279,6 +279,26 @@ export const mockSheetWriteAdapter = (
     statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
   }
 
+  if (request.actionType === 'finance.reviewThaiNavAsset') {
+    const navAssetId = String(request.payload.navAssetId ?? '')
+    const nav = Number(request.payload.nav ?? 0)
+    nextData.thaiNavAssets = nextData.thaiNavAssets.map((asset) =>
+      asset.id === navAssetId
+        ? {
+            ...asset,
+            nav: nav || asset.nav,
+            valueTHB: Math.round((asset.units ?? 0) * (nav || asset.nav)),
+            updatedAt: now.slice(0, 10),
+            stale: false,
+            helperSource: 'manual-nav',
+            sourceStatus: { ...(asset.sourceStatus ?? statusMap.investments), lastSyncedAt: now, isStale: false, mode: 'mock', syncState: 'idle', authority: 'manual', bridgeWarning: undefined },
+            notes: `${asset.notes ?? ''} Manual NAV reviewed through approval flow.`,
+          }
+        : asset,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false, syncState: 'idle', authority: 'manual' }
+  }
+
   if (request.actionType === 'finance.approveReserveTransfer') {
     const reserveId = String(request.payload.reserveId ?? '')
     const amountTHB = Number(request.payload.amountTHB ?? 0)
