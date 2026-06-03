@@ -16,6 +16,8 @@ import type {
   SiteWatchUpdate,
   StudioReview,
   StudioTimelinePhase,
+  Task,
+  TimelineItem,
   WorkScopeSection,
 } from '../../types/models'
 
@@ -115,6 +117,24 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
     })
   }
 
+  const queueStudioTask = () => {
+    createActionRequest({
+      module: 'studio',
+      actionType: 'studio.addTask',
+      description: 'Add MVP studio work queue task',
+      payload: { title: 'Review MVP studio queue and assign next owner' },
+    })
+  }
+
+  const queueStudioMilestone = () => {
+    createActionRequest({
+      module: 'studio',
+      actionType: 'studio.addTimeline',
+      description: 'Add MVP studio milestone',
+      payload: { label: 'MVP usability review checkpoint', dueDate: '2026-06-10' },
+    })
+  }
+
   return (
     <section className="studio-workspace-space space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
@@ -179,9 +199,13 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           reviewDocument={reviewDocument}
           reviewScope={reviewScope}
           reviewSite={reviewSite}
+          tasks={data.tasks}
+          timeline={data.timeline}
           onDocumentIssue={queueDocumentIssue}
+          onMilestoneAdd={queueStudioMilestone}
           onScopeApproval={queueScopeApproval}
           onSiteResolution={queueSiteResolution}
+          onTaskAdd={queueStudioTask}
         />
       ) : null}
 
@@ -263,9 +287,13 @@ const Overview = ({
   reviewDocument,
   reviewScope,
   reviewSite,
+  tasks,
+  timeline,
   onDocumentIssue,
+  onMilestoneAdd,
   onScopeApproval,
   onSiteResolution,
+  onTaskAdd,
 }: {
   activeScope: WorkScopeSection[]
   openSiteWatch: SiteWatchUpdate[]
@@ -274,12 +302,39 @@ const Overview = ({
   reviewDocument?: DocumentRecord
   reviewScope?: WorkScopeSection
   reviewSite?: SiteWatchUpdate
+  tasks: Task[]
+  timeline: TimelineItem[]
   onDocumentIssue: (document: DocumentRecord) => void
+  onMilestoneAdd: () => void
   onScopeApproval: (scope: WorkScopeSection) => void
   onSiteResolution: (siteUpdate: SiteWatchUpdate) => void
+  onTaskAdd: () => void
 }) => (
   <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
     <main className="space-y-7">
+      <section className="panel panel-float">
+        <div className="panel-header">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">MVP quick operations</p>
+            <h3>Task + milestone queue</h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-primary" type="button" onClick={onTaskAdd}>Queue Task</button>
+            <button className="btn-secondary" type="button" onClick={onMilestoneAdd}>Queue Milestone</button>
+          </div>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
+            <p className="font-semibold">Work queue</p>
+            <div className="mt-3 space-y-2">{tasks.slice(0, 4).map((task) => <CompactRow key={task.id} title={task.title} meta={projectName(projects, task.projectId)} status={task.status} />)}</div>
+          </div>
+          <div className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
+            <p className="font-semibold">Milestone queue</p>
+            <div className="mt-3 space-y-2">{timeline.slice(0, 4).map((item) => <CompactRow key={item.id} title={item.label} meta={`${projectName(projects, item.projectId)} / due ${item.dueDate}`} status={item.state} />)}</div>
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="panel panel-float">
           <div className="panel-header">
@@ -928,5 +983,17 @@ const ReviewCard = ({ projectName, review }: { projectName: string; review: Stud
     <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{projectName} / {review.type}</p>
     <p className="mt-2 text-sm font-semibold">{review.title}</p>
     <p className={`mt-2 font-mono text-[10px] font-semibold uppercase ${statusClass(review.status)}`}>{review.status} / due {review.dueAt}</p>
+  </div>
+)
+
+const CompactRow = ({ meta, status, title }: { meta: string; status: string; title: string }) => (
+  <div className="rounded-2xl border border-black/[0.05] bg-white/75 p-3">
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="mt-1 text-xs text-[#777777]">{meta}</p>
+      </div>
+      <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(status)}`}>{status}</span>
+    </div>
   </div>
 )

@@ -40,6 +40,23 @@ export const FamilyOfficePage = () => {
     })
   }
 
+  const queueLedgerRecord = () => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.addFamilyLedgerRecord',
+      description: 'Add manual family office ledger row',
+      payload: {
+        label: 'Manual bill review',
+        amountTHB: 12800,
+        category: 'expense',
+        direction: 'outflow',
+        occurredAt: '2026-06-03',
+        notes: 'MVP manual bill/ledger input. Review before Sheet write-back exists.',
+        risk: 'medium',
+      },
+    })
+  }
+
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
@@ -92,7 +109,7 @@ export const FamilyOfficePage = () => {
           </div>
 
           <div className="panel">
-            <div className="panel-header"><h3>Manual ledger</h3><span className="pill">Sheet-ready rows</span></div>
+            <div className="panel-header"><h3>Manual ledger</h3><button className="btn-primary" type="button" onClick={queueLedgerRecord}>Queue Ledger Row</button></div>
             <div className="grid gap-3 lg:grid-cols-2">
               {data.financeLedgerRows.map((row) => <FinanceRow key={row.id} title={row.label} meta={`${row.category} / ${row.direction} / ${thb(row.amountTHB)} / ${row.occurredAt}`} status={row.status} />)}
             </div>

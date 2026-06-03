@@ -49,6 +49,17 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
   const queueArchiveMemory = (item: AIMemoryRecord) => createActionRequest({ module: 'ai', actionType: 'ai.archiveMemory', description: `Archive AI memory: ${item.title}`, payload: { memoryId: item.id } })
   const queueApproveDigest = (item: AIDigestRecord) => createActionRequest({ module: 'ai', actionType: 'ai.approveDigest', description: `Approve AI operational digest: ${item.title}`, payload: { digestId: item.id } })
   const queueArchiveObservation = (item: AIObservationRecord) => createActionRequest({ module: 'ai', actionType: 'ai.archiveObservation', description: `Archive AI observation: ${item.title}`, payload: { observationId: item.id } })
+  const queueContextExport = () => createActionRequest({
+    module: 'ai',
+    actionType: 'ai.exportContext',
+    description: 'Export combined MVP context for Jarvis B',
+    payload: {
+      moduleName: 'combined',
+      title: 'Export MVP operating context',
+      sourceIds: ['studio', 'finance', 'timeline', 'trading-lab'],
+      summary: 'Manual MVP context export covering routed pages, pending approvals, and source status.',
+    },
+  })
 
   return (
     <section className="space-y-7">
@@ -71,6 +82,7 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
           ))}
         </nav>
         <div className="mt-5 grid gap-3 md:grid-cols-5"><SourceStatusBadge status={sourceStatuses.aiWorkflow} /><Metric label="exports" value={data.aiExports.length} /><Metric label="pending imports" value={pendingImports.length} /><Metric label="memories" value={activeMemories.length} /><Metric label="observations" value={openObservations.length} /></div>
+        <button className="btn-primary mt-5" type="button" onClick={queueContextExport}>Queue Context Export</button>
       </header>
 
       {aiIsEmpty ? (

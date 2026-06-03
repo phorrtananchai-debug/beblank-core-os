@@ -182,6 +182,18 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const rejectActionRequest = (requestId: string) => {
+    const request = pendingApprovals.find((item) => item.id === requestId)
+    if (request) {
+      setChangeLogs((logs) => [{
+        id: generateId('log'),
+        actionRequestId: request.id,
+        module: request.module,
+        actionType: request.actionType,
+        summary: `Rejected action: ${request.description}`,
+        changedAt: new Date().toISOString(),
+        changedBy: 'Operator',
+      }, ...logs])
+    }
     setPendingApprovals((current) => current.filter((item) => item.id !== requestId))
   }
 
