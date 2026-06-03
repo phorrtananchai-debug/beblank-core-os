@@ -61,6 +61,8 @@ export const InvestmentsPage = () => {
   const marketSymbols = data.marketDataSymbols
   const supportedMarketSymbols = getSupportedFinnhubSymbols()
   const [manualAssetDraft, setManualAssetDraft] = useState<ManualAssetDraft>(initialManualAssetDraft)
+  const [showAssetModal, setShowAssetModal] = useState(false)
+  const [navDrafts, setNavDrafts] = useState<Record<string, string>>({})
   const normalizedDraftSymbol = manualAssetDraft.symbol.trim().toUpperCase()
   const helperMarketRow = marketSymbols.find((symbol) => symbol.symbol === normalizedDraftSymbol)
   const helperNavRow = data.thaiNavAssets.find((asset) => asset.symbol === normalizedDraftSymbol)
@@ -100,6 +102,9 @@ export const InvestmentsPage = () => {
     acc[asset.category] = (acc[asset.category] ?? 0) + value
     return acc
   }, {})
+  const cashPosture = data.holdings.filter((holding) => data.financeAssets.find((asset) => asset.id === holding.assetId)?.category === 'cash').reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
+  const riskPosture = data.holdings.filter((holding) => holding.risk === 'high').length
+  const dcaImpactPreview = dcaQueue[0] ? ((dcaQueue[0].plannedAmountTHB / Math.max(totalValue, 1)) * 100).toFixed(2) : '0.00'
 
   const assetName = (assetId: string) => data.financeAssets.find((asset) => asset.id === assetId)?.symbol ?? assetId
   const queueDca = () => {
@@ -138,6 +143,16 @@ export const InvestmentsPage = () => {
         sourceOfTruth: 'manual',
         previewValueTHB: manualPreview.currentValueTHB,
       },
+    })
+    setShowAssetModal(false)
+  }
+
+  const queueThaiNavReview = (navAssetId: string, fallbackNav: number) => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.reviewThaiNavAsset',
+      description: `Review Thai NAV helper row ${navAssetId}`,
+      payload: { navAssetId, nav: Number(navDrafts[navAssetId] ?? fallbackNav) || fallbackNav },
     })
   }
 
@@ -183,11 +198,11 @@ export const InvestmentsPage = () => {
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Investments / early Aequitas core</p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">THB-first portfolio operating room.</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Long-term allocation, DCA, dividends, manual transactions, and AI-assisted review without live brokerage or automatic sync.</p>
+            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Portfolio room / ห้องลงทุน THB-first.</h2>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Manual portfolio คือ source of truth. Finnhub และ Thai NAV เป็น helper เท่านั้น ไม่มี broker execution และไม่มี auto trading.</p>
           </div>
           <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Quiet AI allocation note</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">AI allocation note / อ่านภาพรวม</p>
             <p className="mt-4 text-xl font-semibold leading-snug">Growth sleeve is slightly crowded.</p>
             <p className="mt-3 text-sm leading-6 text-[#666666]">NVDA and PLTR sit above target. Approve core DCA first, then resolve drift before adding more satellite risk.</p>
           </div>
@@ -195,11 +210,70 @@ export const InvestmentsPage = () => {
         <div className="mt-6 grid gap-3 md:grid-cols-5">
           <SourceStatusBadge status={sourceStatuses.investments} />
           <SourceStatusBadge status={sourceStatuses.finnhub} />
-          <Metric label="Portfolio value" value={thb(totalValue)} />
-          <Metric label="Expected dividends" value={thb(expectedDividends)} />
-          <Metric label="Drift reviews" value={driftHoldings.length} />
+          <Metric label="Total THB" value={thb(totalValue)} />
+          <Metric label="Dividend estimate" value={thb(expectedDividends)} />
+          <Metric label="Drift / ต้องดู" value={driftHoldings.length} />
         </div>
       </header>
+
+      <section className="panel panel-float editorial-thai">
+        <div className="panel-header">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Portfolio Summary / ภาพรวมพอร์ต</p>
+            <h3>Manual wealth notebook</h3>
+          </div>
+          <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Add Asset / เพิ่มสินทรัพย์</button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-5">
+          <Metric label="Total THB" value={thb(totalValue)} />
+          <Metric label="Cash posture" value={thb(cashPosture)} />
+          <Metric label="DCA impact" value={`${dcaImpactPreview}%`} />
+          <Metric label="Risk posture" value={`${riskPosture} high-risk rows`} />
+          <Metric label="Allocation groups" value={Object.keys(holdingsByCategory).length} />
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[#666666]">พอร์ตนี้อ่านแบบ manual-first: helper price ใช้ช่วยประเมิน แต่ไม่ทับ units, avg cost, allocation หรือ notes ที่ Por ใส่เอง</p>
+      </section>
+
+      {showAssetModal ? (
+        <div className="modal-scrim">
+          <div className="modal-panel editorial-thai">
+            <div className="panel-header">
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Add Asset Modal / เพิ่มสินทรัพย์</p>
+                <h3>Preview before approval</h3>
+              </div>
+              <button className="btn-secondary" type="button" onClick={() => setShowAssetModal(false)}>Close</button>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
+              <article className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="Ticker"><input className="input" value={manualAssetDraft.symbol} onChange={(event) => updateManualAssetDraft('symbol', event.target.value)} /></Field>
+                  <Field label="Name"><input className="input" value={manualAssetDraft.displayName} onChange={(event) => updateManualAssetDraft('displayName', event.target.value)} /></Field>
+                  <Field label="Asset type"><select className="input" value={manualAssetDraft.assetType} onChange={(event) => updateManualAssetDraft('assetType', event.target.value)}><option value="us-equity-etf">US equity / ETF</option><option value="thai-stock">Thai stock</option><option value="thai-mutual-fund">Thai mutual fund</option><option value="thai-rmf">Thai RMF</option><option value="cash">Cash</option><option value="other">Other</option></select></Field>
+                  <Field label="Currency"><select className="input" value={manualAssetDraft.currency} onChange={(event) => updateManualAssetDraft('currency', event.target.value)}><option value="THB">THB</option><option value="USD">USD</option></select></Field>
+                  <Field label="Units"><input className="input" inputMode="decimal" value={manualAssetDraft.units} onChange={(event) => updateManualAssetDraft('units', event.target.value)} /></Field>
+                  <Field label="Avg cost"><input className="input" inputMode="decimal" value={manualAssetDraft.avgCost} onChange={(event) => updateManualAssetDraft('avgCost', event.target.value)} /></Field>
+                  <Field label="Source"><input className="input" value={helperSource} readOnly /></Field>
+                  <Field label="Contribution date"><input className="input" type="date" value={manualAssetDraft.transactionDate} onChange={(event) => updateManualAssetDraft('transactionDate', event.target.value)} /></Field>
+                </div>
+                <Field label="Note"><textarea className="input min-h-20" value={manualAssetDraft.notes} onChange={(event) => updateManualAssetDraft('notes', event.target.value)} /></Field>
+                <div className="mt-4 flex flex-wrap gap-2">{assetSuggestions.map((suggestion) => <button key={suggestion.symbol} className="btn-secondary" type="button" onClick={() => applySuggestion(suggestion)}>{suggestion.symbol}</button>)}</div>
+              </article>
+              <article className="rounded-[28px] border border-black/[0.05] bg-white/80 p-5">
+                <p className="text-lg font-bold">Approval preview / ตรวจทานก่อนอนุมัติ</p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <Mini label="Estimated THB" value={thb(manualPreview.currentValueTHB)} />
+                  <Mini label="Allocation %" value={`${manualPreview.allocationImpact.toFixed(1)}%`} />
+                  <Mini label="Source label" value={helperSource} />
+                  <Mini label="Manual notice" value="requires approval" />
+                </div>
+                {manualPreview.missingDataWarning ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-[#fffaf4] p-3 text-xs leading-5 text-[#9a4f18]">{manualPreview.missingDataWarning}</p> : null}
+                <button className="btn-primary mt-5 w-full" type="button" onClick={queueManualAssetAdd}>Queue for Approval / ส่งเข้า Approval Queue</button>
+              </article>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <main className="space-y-5">
@@ -209,7 +283,7 @@ export const InvestmentsPage = () => {
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Manual source of truth</p>
                 <h3>Add asset to early Aequitas ledger</h3>
               </div>
-              <button className="btn-primary" type="button" onClick={queueManualAssetAdd}>Queue Manual Asset</button>
+              <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal / เพิ่ม</button>
             </div>
             <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
               <article className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
@@ -311,6 +385,37 @@ export const InvestmentsPage = () => {
               </div>
               <button className="btn-primary" type="button" onClick={queueManualTransaction}>Queue Manual Tx</button>
             </div>
+            <div className="mb-4 overflow-x-auto rounded-[24px] border border-black/[0.05] bg-white/75">
+              <table className="w-full min-w-[780px] text-left text-sm">
+                <thead className="border-b border-black/[0.05] font-mono text-[9px] uppercase tracking-[0.12em] text-[#777777]">
+                  <tr>
+                    <th className="px-4 py-3">Holding</th>
+                    <th className="px-4 py-3">Current value</th>
+                    <th className="px-4 py-3">Gain/loss</th>
+                    <th className="px-4 py-3">Allocation</th>
+                    <th className="px-4 py-3">Last update</th>
+                    <th className="px-4 py-3">Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.holdings.map((holding) => {
+                    const asset = data.financeAssets.find((item) => item.id === holding.assetId)
+                    const costBasis = (holding.units ?? holding.quantity) * holding.averageCost
+                    const gainLoss = (holding.marketValueTHB ?? 0) - costBasis
+                    return (
+                      <tr key={holding.id} className="border-b border-black/[0.04] last:border-b-0">
+                        <td className="px-4 py-3 font-semibold">{asset?.symbol ?? holding.assetId}<p className="text-xs font-normal text-[#777777]">{asset?.name}</p></td>
+                        <td className="px-4 py-3">{thb(holding.marketValueTHB)}</td>
+                        <td className={`px-4 py-3 ${gainLoss < 0 ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{thb(gainLoss)}</td>
+                        <td className="px-4 py-3">{holding.allocationPercent ?? 0}% / target {holding.targetAllocationPercent ?? 0}%</td>
+                        <td className="px-4 py-3">{holding.lastUpdated ?? 'manual'}</td>
+                        <td className="px-4 py-3"><span className="pill">{asset?.sourceOfTruth ?? 'manual'}{holding.sourceStatus?.isStale ? ' / stale' : ''}</span></td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
             <div className="grid gap-3 lg:grid-cols-2">
               {data.holdings.map((holding) => {
                 const asset = data.financeAssets.find((item) => item.id === holding.assetId)
@@ -339,7 +444,10 @@ export const InvestmentsPage = () => {
 
           <div className="grid gap-5 lg:grid-cols-2">
             <div className="panel">
-              <div className="panel-header"><h3>DCA tracking</h3><button className="btn-primary" type="button" onClick={queueDca}>Queue DCA Approval</button></div>
+              <div className="panel-header"><h3>DCA Queue / แผนเติมเงิน</h3><button className="btn-primary" type="button" onClick={queueDca}>Queue DCA Contribution</button></div>
+              <p className="mb-3 rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3 text-xs leading-5 text-[#666666]">
+                Preview impact: next DCA จะเพิ่มประมาณ {dcaImpactPreview}% ของพอร์ตทั้งหมด หลัง approve จะสร้าง transaction, ChangeLog และ Snapshot
+              </p>
               <div className="space-y-3">
                 {data.dcaRecords.map((record) => <FinanceRow key={record.id} title={assetName(record.assetId)} meta={`${record.cadence} / ${thb(record.plannedAmountTHB)} / ${record.nextRunDate}`} status={record.status} />)}
               </div>
@@ -379,8 +487,12 @@ export const InvestmentsPage = () => {
                       <Mini label="Value" value={thb(valueTHB)} />
                       <Mini label="Alloc impact" value={`${allocation.toFixed(1)}%`} />
                     </div>
+                    <div className="mt-4 grid gap-2">
+                      <input className="input" inputMode="decimal" value={navDrafts[asset.id] ?? String(asset.nav)} onChange={(event) => setNavDrafts((current) => ({ ...current, [asset.id]: event.target.value }))} />
+                      <button className="btn-secondary" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Queue NAV Review / ตรวจ NAV</button>
+                    </div>
                     <p className="mt-3 text-xs leading-5 text-[#666666]">{asset.notes}</p>
-                    <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[#8a8176]">NAV updated {asset.updatedAt} / source {asset.sourceStatus?.mode ?? 'manual'}</p>
+                    <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[#8a8176]">NAV updated {asset.updatedAt} / source {asset.helperSource === 'fallback' ? 'sheet-ready' : 'manual'} / {asset.stale ? 'stale' : 'reviewed'}</p>
                   </article>
                 )
               })}
