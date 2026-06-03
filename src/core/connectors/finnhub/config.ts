@@ -1,7 +1,7 @@
 ﻿export const finnhubConfig = {
   apiKey: import.meta.env.VITE_FINNHUB_API_KEY as string | undefined,
   timeoutMs: 8000,
-  supportedSymbols: ['VOO', 'SCHD', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'AVGO', 'PLTR', 'MRVL', 'RBRK', 'ABBV', 'JEPQ'],
+  supportedSymbols: ['TSLA', 'VOO', 'SCHD', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'AVGO', 'PLTR', 'MRVL', 'RBRK', 'ABBV', 'JEPQ'],
   thbPerUsd: 36.5,
 }
 

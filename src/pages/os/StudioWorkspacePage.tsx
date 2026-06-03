@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+﻿import { useMemo, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
@@ -458,6 +458,7 @@ const TimelineView = ({
   const [phaseFilter, setPhaseFilter] = useState('all')
   const [riskFilter, setRiskFilter] = useState('all')
   const [viewWindow, setViewWindow] = useState<'month' | 'quarter'>('quarter')
+  const [expandedPlanning, setExpandedPlanning] = useState(false)
 
   const windowStart = new Date(viewWindow === 'month' ? '2026-06-01T00:00:00.000Z' : '2026-06-01T00:00:00.000Z')
   const windowEnd = new Date(viewWindow === 'month' ? '2026-06-30T00:00:00.000Z' : '2026-08-31T00:00:00.000Z')
@@ -515,12 +516,12 @@ const TimelineView = ({
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
                 Studio Timeline / overlap planning
               </p>
-              <h3>Calendar planning board / แผนงานรวม</h3>
+              <h3>Calendar planning board</h3>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#666666]">
-                Linear roadmap สำหรับ design, construction, handover, opening, blockers และ workload overlap.
+                Linear roadmap for design, construction, handover, opening, blockers, and workload overlap.
               </p>
             </div>
-            <span className="pill">{visiblePhases.length} phase rows / แถวงาน</span>
+            <span className="pill">{visiblePhases.length} phase rows</span>
           </div>
 
           <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_1fr_1fr_auto]">
@@ -546,12 +547,15 @@ const TimelineView = ({
               <button className={viewWindow === 'quarter' ? 'btn-primary' : 'btn-secondary'} type="button" onClick={() => setViewWindow('quarter')}>
                 Q view
               </button>
+              <button className={expandedPlanning ? 'btn-primary' : 'btn-secondary'} type="button" onClick={() => setExpandedPlanning((current) => !current)}>
+                {expandedPlanning ? 'Close expanded view' : 'Expand planning view'}
+              </button>
             </div>
           </div>
 
           <div className="mb-5 rounded-[28px] border border-black/[0.05] bg-white/75 p-4">
             <div className="mb-3 flex items-center justify-between gap-4">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Planning Roadmap / ภาพรวมเดือน</p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Planning Roadmap</p>
               <span className="pill">overlap visible</span>
             </div>
             <div className="flex min-h-24 items-stretch gap-2 overflow-x-auto pb-1">
@@ -568,6 +572,53 @@ const TimelineView = ({
               })}
             </div>
           </div>
+
+          {expandedPlanning ? (
+            <div className="mb-5 rounded-[32px] border border-black/[0.06] bg-white/90 p-4 shadow-[0_26px_70px_rgba(0,0,0,0.08)]">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Expanded planning view</p>
+                  <h3 className="mt-2 text-2xl font-bold">Overlap reading surface</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#666666]">A wider roadmap view for reading project phase collisions, milestone clusters, and blocked approvals without changing the normal planning board.</p>
+                </div>
+                <button className="btn-secondary" type="button" onClick={() => setExpandedPlanning(false)}>Close expanded view</button>
+              </div>
+              <div className="overflow-x-auto pb-2">
+                <div className="min-w-[1380px] rounded-[30px] border border-black/[0.05] bg-[#faf9f8] p-5">
+                  <div className="grid grid-cols-[240px_1fr] gap-5">
+                    <div />
+                    <div className="relative grid grid-cols-6 gap-2">
+                      {buildAxisLabels(viewWindow).map((label) => (
+                        <div key={`expanded-${label}`} className="rounded-2xl bg-white/80 px-3 py-3 text-center font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">
+                          {label}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
+                      Today / 03 Jun
+                    </div>
+                    <div className="relative h-6">
+                      <div className="absolute top-0 h-full w-px bg-[#111111]" style={{ left: `${todayOffset}%` }} />
+                      <div className="absolute -top-1 rounded-full bg-[#111111] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em] text-white" style={{ left: `${todayOffset}%`, transform: 'translateX(-50%)' }}>
+                        today
+                      </div>
+                    </div>
+                    {projectRows.map(({ milestones, project, phases: rowPhases }) => (
+                      <ProjectTimelineRow
+                        key={`expanded-${project.id}`}
+                        milestones={milestones}
+                        onPhaseReview={onPhaseReview}
+                        phases={rowPhases}
+                        project={project}
+                        totalDays={totalDays}
+                        windowStart={windowStart}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <div className="overflow-x-auto pb-2">
             <div className="min-w-[980px] rounded-[30px] border border-black/[0.05] bg-[#faf9f8] p-4">

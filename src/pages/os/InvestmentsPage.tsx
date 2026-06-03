@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from 'react'
+﻿import { type ReactNode, useMemo, useState } from 'react'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
@@ -19,12 +19,38 @@ type ManualAssetDraft = {
   assetType: 'us-equity-etf' | 'thai-stock' | 'thai-mutual-fund' | 'thai-rmf' | 'cash' | 'other'
   units: string
   avgCost: string
-  manualContribution: string
+  manualContributionTHB: string
+  manualContributionUSD: string
   currency: 'THB' | 'USD'
   transactionDate: string
   notes: string
   tags: string
 }
+
+type AssetSuggestion = {
+  symbol: string
+  name: string
+  assetType: ManualAssetDraft['assetType']
+  currency: ManualAssetDraft['currency']
+  market: string
+  sourceLabel: string
+}
+
+const commonAssetSuggestions: AssetSuggestion[] = [
+  { symbol: 'TSLA', name: 'Tesla, Inc.', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'VOO', name: 'Vanguard S&P 500 ETF', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'SCHD', name: 'Schwab US Dividend Equity ETF', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'MSFT', name: 'Microsoft Corporation', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'AMZN', name: 'Amazon.com, Inc.', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'NVDA', name: 'NVIDIA Corporation', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'AVGO', name: 'Broadcom Inc.', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'PLTR', name: 'Palantir Technologies', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'MRVL', name: 'Marvell Technology', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'RBRK', name: 'Rubrik, Inc.', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'ABBV', name: 'AbbVie Inc.', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+  { symbol: 'JEPQ', name: 'JPMorgan Nasdaq Equity Premium Income ETF', assetType: 'us-equity-etf', currency: 'USD', market: 'US', sourceLabel: 'Finnhub helper eligible' },
+]
 
 const initialManualAssetDraft: ManualAssetDraft = {
   symbol: 'K-US500XRMF',
@@ -32,7 +58,8 @@ const initialManualAssetDraft: ManualAssetDraft = {
   assetType: 'thai-rmf',
   units: '100',
   avgCost: '14.86',
-  manualContribution: '',
+  manualContributionTHB: '',
+  manualContributionUSD: '',
   currency: 'THB',
   transactionDate: '2026-06-03',
   notes: 'Manual first. NAV/Finnhub helper data cannot create or overwrite holdings.',
@@ -62,6 +89,7 @@ export const InvestmentsPage = () => {
   const supportedMarketSymbols = getSupportedFinnhubSymbols()
   const [manualAssetDraft, setManualAssetDraft] = useState<ManualAssetDraft>(initialManualAssetDraft)
   const [showAssetModal, setShowAssetModal] = useState(false)
+  const [showAssetSuggestions, setShowAssetSuggestions] = useState(false)
   const [navDrafts, setNavDrafts] = useState<Record<string, string>>({})
   const normalizedDraftSymbol = manualAssetDraft.symbol.trim().toUpperCase()
   const helperMarketRow = marketSymbols.find((symbol) => symbol.symbol === normalizedDraftSymbol)
@@ -69,26 +97,40 @@ export const InvestmentsPage = () => {
   const isThaiAsset = manualAssetDraft.assetType.startsWith('thai')
   const helperSource = isThaiAsset ? (helperNavRow?.helperSource ?? 'manual-nav') : supportedMarketSymbols.includes(normalizedDraftSymbol) ? 'finnhub' : 'none'
   const assetSuggestions = useMemo(() => {
+    const thaiSuggestions: AssetSuggestion[] = data.thaiNavAssets.map((asset) => ({
+      symbol: asset.symbol,
+      name: asset.displayName ?? asset.symbol,
+      assetType: asset.symbol.includes('RMF') ? 'thai-rmf' : 'thai-mutual-fund',
+      currency: 'THB',
+      market: 'TH',
+      sourceLabel: 'Thai NAV manual helper',
+    }))
+    const manualSuggestions: AssetSuggestion[] = [
+      { symbol: 'CASH-THB', name: 'Manual THB cash reserve', assetType: 'cash', currency: 'THB', market: 'Manual', sourceLabel: 'Manual sheet-ready row' },
+    ]
     const query = normalizedDraftSymbol
-    return [
-      ...supportedMarketSymbols.map((symbol) => ({ symbol, label: `${symbol} / Finnhub helper only`, assetType: 'us-equity-etf' as const, currency: 'USD' as const })),
-      ...data.thaiNavAssets.map((asset) => ({ symbol: asset.symbol, label: `${asset.symbol} / Thai NAV helper`, assetType: asset.symbol.includes('RMF') ? 'thai-rmf' as const : 'thai-mutual-fund' as const, currency: 'THB' as const })),
-      { symbol: 'CASH-THB', label: 'CASH-THB / manual cash reserve', assetType: 'cash' as const, currency: 'THB' as const },
-    ].filter((item) => !query || item.symbol.includes(query)).slice(0, 6)
-  }, [data.thaiNavAssets, normalizedDraftSymbol, supportedMarketSymbols])
+    return [...commonAssetSuggestions, ...thaiSuggestions, ...manualSuggestions]
+      .filter((item) => !query || item.symbol.includes(query) || item.name.toUpperCase().includes(query))
+      .slice(0, 8)
+  }, [data.thaiNavAssets, normalizedDraftSymbol])
+
   const manualPreview = useMemo(() => {
     const units = Number(manualAssetDraft.units) || 0
     const avgCost = Number(manualAssetDraft.avgCost) || 0
-    const manualContribution = Number(manualAssetDraft.manualContribution) || units * avgCost
+    const amountTHB = Number(manualAssetDraft.manualContributionTHB) || 0
+    const amountUSD = Number(manualAssetDraft.manualContributionUSD) || 0
+    const fallbackNativeContribution = units * avgCost
+    const fallbackTHB = manualAssetDraft.currency === 'USD' ? fallbackNativeContribution * usdToThb : fallbackNativeContribution
+    const costBasisTHB = amountTHB || (amountUSD ? amountUSD * usdToThb : fallbackTHB)
     const helperPrice = isThaiAsset ? helperNavRow?.nav : helperMarketRow?.delayedPriceTHB
-    const helperValue = helperPrice ? units * helperPrice : 0
-    const costBasisTHB = manualAssetDraft.currency === 'USD' ? manualContribution * usdToThb : manualContribution
-    const currentValueTHB = helperValue ? (manualAssetDraft.currency === 'USD' && !isThaiAsset ? helperValue : helperValue) : costBasisTHB
+    const helperValueTHB = helperPrice ? units * helperPrice : 0
+    const currentValueTHB = helperValueTHB || costBasisTHB
     const allocationImpact = totalValue > 0 ? (currentValueTHB / (totalValue + currentValueTHB)) * 100 : 100
     return {
       units,
       avgCost,
-      manualContribution,
+      manualContributionTHB: costBasisTHB,
+      manualContributionUSD: amountUSD || (manualAssetDraft.currency === 'USD' ? fallbackNativeContribution : 0),
       helperPrice,
       costBasisTHB,
       currentValueTHB,
@@ -97,6 +139,7 @@ export const InvestmentsPage = () => {
       missingDataWarning: !helperPrice ? 'No helper price/NAV found. Manual cost basis will be used until helper data is reviewed.' : undefined,
     }
   }, [helperMarketRow, helperNavRow, isThaiAsset, manualAssetDraft, totalValue])
+
   const holdingsByCategory = data.financeAssets.reduce<Record<string, number>>((acc, asset) => {
     const value = data.holdings.filter((holding) => holding.assetId === asset.id).reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
     acc[asset.category] = (acc[asset.category] ?? 0) + value
@@ -122,8 +165,15 @@ export const InvestmentsPage = () => {
     setManualAssetDraft((current) => ({ ...current, [field]: value }))
   }
 
-  const applySuggestion = (suggestion: { symbol: string; label: string; assetType: ManualAssetDraft['assetType']; currency: ManualAssetDraft['currency'] }) => {
-    setManualAssetDraft((current) => ({ ...current, symbol: suggestion.symbol, displayName: suggestion.label.split(' / ')[0], assetType: suggestion.assetType, currency: suggestion.currency }))
+  const applySuggestion = (suggestion: AssetSuggestion) => {
+    setManualAssetDraft((current) => ({
+      ...current,
+      symbol: suggestion.symbol,
+      displayName: suggestion.name,
+      assetType: suggestion.assetType,
+      currency: suggestion.currency,
+    }))
+    setShowAssetSuggestions(false)
   }
 
   const queueManualAssetAdd = () => {
@@ -137,7 +187,9 @@ export const InvestmentsPage = () => {
         symbol: normalizedDraftSymbol,
         units: manualPreview.units,
         avgCost: manualPreview.avgCost,
-        manualContribution: manualPreview.manualContribution,
+        manualContribution: manualPreview.manualContributionTHB,
+        manualContributionTHB: manualPreview.manualContributionTHB,
+        manualContributionUSD: manualPreview.manualContributionUSD,
         currentHelperPrice: manualPreview.helperPrice,
         helperSource,
         sourceOfTruth: 'manual',
@@ -192,17 +244,90 @@ export const InvestmentsPage = () => {
     })
   }
 
+  const renderAssetInputs = (compact = false) => (
+    <article className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
+      <div className="grid gap-3 md:grid-cols-2">
+        <Field label="Ticker / name">
+          <div className="relative">
+            <input
+              className="input"
+              value={manualAssetDraft.symbol}
+              onChange={(event) => {
+                updateManualAssetDraft('symbol', event.target.value.toUpperCase())
+                setShowAssetSuggestions(true)
+              }}
+              onFocus={() => setShowAssetSuggestions(true)}
+              placeholder="Type TSLA, VOO, K-US500XRMF..."
+            />
+            {showAssetSuggestions ? (
+              <div className="absolute left-0 right-0 top-[calc(100%+0.45rem)] z-20 max-h-72 overflow-y-auto rounded-[22px] border border-black/[0.08] bg-white p-2 shadow-[0_24px_60px_rgba(0,0,0,0.14)]">
+                {assetSuggestions.length > 0 ? assetSuggestions.map((suggestion) => (
+                  <button
+                    key={`${suggestion.symbol}-${suggestion.market}`}
+                    className="w-full rounded-2xl px-3 py-2 text-left transition hover:bg-[#faf9f8]"
+                    type="button"
+                    onClick={() => applySuggestion(suggestion)}
+                  >
+                    <span className="block text-sm font-bold">{suggestion.symbol} <span className="font-normal text-[#777777]">/ {suggestion.name}</span></span>
+                    <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.12em] text-[#777777]">{suggestion.market} / {suggestion.currency} / {suggestion.sourceLabel}</span>
+                  </button>
+                )) : <p className="px-3 py-2 text-xs text-[#777777]">No suggestion. Manual symbol entry is allowed.</p>}
+              </div>
+            ) : null}
+          </div>
+        </Field>
+        <Field label="Display name"><input className="input" value={manualAssetDraft.displayName} onChange={(event) => updateManualAssetDraft('displayName', event.target.value)} /></Field>
+        <Field label="Asset type"><select className="input" value={manualAssetDraft.assetType} onChange={(event) => updateManualAssetDraft('assetType', event.target.value)}><option value="us-equity-etf">US equity / ETF</option><option value="thai-stock">Thai stock</option><option value="thai-mutual-fund">Thai mutual fund</option><option value="thai-rmf">Thai RMF</option><option value="cash">Cash</option><option value="other">Other</option></select></Field>
+        <Field label="Currency"><select className="input" value={manualAssetDraft.currency} onChange={(event) => updateManualAssetDraft('currency', event.target.value)}><option value="THB">THB</option><option value="USD">USD</option></select></Field>
+        <Field label="Units"><input className="input" inputMode="decimal" value={manualAssetDraft.units} onChange={(event) => updateManualAssetDraft('units', event.target.value)} /></Field>
+        <Field label="Average cost"><input className="input" inputMode="decimal" value={manualAssetDraft.avgCost} onChange={(event) => updateManualAssetDraft('avgCost', event.target.value)} /></Field>
+        <Field label="Amount invested THB"><input className="input" inputMode="decimal" placeholder="Manual THB amount" value={manualAssetDraft.manualContributionTHB} onChange={(event) => updateManualAssetDraft('manualContributionTHB', event.target.value)} /></Field>
+        <Field label="Amount invested USD"><input className="input" inputMode="decimal" placeholder="Manual USD amount" value={manualAssetDraft.manualContributionUSD} onChange={(event) => updateManualAssetDraft('manualContributionUSD', event.target.value)} /></Field>
+        <Field label="Source"><input className="input" value={helperSource} readOnly /></Field>
+        <Field label="Contribution date"><input className="input" type="date" value={manualAssetDraft.transactionDate} onChange={(event) => updateManualAssetDraft('transactionDate', event.target.value)} /></Field>
+      </div>
+      <Field label="Note"><textarea className="input min-h-20" value={manualAssetDraft.notes} onChange={(event) => updateManualAssetDraft('notes', event.target.value)} /></Field>
+      {!compact ? <Field label="Tags / category"><input className="input" value={manualAssetDraft.tags} onChange={(event) => updateManualAssetDraft('tags', event.target.value)} /></Field> : null}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {assetSuggestions.slice(0, 6).map((suggestion) => <button key={suggestion.symbol} className="btn-secondary" type="button" onClick={() => applySuggestion(suggestion)}>{suggestion.symbol}</button>)}
+      </div>
+    </article>
+  )
+
+  const renderApprovalPreview = (withSubmit = false) => (
+    <article className="rounded-[28px] border border-black/[0.05] bg-white/80 p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-lg font-bold">Preview before approval</p>
+          <p className="mt-2 text-sm leading-6 text-[#666666]">Draft only. The holding is created only after approval through ActionRequest and the mock Sheet adapter.</p>
+        </div>
+        <span className="pill">source: manual</span>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <Mini label="Cost basis" value={thb(manualPreview.costBasisTHB)} />
+        <Mini label="Current value" value={thb(manualPreview.currentValueTHB)} />
+        <Mini label="Helper source" value={helperSource} />
+        <Mini label="Allocation impact" value={`${manualPreview.allocationImpact.toFixed(1)}%`} />
+        <Mini label="DCA impact" value={manualPreview.dcaImpact} />
+        <Mini label="Source status" value={isThaiAsset ? 'Thai NAV/manual sheet helper' : 'Finnhub helper for US only'} />
+      </div>
+      {manualPreview.missingDataWarning ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-[#fffaf4] p-3 text-xs leading-5 text-[#9a4f18]">{manualPreview.missingDataWarning}</p> : null}
+      <p className="mt-4 text-xs leading-5 text-[#666666]">Finnhub remains helper-only for US assets. It never overwrites units, average cost, allocation, manual notes, or Thai NAV rows.</p>
+      {withSubmit ? <button className="btn-primary mt-5 w-full" type="button" onClick={queueManualAssetAdd}>Queue for Approval</button> : null}
+    </article>
+  )
+
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Investments / early Aequitas core</p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Portfolio room / ห้องลงทุน THB-first.</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Manual portfolio คือ source of truth. Finnhub และ Thai NAV เป็น helper เท่านั้น ไม่มี broker execution และไม่มี auto trading.</p>
+            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Investments / Stocks</h2>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Manual portfolio input is the source of truth. Finnhub and Thai NAV are helper sources only. No broker execution, no auto trading, and no helper source can overwrite Por's manual records.</p>
           </div>
           <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">AI allocation note / อ่านภาพรวม</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">AI allocation note</p>
             <p className="mt-4 text-xl font-semibold leading-snug">Growth sleeve is slightly crowded.</p>
             <p className="mt-3 text-sm leading-6 text-[#666666]">NVDA and PLTR sit above target. Approve core DCA first, then resolve drift before adding more satellite risk.</p>
           </div>
@@ -212,17 +337,17 @@ export const InvestmentsPage = () => {
           <SourceStatusBadge status={sourceStatuses.finnhub} />
           <Metric label="Total THB" value={thb(totalValue)} />
           <Metric label="Dividend estimate" value={thb(expectedDividends)} />
-          <Metric label="Drift / ต้องดู" value={driftHoldings.length} />
+          <Metric label="Drift reviews" value={driftHoldings.length} />
         </div>
       </header>
 
-      <section className="panel panel-float editorial-thai">
+      <section className="panel panel-float">
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Portfolio Summary / ภาพรวมพอร์ต</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Portfolio Summary</p>
             <h3>Manual wealth notebook</h3>
           </div>
-          <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Add Asset / เพิ่มสินทรัพย์</button>
+          <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Add Asset</button>
         </div>
         <div className="grid gap-3 md:grid-cols-5">
           <Metric label="Total THB" value={thb(totalValue)} />
@@ -231,45 +356,22 @@ export const InvestmentsPage = () => {
           <Metric label="Risk posture" value={`${riskPosture} high-risk rows`} />
           <Metric label="Allocation groups" value={Object.keys(holdingsByCategory).length} />
         </div>
-        <p className="mt-4 text-sm leading-6 text-[#666666]">พอร์ตนี้อ่านแบบ manual-first: helper price ใช้ช่วยประเมิน แต่ไม่ทับ units, avg cost, allocation หรือ notes ที่ Por ใส่เอง</p>
+        <p className="mt-4 text-sm leading-6 text-[#666666]">Portfolio rows stay manual-first. Helper prices help estimate value, but never overwrite units, average cost, allocation, or notes entered by Por.</p>
       </section>
 
       {showAssetModal ? (
         <div className="modal-scrim">
-          <div className="modal-panel editorial-thai">
+          <div className="modal-panel">
             <div className="panel-header">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Add Asset Modal / เพิ่มสินทรัพย์</p>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Add Asset Modal</p>
                 <h3>Preview before approval</h3>
               </div>
               <button className="btn-secondary" type="button" onClick={() => setShowAssetModal(false)}>Close</button>
             </div>
             <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
-              <article className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Field label="Ticker"><input className="input" value={manualAssetDraft.symbol} onChange={(event) => updateManualAssetDraft('symbol', event.target.value)} /></Field>
-                  <Field label="Name"><input className="input" value={manualAssetDraft.displayName} onChange={(event) => updateManualAssetDraft('displayName', event.target.value)} /></Field>
-                  <Field label="Asset type"><select className="input" value={manualAssetDraft.assetType} onChange={(event) => updateManualAssetDraft('assetType', event.target.value)}><option value="us-equity-etf">US equity / ETF</option><option value="thai-stock">Thai stock</option><option value="thai-mutual-fund">Thai mutual fund</option><option value="thai-rmf">Thai RMF</option><option value="cash">Cash</option><option value="other">Other</option></select></Field>
-                  <Field label="Currency"><select className="input" value={manualAssetDraft.currency} onChange={(event) => updateManualAssetDraft('currency', event.target.value)}><option value="THB">THB</option><option value="USD">USD</option></select></Field>
-                  <Field label="Units"><input className="input" inputMode="decimal" value={manualAssetDraft.units} onChange={(event) => updateManualAssetDraft('units', event.target.value)} /></Field>
-                  <Field label="Avg cost"><input className="input" inputMode="decimal" value={manualAssetDraft.avgCost} onChange={(event) => updateManualAssetDraft('avgCost', event.target.value)} /></Field>
-                  <Field label="Source"><input className="input" value={helperSource} readOnly /></Field>
-                  <Field label="Contribution date"><input className="input" type="date" value={manualAssetDraft.transactionDate} onChange={(event) => updateManualAssetDraft('transactionDate', event.target.value)} /></Field>
-                </div>
-                <Field label="Note"><textarea className="input min-h-20" value={manualAssetDraft.notes} onChange={(event) => updateManualAssetDraft('notes', event.target.value)} /></Field>
-                <div className="mt-4 flex flex-wrap gap-2">{assetSuggestions.map((suggestion) => <button key={suggestion.symbol} className="btn-secondary" type="button" onClick={() => applySuggestion(suggestion)}>{suggestion.symbol}</button>)}</div>
-              </article>
-              <article className="rounded-[28px] border border-black/[0.05] bg-white/80 p-5">
-                <p className="text-lg font-bold">Approval preview / ตรวจทานก่อนอนุมัติ</p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <Mini label="Estimated THB" value={thb(manualPreview.currentValueTHB)} />
-                  <Mini label="Allocation %" value={`${manualPreview.allocationImpact.toFixed(1)}%`} />
-                  <Mini label="Source label" value={helperSource} />
-                  <Mini label="Manual notice" value="requires approval" />
-                </div>
-                {manualPreview.missingDataWarning ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-[#fffaf4] p-3 text-xs leading-5 text-[#9a4f18]">{manualPreview.missingDataWarning}</p> : null}
-                <button className="btn-primary mt-5 w-full" type="button" onClick={queueManualAssetAdd}>Queue for Approval / ส่งเข้า Approval Queue</button>
-              </article>
+              {renderAssetInputs(true)}
+              {renderApprovalPreview(true)}
             </div>
           </div>
         </div>
@@ -283,45 +385,11 @@ export const InvestmentsPage = () => {
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Manual source of truth</p>
                 <h3>Add asset to early Aequitas ledger</h3>
               </div>
-              <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal / เพิ่ม</button>
+              <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal</button>
             </div>
             <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-              <article className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <Field label="Asset / ticker"><input className="input" value={manualAssetDraft.symbol} onChange={(event) => updateManualAssetDraft('symbol', event.target.value)} /></Field>
-                  <Field label="Display name"><input className="input" value={manualAssetDraft.displayName} onChange={(event) => updateManualAssetDraft('displayName', event.target.value)} /></Field>
-                  <Field label="Asset type"><select className="input" value={manualAssetDraft.assetType} onChange={(event) => updateManualAssetDraft('assetType', event.target.value)}><option value="us-equity-etf">US equity / ETF</option><option value="thai-stock">Thai stock</option><option value="thai-mutual-fund">Thai mutual fund</option><option value="thai-rmf">Thai RMF</option><option value="cash">Cash</option><option value="other">Other</option></select></Field>
-                  <Field label="Currency"><select className="input" value={manualAssetDraft.currency} onChange={(event) => updateManualAssetDraft('currency', event.target.value)}><option value="THB">THB</option><option value="USD">USD</option></select></Field>
-                  <Field label="Units"><input className="input" inputMode="decimal" value={manualAssetDraft.units} onChange={(event) => updateManualAssetDraft('units', event.target.value)} /></Field>
-                  <Field label="Average cost"><input className="input" inputMode="decimal" value={manualAssetDraft.avgCost} onChange={(event) => updateManualAssetDraft('avgCost', event.target.value)} /></Field>
-                  <Field label="Contribution"><input className="input" inputMode="decimal" placeholder="auto from units x avg" value={manualAssetDraft.manualContribution} onChange={(event) => updateManualAssetDraft('manualContribution', event.target.value)} /></Field>
-                  <Field label="Transaction date"><input className="input" type="date" value={manualAssetDraft.transactionDate} onChange={(event) => updateManualAssetDraft('transactionDate', event.target.value)} /></Field>
-                </div>
-                <Field label="Notes"><textarea className="input min-h-20" value={manualAssetDraft.notes} onChange={(event) => updateManualAssetDraft('notes', event.target.value)} /></Field>
-                <Field label="Tags / category"><input className="input" value={manualAssetDraft.tags} onChange={(event) => updateManualAssetDraft('tags', event.target.value)} /></Field>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {assetSuggestions.map((suggestion) => <button key={suggestion.symbol} className="btn-secondary" type="button" onClick={() => applySuggestion(suggestion)}>{suggestion.symbol}</button>)}
-                </div>
-              </article>
-              <article className="rounded-[28px] border border-black/[0.05] bg-white/80 p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-lg font-bold">Preview before approval</p>
-                    <p className="mt-2 text-sm leading-6 text-[#666666]">This preview is draft-only. The portfolio row is created only after approval through the mock Sheet adapter.</p>
-                  </div>
-                  <span className="pill">source: manual</span>
-                </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <Mini label="Cost basis" value={thb(manualPreview.costBasisTHB)} />
-                  <Mini label="Current value" value={thb(manualPreview.currentValueTHB)} />
-                  <Mini label="Helper source" value={helperSource} />
-                  <Mini label="Allocation impact" value={`${manualPreview.allocationImpact.toFixed(1)}%`} />
-                  <Mini label="DCA impact" value={manualPreview.dcaImpact} />
-                  <Mini label="Source status" value={isThaiAsset ? 'Thai NAV/manual sheet helper' : 'Finnhub helper for US only'} />
-                </div>
-                {manualPreview.missingDataWarning ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-[#fffaf4] p-3 text-xs leading-5 text-[#9a4f18]">{manualPreview.missingDataWarning}</p> : null}
-                <p className="mt-4 text-xs leading-5 text-[#666666]">Finnhub and Thai NAV may enrich helper price fields, but they never create holdings or overwrite units, average cost, allocation targets, or manual holding records.</p>
-              </article>
+              {renderAssetInputs()}
+              {renderApprovalPreview()}
             </div>
           </div>
 
@@ -444,9 +512,9 @@ export const InvestmentsPage = () => {
 
           <div className="grid gap-5 lg:grid-cols-2">
             <div className="panel">
-              <div className="panel-header"><h3>DCA Queue / แผนเติมเงิน</h3><button className="btn-primary" type="button" onClick={queueDca}>Queue DCA Contribution</button></div>
+              <div className="panel-header"><h3>DCA Queue</h3><button className="btn-primary" type="button" onClick={queueDca}>Queue DCA Contribution</button></div>
               <p className="mb-3 rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3 text-xs leading-5 text-[#666666]">
-                Preview impact: next DCA จะเพิ่มประมาณ {dcaImpactPreview}% ของพอร์ตทั้งหมด หลัง approve จะสร้าง transaction, ChangeLog และ Snapshot
+                Preview impact: the next DCA adds about {dcaImpactPreview}% of the current portfolio after approval. Approval creates a transaction, ChangeLog, and Snapshot.
               </p>
               <div className="space-y-3">
                 {data.dcaRecords.map((record) => <FinanceRow key={record.id} title={assetName(record.assetId)} meta={`${record.cadence} / ${thb(record.plannedAmountTHB)} / ${record.nextRunDate}`} status={record.status} />)}
@@ -489,7 +557,7 @@ export const InvestmentsPage = () => {
                     </div>
                     <div className="mt-4 grid gap-2">
                       <input className="input" inputMode="decimal" value={navDrafts[asset.id] ?? String(asset.nav)} onChange={(event) => setNavDrafts((current) => ({ ...current, [asset.id]: event.target.value }))} />
-                      <button className="btn-secondary" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Queue NAV Review / ตรวจ NAV</button>
+                      <button className="btn-secondary" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Queue NAV Review</button>
                     </div>
                     <p className="mt-3 text-xs leading-5 text-[#666666]">{asset.notes}</p>
                     <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[#8a8176]">NAV updated {asset.updatedAt} / source {asset.helperSource === 'fallback' ? 'sheet-ready' : 'manual'} / {asset.stale ? 'stale' : 'reviewed'}</p>
@@ -499,6 +567,7 @@ export const InvestmentsPage = () => {
             </div>
             <p className="mt-4 rounded-2xl border border-black/[0.04] bg-white/75 p-3 text-xs leading-5 text-[#666666]">Thai funds, RMF, and local NAV assets use manual NAV now and a future Google Sheet NAV bridge later. They never use Finnhub and never create holdings automatically.</p>
           </div>
+
           <div className="panel">
             <div className="panel-header"><h3>Allocation grouping</h3><span className="pill">THB posture</span></div>
             <div className="grid gap-3 md:grid-cols-4">
@@ -550,14 +619,6 @@ const FinanceRow = ({ meta, status, title }: { meta: string; status: string; tit
     </div>
   </div>
 )
-
-
-
-
-
-
-
-
 
 const Field = ({ children, label }: { children: ReactNode; label: string }) => (
   <label className="mt-3 block">

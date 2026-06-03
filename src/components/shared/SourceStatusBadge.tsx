@@ -13,13 +13,11 @@ export const SourceStatusBadge = ({ status }: { status: SourceStatus }) => {
     <div className="rounded-2xl border border-[#dfd8cc] bg-white/85 px-4 py-3 text-sm text-[#2c2924]">
       <div className="flex items-center justify-between gap-3">
         <span className="font-semibold">{status.sourceName}</span>
-        <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase tracking-wide ${modeStyle}`}>
-          {status.mode}
-        </span>
+        <span className={`rounded-full px-2 py-1 text-xs font-semibold uppercase tracking-wide ${modeStyle}`}>{status.mode}</span>
       </div>
-      <div className="mt-2 text-xs text-[#6e675d]">Last synced / อัปเดตล่าสุด: {formatDateTime(status.lastSyncedAt)}</div>
+      <div className="mt-2 text-xs text-[#6e675d]">Last synced: {formatDateTime(status.lastSyncedAt)}</div>
       <div className={`mt-1 text-xs font-medium ${status.isStale ? 'text-amber-700' : 'text-emerald-700'}`}>
-        {status.isStale ? 'ข้อมูล stale / ต้อง review source' : 'ล่าสุด synced ผ่าน Mock Source'}
+        {status.isStale ? 'Stale source row requires review' : 'Latest mock source sync'}
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {status.health ? <span className="rounded-full bg-[#faf9f8] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-[#6e675d]">{status.health}</span> : null}
@@ -30,4 +28,3 @@ export const SourceStatusBadge = ({ status }: { status: SourceStatus }) => {
     </div>
   )
 }
-
