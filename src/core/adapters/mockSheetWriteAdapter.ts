@@ -305,6 +305,26 @@ export const mockSheetWriteAdapter = (
     statusMap.familyOffice = { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false }
   }
 
+  if (request.actionType === 'finance.addFamilyLedgerRecord') {
+    const amountTHB = Number(request.payload.amountTHB ?? 0)
+    nextData.financeLedgerRows.unshift({
+      id: generateId('ledger'),
+      accountId: 'acct-family-core',
+      category: String(request.payload.category ?? 'expense') as 'studio-income' | 'project-payment' | 'subscription' | 'equipment' | 'debt' | 'reserve-transfer' | 'expense',
+      label: String(request.payload.label ?? 'Manual family office ledger row'),
+      amountTHB,
+      direction: String(request.payload.direction ?? 'outflow') as 'inflow' | 'outflow',
+      occurredAt: String(request.payload.occurredAt ?? now.slice(0, 10)),
+      status: 'review',
+      sourceStatus: statusMap.familyOffice,
+      lastUpdated: now.slice(0, 10),
+      notes: String(request.payload.notes ?? 'Created from MVP manual ledger action.'),
+      risk: String(request.payload.risk ?? 'low') as 'low' | 'medium' | 'high',
+      tags: ['manual-ledger', 'mvp-action'],
+    })
+    statusMap.familyOffice = { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false, syncState: 'idle' }
+  }
+
   if (request.actionType === 'trading.addSignal') {
     const signal: TradingSignal = {
       id: generateId('signal'),
@@ -315,6 +335,20 @@ export const mockSheetWriteAdapter = (
     }
     nextData.tradingSignals.unshift(signal)
     statusMap.tradingLab = { ...statusMap.tradingLab, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'trading.addStrategyNote') {
+    nextData.tradingStrategyNotes.unshift({
+      id: generateId('strategy'),
+      title: String(request.payload.title ?? 'Manual paper strategy note'),
+      note: String(request.payload.note ?? 'Sandbox journal note only. No broker execution.'),
+      riskLevel: String(request.payload.riskLevel ?? 'medium') as 'low' | 'medium' | 'high',
+      status: 'active',
+      sourceStatus: statusMap.tradingLab,
+      lastUpdated: now.slice(0, 10),
+      tags: ['manual-strategy', 'paper-only'],
+    })
+    statusMap.tradingLab = { ...statusMap.tradingLab, lastSyncedAt: now, isStale: false, syncState: 'idle' }
   }
 
   if (request.actionType === 'trading.approvePaperTradeNote') {
@@ -343,6 +377,27 @@ export const mockSheetWriteAdapter = (
       item.id === suggestionId ? { ...item, status: 'approved' } : item,
     )
     statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'ai.exportContext') {
+    nextData.aiExports.unshift({
+      id: generateId('aiexp'),
+      module: String(request.payload.moduleName ?? 'combined') as 'studio' | 'finance' | 'timeline' | 'trading-lab' | 'combined',
+      title: String(request.payload.title ?? 'Manual MVP context export'),
+      sourceIds: Array.isArray(request.payload.sourceIds) ? request.payload.sourceIds.map(String) : ['manual-mvp-export'],
+      snapshotId: request.id,
+      createdAt: now,
+      sourceStatus: statusMap.aiWorkflow,
+      summary: String(request.payload.summary ?? 'Manual context export prepared for Jarvis B handoff.'),
+      jsonPreview: JSON.stringify({ mode: 'manual-export', source: 'mvp-interaction', createdAt: now }),
+      handoffNotes: 'User manually copies this context to Jarvis B. No AI API call is made.',
+      confidence: 70,
+      reviewStatus: 'exported',
+      approvedBy: request.requestedBy,
+      notes: 'Created from approved AI context export action.',
+      tags: ['manual-export', 'mvp-action'],
+    })
+    statusMap.aiWorkflow = { ...statusMap.aiWorkflow, lastSyncedAt: now, isStale: false, syncState: 'idle' }
   }
 
   if (request.actionType === 'ai.approveImportReview') {

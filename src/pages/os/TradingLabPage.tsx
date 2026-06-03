@@ -57,6 +57,19 @@ export const TradingLabPage = () => {
     })
   }
 
+  const queueStrategyNote = () => {
+    createActionRequest({
+      module: 'trading',
+      actionType: 'trading.addStrategyNote',
+      description: 'Add manual paper strategy note',
+      payload: {
+        title: 'Manual sandbox risk note',
+        note: 'Keep the next signal as observation-only until one existing paper thesis is reviewed.',
+        riskLevel: 'medium',
+      },
+    })
+  }
+
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
@@ -106,7 +119,7 @@ export const TradingLabPage = () => {
 
           <div className="grid gap-5 lg:grid-cols-2">
             <div className="panel">
-              <div className="panel-header"><h3>Strategy journal</h3><button className="btn-secondary" type="button" onClick={queueArchiveStrategy}>Queue Archive</button></div>
+              <div className="panel-header"><h3>Strategy journal</h3><div className="flex gap-2"><button className="btn-primary" type="button" onClick={queueStrategyNote}>Queue Strategy Note</button><button className="btn-secondary" type="button" onClick={queueArchiveStrategy}>Queue Archive</button></div></div>
               <div className="space-y-3">
                 {data.tradingStrategyNotes.map((item) => <TradeRow key={item.id} title={item.title} meta={item.note} status={`${item.status ?? 'active'} / ${item.riskLevel}`} />)}
               </div>
