@@ -5,6 +5,7 @@ import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPan
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
+import { getSupportedFinnhubSymbols } from '../../core/connectors/finnhub/config'
 import { useOs } from '../../core/os/OsContext'
 import type { Holding } from '../../types/models'
 
@@ -14,6 +15,7 @@ export const InvestmentsPage = () => {
   const {
     data,
     sourceStatuses,
+    providerStatuses,
     pendingApprovals,
     changeLogs,
     snapshots,
@@ -27,6 +29,9 @@ export const InvestmentsPage = () => {
   const driftHoldings = data.holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
   const dcaQueue = data.dcaRecords.filter((record) => record.status === 'planned' || record.status === 'review')
   const expectedDividends = data.dividendRecords.reduce((sum, record) => sum + record.expectedAmountTHB, 0)
+  const finnhubProvider = providerStatuses.finnhub
+  const marketSymbols = data.marketDataSymbols
+  const supportedMarketSymbols = getSupportedFinnhubSymbols()
   const holdingsByCategory = data.financeAssets.reduce<Record<string, number>>((acc, asset) => {
     const value = data.holdings.filter((holding) => holding.assetId === asset.id).reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
     acc[asset.category] = (acc[asset.category] ?? 0) + value
@@ -54,6 +59,24 @@ export const InvestmentsPage = () => {
     })
   }
 
+  const queueMarketRefresh = () => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.manualMarketRefresh',
+      description: 'Approve manual Finnhub market data refresh',
+      payload: { symbols: supportedMarketSymbols, mode: 'manual-refresh-only' },
+    })
+  }
+
+  const queueMarketSourceReview = () => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.reviewStaleMarketSource',
+      description: 'Review stale Finnhub market source status',
+      payload: { connectorId: 'conn-finnhub', source: 'Finnhub Manual Market Refresh' },
+    })
+  }
+
   const queueDriftReview = (holding: Holding) => {
     createActionRequest({
       module: 'finance',
@@ -78,8 +101,9 @@ export const InvestmentsPage = () => {
             <p className="mt-3 text-sm leading-6 text-[#666666]">NVDA and PLTR sit above target. Approve core DCA first, then resolve drift before adding more satellite risk.</p>
           </div>
         </div>
-        <div className="mt-6 grid gap-3 md:grid-cols-4">
+        <div className="mt-6 grid gap-3 md:grid-cols-5">
           <SourceStatusBadge status={sourceStatuses.investments} />
+          <SourceStatusBadge status={sourceStatuses.finnhub} />
           <Metric label="Portfolio value" value={thb(totalValue)} />
           <Metric label="Expected dividends" value={thb(expectedDividends)} />
           <Metric label="Drift reviews" value={driftHoldings.length} />
@@ -88,6 +112,58 @@ export const InvestmentsPage = () => {
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <main className="space-y-5">
+          <div className="panel panel-float">
+            <div className="panel-header">
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Finnhub manual market refresh</p>
+                <h3>Delayed quote cache / THB posture</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="btn-secondary" type="button" onClick={queueMarketSourceReview}>Review Stale Source</button>
+                <button className="btn-primary" type="button" onClick={queueMarketRefresh}>Refresh Market Data</button>
+              </div>
+            </div>
+            <div className="grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
+              <article className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-lg font-bold">Connector status</p>
+                    <p className="mt-2 text-sm leading-6 text-[#666666]">Manual approved refresh only. Missing key or failed request keeps mock/fallback prices visible.</p>
+                  </div>
+                  <span className="pill">{finnhubProvider?.mode ?? 'fallback'}</span>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <Mini label="Last sync" value={finnhubProvider?.lastUpdated ? new Date(finnhubProvider.lastUpdated).toLocaleString() : 'not synced'} />
+                  <Mini label="Stale" value={finnhubProvider?.stale ? 'yes' : 'no'} />
+                  <Mini label="Fallback used" value={finnhubProvider?.fallbackUsed ? 'yes' : 'no'} />
+                  <Mini label="Execution" value="none / read only" />
+                </div>
+                <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-[#777777]">Supported: {supportedMarketSymbols.join(' / ')}</p>
+                {finnhubProvider?.error ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-white/80 p-3 text-xs leading-5 text-[#9a4f18]">{finnhubProvider.error}</p> : null}
+              </article>
+              <article className="rounded-[28px] border border-black/[0.05] bg-white/75 p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Sheet cache rows</p>
+                  <span className="pill">{marketSymbols.length} symbols</span>
+                </div>
+                <div className="mt-4 grid gap-2 md:grid-cols-2">
+                  {marketSymbols.map((symbol) => (
+                    <div key={symbol.id} className="rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-bold">{symbol.symbol}</p>
+                          <p className="mt-1 text-xs text-[#777777]">{symbol.notes}</p>
+                        </div>
+                        <span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{thb(symbol.delayedPriceTHB)}</span>
+                      </div>
+                      <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[#8a8176]">last {new Date(symbol.lastUpdated).toLocaleDateString()} / stale after {symbol.staleAfterHours}h</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </div>
+          </div>
+
           <div className="panel panel-float">
             <div className="panel-header">
               <div>

@@ -1,4 +1,5 @@
-﻿import { mockOsData, mockSourceStatuses } from '../../data/mockData'
+import { mockOsData, mockSourceStatuses } from '../../data/mockData'
+import { refreshFinnhubQuotes } from '../connectors/finnhub/finnhubConnector'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
 import type { AIDataProvider, ConnectorDataProvider, FinanceDataProvider, ProviderResult, StudioDataProvider } from './contracts'
 
@@ -135,4 +136,7 @@ export const dataProviders = {
   connectors: createConnectorDataProvider(),
 }
 
+export const refreshFinanceMarketData = (symbols: string[]) => refreshFinnhubQuotes(symbols)
+
 export type { ProviderResult }
+

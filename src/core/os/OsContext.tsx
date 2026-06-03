@@ -2,8 +2,9 @@ import { createContext, useContext, useMemo, useState } from 'react'
 import { generateId } from '../../app/utils'
 import { isKarunBridgeConfigured } from '../connectors/appsScript/config'
 import { readKarunPhuketBridge } from '../connectors/appsScript/karunReadConnector'
+import { isFinnhubConfigured } from '../connectors/finnhub/config'
 import { mockSheetWriteAdapter, validateActionRequest } from '../adapters/mockSheetWriteAdapter'
-import { createInitialOsDataFromProviders } from '../data/providers'
+import { createInitialOsDataFromProviders, refreshFinanceMarketData } from '../data/providers'
 import type {
   ActionRequest,
   ChangeLogRecord,
@@ -42,6 +43,14 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     error: isKarunBridgeConfigured ? undefined : 'VITE_APPS_SCRIPT_KARUN_ENDPOINT is not configured.',
     fallbackUsed: !isKarunBridgeConfigured,
   })
+  const [finnhubStatus, setFinnhubStatus] = useState<DataProviderStatus>({
+    source: 'Finnhub Manual Market Refresh',
+    mode: isFinnhubConfigured ? 'live' : 'fallback',
+    lastUpdated: initialProviderState.sourceStatuses.finnhub.lastSyncedAt,
+    stale: true,
+    error: isFinnhubConfigured ? undefined : 'VITE_FINNHUB_API_KEY is not configured.',
+    fallbackUsed: !isFinnhubConfigured,
+  })
   const [pendingApprovals, setPendingApprovals] = useState<ActionRequest[]>([])
   const [changeLogs, setChangeLogs] = useState<ChangeLogRecord[]>([])
   const [snapshots, setSnapshots] = useState<SnapshotRecord[]>([])
@@ -63,9 +72,106 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     setPendingApprovals((current) => [request, ...current])
   }
 
-  const approveActionRequest = (requestId: string) => {
+  const approveActionRequest = async (requestId: string) => {
     const request = pendingApprovals.find((item) => item.id === requestId)
     if (!request) return
+
+    if (request.actionType === 'finance.manualMarketRefresh') {
+      const now = new Date().toISOString()
+      const response = await refreshFinanceMarketData(Array.isArray(request.payload.symbols) ? request.payload.symbols.filter((symbol): symbol is string => typeof symbol === 'string') : [])
+      const successful = response.results.filter((result) => !result.error && result.delayedPriceTHB)
+
+      if (successful.length) {
+        setData((current) => ({
+          ...current,
+          marketDataSymbols: current.marketDataSymbols.map((symbol) => {
+            const result = successful.find((item) => item.symbol === symbol.symbol)
+            return result
+              ? {
+                  ...symbol,
+                  delayedPriceTHB: result.delayedPriceTHB,
+                  lastUpdated: result.refreshedAt,
+                  sourceStatus: {
+                    ...symbol.sourceStatus,
+                    lastSyncedAt: result.refreshedAt,
+                    isStale: false,
+                    mode: 'live',
+                    health: 'healthy',
+                    syncState: 'idle',
+                    bridgeWarning: undefined,
+                  },
+                }
+              : symbol
+          }),
+        }))
+      }
+
+      const fallbackUsed = !response.ok
+      const status: SourceStatus = {
+        ...sourceStatuses.finnhub,
+        lastSyncedAt: now,
+        isStale: fallbackUsed,
+        mode: fallbackUsed ? 'fallback' : 'live',
+        health: fallbackUsed ? 'warning' : 'healthy',
+        syncState: fallbackUsed ? 'failed' : 'idle',
+        bridgeWarning: response.error,
+        pendingSyncCount: fallbackUsed ? 1 : 0,
+      }
+      setSourceStatuses((current) => ({ ...current, finnhub: status, investments: { ...current.investments, lastSyncedAt: now, mode: fallbackUsed ? 'fallback' : 'live', isStale: fallbackUsed, bridgeWarning: response.error } }))
+      setFinnhubStatus({
+        source: 'Finnhub Manual Market Refresh',
+        mode: fallbackUsed ? 'fallback' : 'live',
+        lastUpdated: now,
+        stale: fallbackUsed,
+        error: response.error,
+        fallbackUsed,
+      })
+      setChangeLogs((logs) => [{
+        id: generateId('log'),
+        actionRequestId: request.id,
+        module: request.module,
+        actionType: request.actionType,
+        summary: fallbackUsed ? `Finnhub refresh used fallback: ${response.error ?? 'unknown error'}` : `Finnhub manual refresh completed for ${successful.length} symbols`,
+        changedAt: now,
+        changedBy: request.requestedBy,
+      }, ...logs])
+      setSnapshots((records) => [{
+        id: generateId('snapshot'),
+        triggerActionRequestId: request.id,
+        module: request.module,
+        reason: 'Approved Finnhub manual market refresh',
+        createdAt: now,
+      }, ...records])
+      setPendingApprovals((current) => current.filter((item) => item.id !== requestId))
+      return
+    }
+
+    if (request.actionType === 'finance.reviewStaleMarketSource') {
+      const now = new Date().toISOString()
+      setSourceStatuses((current) => ({
+        ...current,
+        finnhub: { ...current.finnhub, lastSyncedAt: now, syncState: 'idle', pendingSyncCount: 0, bridgeWarning: 'Stale market source reviewed manually. Refresh remains manual only.' },
+      }))
+      setFinnhubStatus((current) => ({ ...current, lastUpdated: now, error: 'Stale market source reviewed manually. Refresh remains manual only.' }))
+      setChangeLogs((logs) => [{
+        id: generateId('log'),
+        actionRequestId: request.id,
+        module: request.module,
+        actionType: request.actionType,
+        summary: 'Reviewed stale Finnhub market source status',
+        changedAt: now,
+        changedBy: request.requestedBy,
+      }, ...logs])
+      setSnapshots((records) => [{
+        id: generateId('snapshot'),
+        triggerActionRequestId: request.id,
+        module: request.module,
+        reason: 'Approved stale market source review',
+        createdAt: now,
+      }, ...records])
+      setPendingApprovals((current) => current.filter((item) => item.id !== requestId))
+      return
+    }
 
     const result = mockSheetWriteAdapter(request, data, sourceStatuses)
     setData(result.data)
@@ -165,7 +271,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     () => ({
       data,
       sourceStatuses,
-      providerStatuses: { ...providerStatuses, karunBridge: karunBridgeStatus },
+      providerStatuses: { ...providerStatuses, karunBridge: karunBridgeStatus, finnhub: finnhubStatus },
       refreshKarunBridge,
       pendingApprovals,
       changeLogs,
@@ -175,7 +281,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       rejectActionRequest,
       queueSuggestionImport,
     }),
-    [data, sourceStatuses, providerStatuses, karunBridgeStatus, pendingApprovals, changeLogs, snapshots],
+    [data, sourceStatuses, providerStatuses, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots],
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>

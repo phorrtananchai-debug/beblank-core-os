@@ -125,3 +125,12 @@ npm run build
 - Bridge payloads are normalized into Studio project, timeline, WorkScope, site watch, document, and review rows when present.
 - If the endpoint fails or returns malformed/partial data, the OS keeps mock fallback data and surfaces the error through provider/source status.
 - Future write-back should reuse the existing approval-first flow before any Apps Script write adapter is enabled.
+
+## Finnhub Manual Refresh v1
+- PR #12 introduces the first Finnhub market data foundation for Finance / Investments.
+- Configure `VITE_FINNHUB_API_KEY` in a local `.env` file only. `.env.example` documents the key, but no secrets are committed.
+- The connector supports approved manual quote refresh for: VOO, SCHD, MSFT, GOOGL, AMZN, NVDA, AVGO, PLTR, MRVL, RBRK, ABBV, and JEPQ.
+- If the key is missing, the Investments page shows Finnhub as unconfigured/fallback and keeps mock Sheet cache rows visible.
+- If a request times out, fails, or returns malformed quote data, the provider falls back safely and surfaces `fallbackUsed`, stale state, and connector error details.
+- The Investments page never fetches Finnhub directly. Manual refresh flows through `ActionRequest -> Approval -> Finance provider -> Finnhub connector -> ChangeLog -> Snapshot/SourceStatus`.
+- This is read-only market data. There is no realtime stream, websocket, background polling, broker connection, auto buy/sell, or trading execution.
