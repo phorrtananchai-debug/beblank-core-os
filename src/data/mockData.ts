@@ -468,9 +468,9 @@ export const mockOsData: OsData = {
     { id: 'hold-cash', accountId: 'acct-cash-reserve', assetId: 'asset-cash', units: 1, quantity: 1, averageCost: 310000, marketValueTHB: 310000, allocationPercent: 28, targetAllocationPercent: 25, currentPosture: 'reserve', dcaStatus: 'paused', dividendStatus: 'none', sourceStatus: mockSourceStatuses.familyOffice, lastUpdated: '2026-06-02', notes: 'THB cash reserve and deployment buffer.', risk: 'low', tags: ['reserve'] },
   ],
   thaiNavAssets: [
-    { id: 'n1', symbol: 'B-INNOTECH', nav: 12.2, updatedAt: '2026-06-01' },
-    { id: 'n2', symbol: 'K-STAR', nav: 9.7, updatedAt: '2026-06-01' },
-    { id: 'n3', symbol: 'SCBLEQ', nav: 15.4, updatedAt: '2026-06-01' },
+    { id: 'nav-k-us500x-a', symbol: 'K-US500X-A(A)', displayName: 'K US Equity Index Fund', nav: 18.42, units: 820, valueTHB: 15104, sourceStatus: { ...mockSourceStatuses.investments, sourceName: 'Manual Thai NAV Sheet Cache', authority: 'manual', mode: 'mock', isStale: false }, helperSource: 'manual-nav', sourceOfTruth: 'manual', stale: false, updatedAt: '2026-06-02', notes: 'Manual NAV helper row. Portfolio units remain manual source of truth.', tags: ['thai-nav', 'us-index'] },
+    { id: 'nav-k-us500xrmf', symbol: 'K-US500XRMF', displayName: 'K US Equity RMF', nav: 14.86, units: 1250, valueTHB: 18575, sourceStatus: { ...mockSourceStatuses.investments, sourceName: 'Future Google Sheet NAV Bridge', authority: 'manual', mode: 'fallback', isStale: true, bridgeWarning: 'NAV bridge placeholder. Manual NAV is active until Sheet bridge exists.' }, helperSource: 'fallback', sourceOfTruth: 'manual', stale: true, updatedAt: '2026-05-31', notes: 'Thai RMF NAV helper only. No Finnhub enrichment.', tags: ['thai-nav', 'rmf'] },
+    { id: 'nav-th-income', symbol: 'TH-INCOME-DIV', displayName: 'Thai Income / Dividend Placeholder', nav: 10.24, units: 900, valueTHB: 9216, sourceStatus: { ...mockSourceStatuses.investments, sourceName: 'Manual Thai Income NAV', authority: 'manual', mode: 'mock', isStale: false }, helperSource: 'manual-nav', sourceOfTruth: 'manual', stale: false, updatedAt: '2026-06-02', notes: 'Local income placeholder for allocation planning. NAV is helper data only.', tags: ['thai-nav', 'income'] },
   ],
   transactions: [
     { id: 'tx1', accountId: 'acct-invest-core', assetId: 'asset-voo', description: 'Manual DCA VOO', amountTHB: 12000, type: 'buy', occurredAt: '2026-05-31', sourceStatus: mockSourceStatuses.investments, lastUpdated: '2026-05-31', notes: 'Manual brokerage entry, no auto sync.', risk: 'low', tags: ['dca'] },
