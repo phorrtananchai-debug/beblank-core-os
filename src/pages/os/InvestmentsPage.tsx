@@ -6,7 +6,7 @@ import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPan
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
-import { getSupportedFinnhubSymbols } from '../../core/connectors/finnhub/config'
+import { getSupportedFinnhubSymbols } from '../../core/connectors'
 import { useOs } from '../../core/os/OsContext'
 import type { Holding } from '../../types/models'
 

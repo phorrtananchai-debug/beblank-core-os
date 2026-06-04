@@ -1,8 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react'
 import { generateId } from '../../app/utils'
-import { isKarunBridgeConfigured } from '../connectors/appsScript/config'
-import { readKarunPhuketBridge } from '../connectors/appsScript/karunReadConnector'
-import { isFinnhubConfigured } from '../connectors/finnhub/config'
+import { isFinnhubConfigured, isKarunBridgeConfigured, readKarunPhuketBridge } from '../connectors'
 import { mockSheetWriteAdapter, validateActionRequest } from '../adapters/mockSheetWriteAdapter'
 import { createInitialOsDataFromProviders, refreshFinanceMarketData } from '../data/providers'
 import type {

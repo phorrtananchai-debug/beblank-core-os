@@ -1,5 +1,5 @@
 import { mockOsData, mockSourceStatuses } from '../../data/mockData'
-import { refreshFinnhubQuotes } from '../connectors/finnhub/finnhubConnector'
+import { refreshFinnhubQuotes } from '../connectors'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
 import type { AIDataProvider, ConnectorDataProvider, FinanceDataProvider, ProviderResult, StudioDataProvider } from './contracts'
 
