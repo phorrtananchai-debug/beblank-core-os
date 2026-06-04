@@ -10,7 +10,7 @@ const links = [
   { to: '/os/studio', label: 'Studio Work' },
   { to: '/os/finance', label: 'Finance' },
   { to: '/os/finance/investments', label: 'Investments / Stocks' },
-  { to: '/os/finance/family-office', label: 'Family Office Finance' },
+  { to: '/os/capital', label: 'Capital' },
   { to: '/os/finance/trading-lab', label: 'Trading Lab / Sandbox' },
   { to: '/os/ai', label: 'AI Workflow' },
   { to: '/os/settings', label: 'Settings' },

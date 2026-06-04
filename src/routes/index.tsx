@@ -3,6 +3,7 @@ import { OSLayout } from '../layouts/OSLayout'
 import { PublicWebsiteLayout } from '../layouts/PublicWebsiteLayout'
 import { AIWorkflowPage } from '../pages/os/AIWorkflowPage'
 import { CommandCenterPage } from '../pages/os/CommandCenterPage'
+import { CapitalPage } from '../pages/os/CapitalPage'
 import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
 import { InvestmentsPage } from '../pages/os/InvestmentsPage'
@@ -55,6 +56,7 @@ export const AppRoutes = () => {
         <Route path="studio/reviews" element={<StudioWorkspacePage view="reviews" />} />
         <Route path="finance" element={<FinancePage />} />
         <Route path="finance/investments" element={<InvestmentsPage />} />
+        <Route path="capital" element={<CapitalPage />} />
         <Route path="finance/family-office" element={<FamilyOfficePage />} />
         <Route path="finance/trading-lab" element={<TradingLabPage />} />
         <Route path="ai" element={<AIWorkflowPage view="overview" />} />

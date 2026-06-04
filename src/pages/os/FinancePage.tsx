@@ -17,7 +17,7 @@ export const FinancePage = () => {
 
   const cards = [
     { title: 'Investments', to: '/os/finance/investments', detail: 'Long-term allocation, DCA, dividends, holdings.', metric: thb(portfolioValue), note: `${driftCount} allocation reviews` },
-    { title: 'Family Office', to: '/os/finance/family-office', detail: 'Reserve, obligations, ledger, runway, project cash.', metric: thb(reserveValue), note: `${data.financeLedgerRows.length} ledger rows` },
+    { title: 'Capital', to: '/os/capital', detail: 'Overview, studio office ledger, family finance, reserves.', metric: thb(reserveValue), note: `${data.financeLedgerRows.length} ledger rows` },
     { title: 'Trading Lab', to: '/os/finance/trading-lab', detail: 'Paper-only signals, watchlist, sandbox strategy notes.', metric: thb(sandboxExposure), note: 'no broker execution' },
   ]
 
