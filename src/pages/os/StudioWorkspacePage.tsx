@@ -1,5 +1,5 @@
 ﻿import { useMemo, useState, type ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
@@ -412,7 +412,7 @@ const ProjectsView = ({
 }) => (
   <section className="grid gap-5 xl:grid-cols-2">
     {projects.map((project) => (
-      <article key={project.id} className="panel panel-float">
+      <Link key={project.id} to={`/os/studio/projects/${project.id}`} className="panel panel-float block transition hover:-translate-y-0.5">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{project.location} / {project.phase}</p>
         <h3 className="mt-3 text-3xl font-bold tracking-tight">{project.name}</h3>
         <p className="mt-3 text-sm leading-6 text-[#666666]">{project.operationalNotes}</p>
@@ -428,7 +428,7 @@ const ProjectsView = ({
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Brief preview</p>
           <p className="mt-2 text-sm text-[#555555]">{briefs.find((brief) => brief.projectId === project.id)?.direction ?? 'No brief linked yet.'}</p>
         </div>
-      </article>
+      </Link>
     ))}
   </section>
 )

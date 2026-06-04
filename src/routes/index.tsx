@@ -8,6 +8,7 @@ import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
 import { InvestmentsPage } from '../pages/os/InvestmentsPage'
 import { SettingsPage } from '../pages/os/SettingsPage'
+import { StudioProjectDetailPage } from '../pages/os/StudioProjectDetailPage'
 import { StudioWorkspacePage } from '../pages/os/StudioWorkspacePage'
 import { TradingLabPage } from '../pages/os/TradingLabPage'
 import { AboutPage } from '../pages/public/AboutPage'
@@ -47,6 +48,7 @@ export const AppRoutes = () => {
       >
         <Route index element={<CommandCenterPage />} />
         <Route path="studio" element={<StudioWorkspacePage view="overview" />} />
+        <Route path="studio/projects/:projectId" element={<StudioProjectDetailPage />} />
         <Route path="studio/projects" element={<StudioWorkspacePage view="projects" />} />
         <Route path="studio/timeline" element={<StudioWorkspacePage view="timeline" />} />
         <Route path="studio/site-watch" element={<StudioWorkspacePage view="site-watch" />} />
