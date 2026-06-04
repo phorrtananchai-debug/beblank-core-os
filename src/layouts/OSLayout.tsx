@@ -6,14 +6,14 @@ import { AISuggestionImportPanel } from '../components/shared/AISuggestionImport
 import { ModuleAISummaryPanel } from '../components/shared/ModuleAISummaryPanel'
 
 const links = [
-  { to: '/os', label: 'ศูนย์ควบคุม', end: true },
-  { to: '/os/studio', label: 'สตูดิโอ' },
-  { to: '/os/finance', label: 'การเงิน' },
-  { to: '/os/finance/investments', label: 'การลงทุน' },
-  { to: '/os/capital', label: 'เงินทุน' },
-  { to: '/os/finance/trading-lab', label: 'เทรดดิ้งแล็บ' },
-  { to: '/os/ai', label: 'ระบบ AI' },
-  { to: '/os/settings', label: 'ตั้งค่า' },
+  { to: '/os', label: 'Command Center', end: true },
+  { to: '/os/studio', label: 'Studio' },
+  { to: '/os/finance', label: 'Capital' },
+  { to: '/os/finance/investments', label: 'Investments' },
+  { to: '/os/capital', label: 'Reserves' },
+  { to: '/os/finance/trading-lab', label: 'Trading Lab' },
+  { to: '/os/ai', label: 'AI Workspace' },
+  { to: '/os/settings', label: 'Settings' },
 ]
 
 export const OSLayout = () => {
@@ -21,10 +21,10 @@ export const OSLayout = () => {
   const { data, queueSuggestionImport } = useOs()
 
   return (
-    <div className="os-shell min-h-screen overflow-hidden bg-[#faf9f8] px-3 py-3 text-[#111111] md:px-6 md:py-5">
+    <div className="os-shell min-h-screen overflow-hidden bg-[var(--bb-bg)] px-3 py-3 text-[var(--bb-text)] md:px-6 md:py-5">
       <div className="os-ambient-plane" />
-      <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[36px] border border-black/[0.04] bg-[#f2f0ed]/80 p-3 shadow-[0_36px_90px_-56px_rgba(0,0,0,0.34)] backdrop-blur-xl">
-        <aside className="os-sidebar sticky top-5 h-[calc(100vh-2.5rem)] w-[292px] rounded-[34px] border border-black/[0.05] bg-[#fffaf1]/95 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.36)] backdrop-blur-xl">
+      <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[36px] border border-[var(--bb-border)]/60 bg-white/80 p-3 shadow-[0_36px_90px_-56px_rgba(0,0,0,0.34)] backdrop-blur-xl">
+        <aside className="os-sidebar sticky top-5 h-[calc(100vh-2.5rem)] w-[292px] rounded-[34px] border border-[var(--bb-border)] bg-[var(--bb-surface-warm)]/95 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.36)] backdrop-blur-xl">
           <div className="mb-6">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">สภาพแวดล้อมสตูดิโอ</p>
             <h1 className="mt-2 text-2xl font-bold leading-none tracking-tight">BE BLANK OS</h1>
@@ -44,7 +44,7 @@ export const OSLayout = () => {
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `os-nav-link block rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? 'bg-black text-white shadow-[0_16px_34px_-24px_rgba(0,0,0,0.7)]' : 'text-[#55504a] hover:bg-black/[0.04] hover:text-[#111111]'}`
+                  `os-nav-link block rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? 'bg-[var(--bb-accent)] text-white shadow-[0_10px_24px_-12px_var(--bb-accent)]' : 'text-[#4E463E] hover:bg-[var(--bb-accent-soft)] hover:text-[var(--bb-accent-strong)]'}`
                 }
               >
                 {link.label}
@@ -55,10 +55,10 @@ export const OSLayout = () => {
         </aside>
 
           <div className="min-w-0 flex-1 space-y-5">
-            <div className="os-workspace-panel break-words rounded-[34px] border border-black/[0.05] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
+            <div className="os-workspace-panel break-words rounded-[34px] border border-[var(--bb-border)] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
               <Outlet />
             </div>
-            <div className="os-ai-dock grid gap-4 rounded-[34px] border border-black/[0.05] bg-white/88 p-4 shadow-[0_20px_70px_-58px_rgba(0,0,0,0.32)] xl:grid-cols-3">
+            <div className="os-ai-dock grid gap-4 rounded-[34px] border border-[var(--bb-border)] bg-white/88 p-4 shadow-[0_20px_70px_-58px_rgba(0,0,0,0.32)] xl:grid-cols-3">
               <AIContextExportPanel contexts={data.aiContexts} />
               <AISuggestionImportPanel onImport={queueSuggestionImport} />
               <ModuleAISummaryPanel moduleName="" suggestions={data.aiSuggestions} />

@@ -412,7 +412,7 @@ export const InvestmentsPage = () => {
           <button
             key={tab.key}
             className={`rounded-full px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition ${
-              activeTab === tab.key ? 'bg-black text-white' : 'bg-white/70 text-[#777777] hover:bg-black/[0.05] hover:text-[#111111]'
+              activeTab === tab.key ? 'bg-accent text-white' : 'bg-white/70 text-[var(--bb-text-muted)] hover:bg-black/[0.05] hover:text-[var(--bb-text)]'
             }`}
             role="tab"
             aria-selected={activeTab === tab.key}

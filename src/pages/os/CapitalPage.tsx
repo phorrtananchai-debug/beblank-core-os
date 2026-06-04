@@ -20,9 +20,9 @@ import { FamilyPage } from './FamilyPage'
 const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
 
 const tabs = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'studio-office', label: 'Studio Office' },
-  { key: 'family', label: 'Family' },
+  { key: 'overview', label: 'ภาพรวม' },
+  { key: 'studio-office', label: 'สตูดิโอ' },
+  { key: 'family', label: 'ครอบครัว' },
 ] as const
 
 type TabKey = (typeof tabs)[number]['key']
@@ -78,7 +78,7 @@ export const CapitalPage = () => {
             onClick={() => setActiveTab(tab.key)}
             className={`rounded-2xl px-5 py-2 text-sm font-semibold transition ${
               activeTab === tab.key
-                ? 'bg-black text-white shadow-[0_8px_20px_-12px_rgba(0,0,0,0.5)]'
+                ? 'bg-accent text-white shadow-[0_8px_20px_-12px_var(--bb-accent)]'
                 : 'text-[#55504a] hover:bg-black/[0.04]'
             }`}
           >

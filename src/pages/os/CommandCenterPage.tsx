@@ -16,6 +16,60 @@ const getTone = (severity: SiteIssue['severity'] | TimelineItem['state'] | Task[
   return 'text-[#59634a]'
 }
 
+const HeroMetricCard = ({
+  label,
+  value,
+  sub,
+  accent = 'neutral',
+}: {
+  label: string
+  value: string
+  sub: string
+  accent?: 'neutral' | 'amber' | 'red' | 'green' | 'blue'
+}) => {
+  const borderMap: Record<string, string> = {
+    neutral: 'border-[var(--bb-neutral-border)]',
+    amber: 'border-[var(--bb-amber-border)]',
+    red: 'border-[var(--bb-red-border)]',
+    green: 'border-[var(--bb-green-border)]',
+    blue: 'border-[var(--bb-blue-border)]',
+  }
+  const bgMap: Record<string, string> = {
+    neutral: 'bg-[var(--bb-neutral-soft)]',
+    amber: 'bg-[var(--bb-amber-soft)]',
+    red: 'bg-[var(--bb-red-soft)]',
+    green: 'bg-[var(--bb-green-soft)]',
+    blue: 'bg-[var(--bb-blue-soft)]',
+  }
+  return (
+    <div className={`rounded-2xl border p-4 ${borderMap[accent]} ${bgMap[accent]}`}>
+      <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p>
+      <p className="mt-1.5 text-2xl font-extrabold tracking-tight">{value}</p>
+      <p className="mt-1 text-xs leading-4 text-[var(--bb-text-muted)]">{sub}</p>
+    </div>
+  )
+}
+
+const FinanceTile = ({
+  eyebrow,
+  title,
+  body,
+  warning = false,
+}: {
+  eyebrow: string
+  title: string
+  body: string
+  warning?: boolean
+}) => (
+  <div className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
+    <p className={`font-mono text-[10px] font-semibold uppercase tracking-[0.14em] ${warning ? 'text-[#c2410c]' : 'text-[#777777]'}`}>
+      {eyebrow}
+    </p>
+    <p className="mt-4 text-2xl font-bold tracking-tight">{title}</p>
+    <p className="mt-3 text-sm leading-6 text-[#666666]">{body}</p>
+  </div>
+)
+
 export const CommandCenterPage = () => {
   const {
     data,
@@ -33,6 +87,7 @@ export const CommandCenterPage = () => {
   const todayFocus = data.tasks.filter((task) => task.status !== 'done').slice(0, 4)
   const studioQueue = data.tasks.slice(0, 5)
   const atRiskTimeline = data.timeline.filter((item) => item.state === 'at-risk')
+
   const alerts = [
     ...data.siteIssues.filter((issue) => issue.severity !== 'low').map((issue) => ({
       id: issue.id,
@@ -62,6 +117,7 @@ export const CommandCenterPage = () => {
     suggestion.module.toLowerCase().includes('command'),
   )
   const primarySuggestion = commandSuggestions[0] ?? data.aiSuggestions[0]
+  const unreviewedSuggestions = data.aiSuggestions.filter((s) => s.status !== 'reviewed')
 
   const activity = [
     ...data.timeline.slice(0, 4).map((item) => ({
@@ -84,11 +140,9 @@ export const CommandCenterPage = () => {
     })),
   ]
 
-  const studioFragments = [
-    { label: 'material trace', tone: 'stone', caption: 'marble lot / sample variance' },
-    { label: 'site frame', tone: 'paper', caption: 'HVAC alignment / field note' },
-    { label: 'render crop', tone: 'ink', caption: 'client review packet' },
-  ]
+  const totalAssets = portfolioValue + reserveValue
+  const attentionItems = alerts.length + atRiskTimeline.length
+  const topAttention = alerts[0]?.label || atRiskTimeline[0]?.label || ''
 
   const queueTodayFocusReview = () => {
     createActionRequest({
@@ -100,69 +154,61 @@ export const CommandCenterPage = () => {
   }
 
   return (
-    <section className="command-center-space space-y-8">
-      <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
-          <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">
-              Today / Command Center
-            </p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">
-              Por's operating surface for the day.
-            </h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">
-              Studio work, finance posture, AI notes, approvals, source health, and recent operating activity in one calm private workspace.
-            </p>
-          </div>
-          <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
-              Jarvis B / Daily Brief
-            </p>
-            <p className="mt-4 text-xl font-semibold leading-snug">{primarySuggestion?.title ?? 'No daily brief yet'}</p>
-            <p className="mt-3 text-sm leading-6 text-[#666666]">
-              {primarySuggestion?.recommendation ?? 'Export context, review manually with Jarvis B, then import a suggestion.'}
-            </p>
-            <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-[#c2410c]">
-              Risk note: {primarySuggestion?.riskNotes ?? 'No risk note imported.'}
-            </p>
-          </div>
-        </div>
-        <div className="today-context-strip mt-8 grid gap-3 rounded-[28px] border border-black/[0.04] bg-white/55 p-3 md:grid-cols-4">
-          {[
-            ['Operating state', alerts.length > 0 ? `${alerts.length} items watching` : 'clear field'],
-            ['Focus mode', `${todayFocus.length} open loops`],
-            ['Source posture', Object.values(sourceStatuses).some((status) => status.isStale) ? 'one stale source' : 'sources calm'],
-            ['AI stance', primarySuggestion?.status ?? 'waiting'],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-2xl bg-[#faf9f8]/80 px-4 py-3">
-              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
-              <p className="mt-2 text-sm font-semibold">{value}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          <SourceStatusBadge status={sourceStatuses.commandCenter} />
-          <SourceStatusBadge status={sourceStatuses.studio} />
-          <SourceStatusBadge status={sourceStatuses.aiWorkflow} />
+    <section className="command-center-space space-y-6">
+      {/* LEVEL 1: HERO + SUMMARY ROW */}
+      <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-5 md:p-6">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">
+          วันนี้ / ศูนย์ควบคุม
+        </p>
+        <h2 className="mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+          พื้นผิวปฏิบัติการของ Por
+        </h2>
+        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <HeroMetricCard
+            label="ต้องตรวจสอบ"
+            value={attentionItems > 0 ? `${attentionItems} รายการ` : 'ปกติ'}
+            sub={topAttention || 'ไม่มีรายการที่ต้องตรวจสอบ'}
+            accent={attentionItems > 2 ? 'red' : attentionItems > 0 ? 'amber' : 'green'}
+          />
+          <HeroMetricCard
+            label="รออนุมัติ"
+            value={pendingApprovals.length > 0 ? `${pendingApprovals.length} รายการ` : 'ไม่มี'}
+            sub={pendingApprovals[0]?.description?.slice(0, 28) || 'ไม่มีรายการรออนุมัติ'}
+            accent={pendingApprovals.length > 0 ? 'amber' : 'green'}
+          />
+          <HeroMetricCard
+            label="ฐานะการเงิน"
+            value={formatTHB(totalAssets)}
+            sub={`พอร์ต ${formatTHB(portfolioValue)} | สำรอง ${formatTHB(reserveValue)}`}
+            accent="neutral"
+          />
+          <HeroMetricCard
+            label="ข้อเสนอแนะ AI"
+            value={unreviewedSuggestions.length > 0 ? `${unreviewedSuggestions.length} ต้องการรีวิว` : 'ไม่มี'}
+            sub={primarySuggestion?.title?.slice(0, 28) || 'ไม่มีข้อเสนอแนะใหม่'}
+            accent={unreviewedSuggestions.length > 0 ? 'blue' : 'neutral'}
+          />
         </div>
       </header>
 
-      <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_370px]">
-        <main className="space-y-7">
-          <section className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr]">
+      {/* LEVEL 2 (Operations) + LEVEL 3 (Reference) */}
+      <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
+        <main className="space-y-6">
+          {/* — Focus Queue + Project Pulse — */}
+          <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
             <article className="panel panel-float reveal-soft">
               <div className="panel-header">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Today Focus</p>
-                  <h3>Focus queue</h3>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">โฟกัสวันนี้</p>
+                  <h3>คิวงาน</h3>
                 </div>
                 <button className="btn-primary" type="button" onClick={queueTodayFocusReview}>
-                  Queue Focus Review
+                  เพิ่มรีวิว
                 </button>
               </div>
               <div className="space-y-3">
                 {todayFocus.map((task) => (
-                  <div key={task.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+                  <div key={task.id} className="rounded-2xl border border-[var(--bb-border)] bg-[var(--bb-bg)] p-4">
                     <p className="text-sm font-semibold">{task.title}</p>
                     <p className={`mt-2 font-mono text-[10px] font-semibold uppercase tracking-wide ${getTone(task.status)}`}>
                       {task.status}
@@ -170,25 +216,25 @@ export const CommandCenterPage = () => {
                   </div>
                 ))}
               </div>
-              <p className="mt-4 text-xs leading-5 text-[#777777]">
-                This button demonstrates the Sheet-first flow: UI Action -&gt; ActionRequest -&gt; approval -&gt; mock SheetWriteAdapter -&gt; ChangeLog -&gt; Snapshot -&gt; refreshed OS.
+              <p className="mt-4 text-xs leading-5 text-[var(--bb-text-muted)]">
+                UI Action → ActionRequest → อนุมัติ → mock → ChangeLog → Snapshot
               </p>
             </article>
 
             <article className="panel panel-float reveal-soft reveal-delay-1">
               <div className="panel-header">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Work</p>
-                  <h3>Project pulse</h3>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">งานสตูดิโอ</p>
+                  <h3>ชีพจรโปรเจค</h3>
                 </div>
-                <span className="pill">{activeProjects.length} active</span>
+                <span className="pill">{activeProjects.length} กำลังดำเนินการ</span>
               </div>
               <div className="grid gap-5 md:grid-cols-[0.85fr_1fr]">
                 <div className="space-y-3">
                   {activeProjects.map((project) => (
-                    <div key={project.id} className="surface-hover rounded-2xl border border-black/[0.05] bg-white p-4">
+                    <div key={project.id} className="surface-hover rounded-2xl border border-[var(--bb-border)] bg-white p-4">
                       <p className="text-base font-semibold">{project.name}</p>
-                      <p className="mt-1 text-xs text-[#777777]">{project.owner} / {project.status}</p>
+                      <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{project.owner} / {project.status}</p>
                     </div>
                   ))}
                 </div>
@@ -202,149 +248,118 @@ export const CommandCenterPage = () => {
                 </div>
               </div>
             </article>
-          </section>
+          </div>
 
-          <section className="studio-fragment-board reveal-soft reveal-delay-2">
-            <div>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Presence</p>
-              <h3 className="mt-2 text-xl font-semibold">Pinned traces from the workspace</h3>
-            </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              {studioFragments.map((fragment) => (
-                <article key={fragment.label} className="studio-fragment surface-hover">
-                  <div className={`studio-fragment-media studio-fragment-${fragment.tone}`} />
-                  <p className="mt-4 text-sm font-semibold uppercase">{fragment.label}</p>
-                  <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{fragment.caption}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="panel panel-float reveal-soft reveal-delay-3">
+          {/* — Financial Posture — */}
+          <section className="panel panel-float reveal-soft reveal-delay-2">
             <div className="panel-header">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Finance</p>
-                <h3>Calm THB posture</h3>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">การเงิน</p>
+                <h3>ฐานะการเงิน</h3>
               </div>
-              <span className="pill">manual only</span>
+              <span className="pill">ป้อนด้วยมือ</span>
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
               <FinanceTile
-                eyebrow="Investments"
+                eyebrow="การลงทุน"
                 title={formatTHB(portfolioValue)}
-                body={`${data.holdings.length} holdings / DCA and dividend estimates only`}
+                body={`${data.holdings.length} รายการ / ประมาณการ DCA และปันผลเท่านั้น`}
               />
               <FinanceTile
-                eyebrow="Family Office"
+                eyebrow="การเงินครอบครัว"
                 title={formatTHB(reserveValue)}
-                body={`Reserve posture / ${formatTHB(monthlyBills)} upcoming bill load`}
+                body={`สถานะสำรอง / ค่าใช้จ่ายที่กำลังจะถึง ${formatTHB(monthlyBills)}`}
               />
               <FinanceTile
-                eyebrow="Trading Lab"
-                title={`${data.tradingSignals.length} paper signals`}
-                body="Sandbox only. No broker execution. No auto trading."
+                eyebrow="เทรดดิ้งแล็บ"
+                title={`${data.tradingSignals.length} สัญญาณ`}
+                body="Sandbox เท่านั้น ไม่มีการซื้อขายจริง"
                 warning
               />
             </div>
           </section>
 
-          <section className="grid gap-5 lg:grid-cols-[1fr_0.9fr]">
-            <article className="panel panel-float reveal-soft reveal-delay-4">
-              <div className="panel-header">
-                <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Timeline</p>
-                  <h3>Activity rhythm</h3>
-                </div>
-                <span className="pill">{activity.length}</span>
-              </div>
-              <div className="space-y-3">
-                {activity.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[0.8rem_1fr] gap-3 border-b border-black/[0.05] pb-3 last:border-b-0">
-                    <span className={`mt-1 h-2 w-2 rounded-full bg-current ${item.tone}`} />
-                    <div>
-                      <p className="text-sm font-semibold">{item.label}</p>
-                      <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{item.meta}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </article>
-
-            <article className="panel intelligence-card reveal-soft reveal-delay-5">
-              <div className="panel-header">
-                <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Embedded AI</p>
-                  <h3>Quiet next actions</h3>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {[
-                  'Review client packet before finance context switching.',
-                  'Approve one source update, then check the snapshot log.',
-                  'Keep Trading Lab paper-only until stale signal is refreshed.',
-                ].map((item, index) => (
-                  <div key={item} className="flex gap-3 rounded-2xl bg-[#faf9f8] p-4">
-                    <span className="font-mono text-[10px] font-bold text-[#777777]">{index + 1}</span>
-                    <p className="text-sm leading-6">{item}</p>
-                  </div>
-                ))}
-              </div>
-            </article>
-          </section>
-        </main>
-
-        <aside className="intelligence-rail space-y-5">
-          <div className="rounded-[30px] border border-black/[0.05] bg-[#111111] p-5 text-white shadow-[0_28px_70px_-52px_rgba(0,0,0,0.8)]">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">Jarvis B is observing</p>
-            <p className="mt-4 text-sm leading-6 text-white/78">
-              Watching approvals, stale sources, studio risks, and imported suggestions. Nothing applies without manual approval.
-            </p>
+          {/* — Pending Approvals — */}
+          <div className="reveal-soft reveal-delay-3">
+            <PendingApprovalPanel
+              items={pendingApprovals}
+              onApprove={approveActionRequest}
+              onReject={rejectActionRequest}
+            />
           </div>
-          <PendingApprovalPanel
-            items={pendingApprovals}
-            onApprove={approveActionRequest}
-            onReject={rejectActionRequest}
-          />
 
-          <section className="panel rail-panel">
+          {/* — Activity Timeline — */}
+          <section className="panel panel-float reveal-soft reveal-delay-4">
             <div className="panel-header">
-              <h3>AI Suggestions</h3>
-              <span className="pill">{data.aiSuggestions.length}</span>
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">กิจกรรม</p>
+                <h3>จังหวะกิจกรรม</h3>
+              </div>
+              <span className="pill">{activity.length}</span>
             </div>
             <div className="space-y-3">
-              {data.aiSuggestions.slice(0, 3).map((suggestion) => (
-                <div key={suggestion.id} className="surface-hover rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
-                  <p className="text-sm font-semibold">{suggestion.title}</p>
-                  <p className="mt-2 text-xs leading-5 text-[#666666]">{suggestion.recommendation}</p>
-                  <p className="mt-3 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{suggestion.status}</p>
+              {activity.map((item) => (
+                <div key={item.id} className="grid grid-cols-[0.8rem_1fr] gap-3 border-b border-black/[0.05] pb-3 last:border-b-0">
+                  <span className={`mt-1 h-2 w-2 rounded-full bg-current ${item.tone}`} />
+                  <div>
+                    <p className="text-sm font-semibold">{item.label}</p>
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{item.meta}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
 
+          {/* — AI Suggestions (subdued) — */}
+          <section className="panel reveal-soft reveal-delay-5">
+            <div className="panel-header">
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">AI</p>
+                <h3>ข้อเสนอแนะ</h3>
+              </div>
+              <span className="pill">{data.aiSuggestions.length}</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {data.aiSuggestions.slice(0, 3).map((suggestion) => (
+                <div key={suggestion.id} className="rounded-2xl border border-[var(--bb-border)] bg-[var(--bb-bg)] p-3">
+                  <p className="text-xs font-semibold">{suggestion.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--bb-text-muted)]">{suggestion.recommendation}</p>
+                  <p className="mt-2 font-mono text-[9px] uppercase tracking-wide text-[var(--bb-text-muted)]">{suggestion.status}</p>
+                </div>
+              ))}
+              {data.aiSuggestions.length === 0 && (
+                <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีข้อเสนอแนะ AI</p>
+              )}
+            </div>
+          </section>
+        </main>
+
+        {/* LEVEL 3: REFERENCE RAIL */}
+        <aside className="intelligence-rail space-y-4">
+          {/* Alerts */}
           <section className="panel rail-panel">
             <div className="panel-header">
-              <h3>Alerts / Risks</h3>
+              <h3>การแจ้งเตือน / ความเสี่ยง</h3>
               <span className="pill">{alerts.length}</span>
             </div>
             <div className="space-y-3">
               {alerts.map((alert) => (
-                <div key={alert.id} className="rounded-2xl border border-black/[0.05] bg-white p-4">
-                  <p className="text-sm font-semibold">{alert.label}</p>
-                  <p className={`mt-2 font-mono text-[10px] uppercase tracking-wide ${alert.tone}`}>{alert.meta}</p>
+                <div key={alert.id} className="rounded-2xl border border-[var(--bb-border)] bg-white p-3">
+                  <p className="text-xs font-semibold">{alert.label}</p>
+                  <p className={`mt-1 font-mono text-[9px] uppercase tracking-wide ${alert.tone}`}>{alert.meta}</p>
                 </div>
               ))}
-              {atRiskTimeline.length === 0 && alerts.length === 0 ? (
-                <p className="text-sm text-[#777777]">No active alerts.</p>
+              {alerts.length === 0 && atRiskTimeline.length === 0 ? (
+                <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีการแจ้งเตือน</p>
               ) : null}
             </div>
           </section>
 
           <section className="panel rail-panel">
             <div className="panel-header">
-              <h3>Source Status</h3>
+              <h3>สถานะแหล่งข้อมูล</h3>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[sourceStatuses.investments, sourceStatuses.familyOffice, sourceStatuses.tradingLab].map((status) => (
                 <SourceStatusBadge key={status.sourceName} status={status} />
               ))}
@@ -360,23 +375,3 @@ export const CommandCenterPage = () => {
     </section>
   )
 }
-
-const FinanceTile = ({
-  eyebrow,
-  title,
-  body,
-  warning = false,
-}: {
-  eyebrow: string
-  title: string
-  body: string
-  warning?: boolean
-}) => (
-  <div className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
-    <p className={`font-mono text-[10px] font-semibold uppercase tracking-[0.14em] ${warning ? 'text-[#c2410c]' : 'text-[#777777]'}`}>
-      {eyebrow}
-    </p>
-    <p className="mt-4 text-2xl font-bold tracking-tight">{title}</p>
-    <p className="mt-3 text-sm leading-6 text-[#666666]">{body}</p>
-  </div>
-)
