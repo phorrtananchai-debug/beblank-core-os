@@ -14,6 +14,14 @@
     @apply box-border;
   }
 
+  img, svg, video, canvas, audio, iframe, embed, object {
+    @apply max-w-full;
+  }
+
+  input, textarea, select, button {
+    @apply max-w-full;
+  }
+
   html {
     scroll-behavior: smooth;
   }

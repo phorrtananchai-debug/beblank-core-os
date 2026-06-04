@@ -13,9 +13,6 @@ const categoryLabels: Record<string, string> = {
   expense: 'Expense',
 }
 
-type SortField = 'occurredAt' | 'label' | 'amountTHB' | 'direction' | 'status'
-type SortDir = 'asc' | 'desc'
-
 export interface LedgerTableCallbacks {
   onAdd: () => void
   onEdit: (row: FinanceLedgerRow) => void
@@ -31,27 +28,11 @@ export const LedgerTable = ({ rows, callbacks }: Props) => {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [directionFilter, setDirectionFilter] = useState<'all' | 'inflow' | 'outflow'>('all')
-  const [sortField, setSortField] = useState<SortField>('occurredAt')
-  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const categories = useMemo(() => {
     const set = new Set(rows.map((r) => r.category))
     return ['all', ...Array.from(set)]
   }, [rows])
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortField(field)
-      setSortDir('asc')
-    }
-  }
-
-  const sortArrow = (field: SortField) => {
-    if (sortField !== field) return ''
-    return sortDir === 'asc' ? ' ▲' : ' ▼'
-  }
 
   const filtered = useMemo(() => {
     let result = [...rows]
@@ -69,18 +50,10 @@ export const LedgerTable = ({ rows, callbacks }: Props) => {
       result = result.filter((r) => r.direction === directionFilter)
     }
 
-    result.sort((a, b) => {
-      let cmp = 0
-      if (sortField === 'occurredAt') cmp = a.occurredAt.localeCompare(b.occurredAt)
-      else if (sortField === 'label') cmp = a.label.localeCompare(b.label)
-      else if (sortField === 'amountTHB') cmp = a.amountTHB - b.amountTHB
-      else if (sortField === 'direction') cmp = a.direction.localeCompare(b.direction)
-      else if (sortField === 'status') cmp = a.status.localeCompare(b.status)
-      return sortDir === 'asc' ? cmp : -cmp
-    })
+    result.sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
 
     return result
-  }, [rows, search, categoryFilter, directionFilter, sortField, sortDir])
+  }, [rows, search, categoryFilter, directionFilter])
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -138,47 +111,32 @@ export const LedgerTable = ({ rows, callbacks }: Props) => {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-[24px] border border-black/[0.05] bg-white/75">
-        <table className="w-full min-w-[700px] text-left text-sm">
-          <thead className="border-b border-black/[0.05] font-mono text-[9px] uppercase tracking-[0.12em] text-[#777777]">
-            <tr>
-              <th className="cursor-pointer px-4 py-3 hover:text-[#111111]" onClick={() => toggleSort('occurredAt')}>Date{sortArrow('occurredAt')}</th>
-              <th className="cursor-pointer px-4 py-3 hover:text-[#111111]" onClick={() => toggleSort('label')}>Label{sortArrow('label')}</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="cursor-pointer px-4 py-3 hover:text-[#111111]" onClick={() => toggleSort('direction')}>Direction{sortArrow('direction')}</th>
-              <th className="cursor-pointer px-4 py-3 hover:text-[#111111]" onClick={() => toggleSort('amountTHB')}>Amount{sortArrow('amountTHB')}</th>
-              <th className="cursor-pointer px-4 py-3 hover:text-[#111111]" onClick={() => toggleSort('status')}>Status{sortArrow('status')}</th>
-              <th className="px-4 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((row) => (
-              <tr key={row.id} className="border-b border-black/[0.04] last:border-b-0 hover:bg-black/[0.02]">
-                <td className="px-4 py-3 whitespace-nowrap">{row.occurredAt}</td>
-                <td className="px-4 py-3 font-semibold">
-                  {row.label}
-                  {row.notes ? <p className="mt-0.5 text-xs font-normal text-[#777777] max-w-56 truncate">{row.notes}</p> : null}
-                </td>
-                <td className="px-4 py-3 text-xs">{categoryLabels[row.category] ?? row.category}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-semibold ${row.direction === 'inflow' ? 'text-[#59634a]' : 'text-[#c2410c]'}`}>
-                    {row.direction === 'inflow' ? 'In' : 'Out'}
-                  </span>
-                </td>
-                <td className={`px-4 py-3 font-semibold ${row.direction === 'inflow' ? 'text-[#59634a]' : ''}`}>{thb(row.amountTHB)}</td>
-                <td className="px-4 py-3">
-                  <span className={`font-mono text-[10px] font-semibold uppercase ${statusColor(row.status)}`}>{row.status}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-1.5">
-                    <button className="btn-secondary !px-2.5 !py-1 text-xs" type="button" onClick={() => callbacks.onEdit(row)}>Edit</button>
-                    <button className="btn-secondary !px-2.5 !py-1 text-xs !text-[#c2410c]" type="button" onClick={() => callbacks.onDelete(row)}>Delete</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {filtered.map((row) => (
+          <div key={row.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold break-words">{row.label}</p>
+                <p className="mt-0.5 text-xs text-[#777777]">{row.occurredAt}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <span className={`font-semibold ${row.direction === 'inflow' ? 'text-[#59634a]' : 'text-[#c2410c]'}`}>{thb(row.amountTHB)}</span>
+                <p className={`text-xs font-semibold ${row.direction === 'inflow' ? 'text-[#59634a]' : 'text-[#c2410c]'}`}>
+                  {row.direction === 'inflow' ? 'Inflow' : 'Outflow'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-lg bg-black/[0.06] px-2 py-0.5 font-semibold">{categoryLabels[row.category] ?? row.category}</span>
+              <span className={`font-mono font-semibold uppercase ${statusColor(row.status)}`}>{row.status}</span>
+            </div>
+            {row.notes ? <p className="mt-2 text-xs leading-5 text-[#666666] break-words">{row.notes}</p> : null}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button className="btn-secondary !px-2.5 !py-1 text-xs" type="button" onClick={() => callbacks.onEdit(row)}>Edit</button>
+              <button className="btn-secondary !px-2.5 !py-1 text-xs !text-[#c2410c]" type="button" onClick={() => callbacks.onDelete(row)}>Delete</button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <p className="mt-3 text-xs text-[#777777]">{filtered.length} of {rows.length} rows</p>

@@ -54,16 +54,16 @@ export const OSLayout = () => {
           <button className="btn-secondary mt-6 w-full" onClick={logout}>Logout</button>
         </aside>
 
-        <div className="min-w-0 flex-1 space-y-5">
-          <div className="os-workspace-panel rounded-[34px] border border-black/[0.05] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
-            <Outlet />
+          <div className="min-w-0 flex-1 space-y-5">
+            <div className="os-workspace-panel break-words rounded-[34px] border border-black/[0.05] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
+              <Outlet />
+            </div>
+            <div className="os-ai-dock grid gap-4 rounded-[34px] border border-black/[0.05] bg-white/88 p-4 shadow-[0_20px_70px_-58px_rgba(0,0,0,0.32)] xl:grid-cols-3">
+              <AIContextExportPanel contexts={data.aiContexts} />
+              <AISuggestionImportPanel onImport={queueSuggestionImport} />
+              <ModuleAISummaryPanel moduleName="" suggestions={data.aiSuggestions} />
+            </div>
           </div>
-          <div className="os-ai-dock grid gap-4 rounded-[34px] border border-black/[0.05] bg-white/88 p-4 shadow-[0_20px_70px_-58px_rgba(0,0,0,0.32)] xl:grid-cols-3">
-            <AIContextExportPanel contexts={data.aiContexts} />
-            <AISuggestionImportPanel onImport={queueSuggestionImport} />
-            <ModuleAISummaryPanel moduleName="" suggestions={data.aiSuggestions} />
-          </div>
-        </div>
       </div>
     </div>
   )

@@ -388,7 +388,7 @@ export const InvestmentsPage = () => {
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Investments / early Aequitas core</p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Investments / Stocks</h2>
+            <h2 className="mt-4 max-w-4xl break-words text-3xl font-extrabold leading-[0.92] tracking-tight md:text-5xl lg:text-7xl">Investments / Stocks</h2>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Manual portfolio input is the source of truth. Finnhub and Thai NAV are helper sources only. No broker execution, no auto trading, and no helper source can overwrite Por's manual records.</p>
           </div>
           <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
@@ -584,7 +584,7 @@ const Metric = ({ label, value }: { label: string; value: number | string }) => 
   </div>
 )
 
-const Mini = ({ label, value }: { label: string; value: string }) => (
+const Mini = ({ label, value }: { label: string; value: string | ReactNode }) => (
   <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3">
     <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-[#777777]">{label}</p>
     <p className="mt-1 font-semibold">{value}</p>
@@ -758,56 +758,34 @@ const HoldingsTab = ({
 }) => (
   <div className="space-y-5">
     <SectionPanel label="Holdings" title="Allocation posture" endSlot={<button className="btn-primary" type="button">Queue Manual Tx</button>}>
-      <div className="mb-4 overflow-x-auto rounded-[24px] border border-black/[0.05] bg-white/75">
-        <table className="w-full min-w-[780px] text-left text-sm">
-          <thead className="border-b border-black/[0.05] font-mono text-[9px] uppercase tracking-[0.12em] text-[#777777]">
-            <tr>
-              <th className="px-4 py-3">Holding</th>
-              <th className="px-4 py-3">Current value</th>
-              <th className="px-4 py-3">Gain/loss</th>
-              <th className="px-4 py-3">Allocation</th>
-              <th className="px-4 py-3">Last update</th>
-              <th className="px-4 py-3">Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            {holdings.map((holding) => {
-              const asset = financeAssets.find((item) => item.id === holding.assetId)
-              const costBasis = (holding.units ?? holding.quantity) * holding.averageCost
-              const gainLoss = (holding.marketValueTHB ?? 0) - costBasis
-              return (
-                <tr key={holding.id} className="border-b border-black/[0.04] last:border-b-0">
-                  <td className="px-4 py-3 font-semibold">{asset?.symbol ?? holding.assetId}<p className="text-xs font-normal text-[#777777]">{asset?.name}</p></td>
-                  <td className="px-4 py-3">{thb(holding.marketValueTHB)}</td>
-                  <td className={`px-4 py-3 ${gainLoss < 0 ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{thb(gainLoss)}</td>
-                  <td className="px-4 py-3">{holding.allocationPercent ?? 0}% / target {holding.targetAllocationPercent ?? 0}%</td>
-                  <td className="px-4 py-3">{holding.lastUpdated ?? 'manual'}</td>
-                  <td className="px-4 py-3"><span className="pill">{asset?.sourceOfTruth ?? 'manual'}{holding.sourceStatus?.isStale ? ' / stale' : ''}</span></td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
       <div className="grid gap-3 lg:grid-cols-2">
         {holdings.map((holding) => {
           const asset = financeAssets.find((item) => item.id === holding.assetId)
           const drift = (holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)
+          const costBasis = (holding.units ?? holding.quantity) * holding.averageCost
+          const gainLoss = (holding.marketValueTHB ?? 0) - costBasis
           return (
             <article key={holding.id} className="surface-hover rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
               <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-base font-bold">{asset?.symbol ?? asset?.name}</p>
-                  <p className="mt-1 text-xs text-[#777777]">{asset?.name} / {asset?.category} / {holding.currentPosture}</p>
+                <div className="min-w-0">
+                  <p className="text-base font-bold break-words">{asset?.symbol ?? asset?.name}</p>
+                  <p className="mt-1 text-xs text-[#777777] break-words">{asset?.name} / {asset?.category} / {holding.currentPosture}</p>
                 </div>
-                <span className={`font-mono text-[10px] font-semibold uppercase ${holding.risk === 'high' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{holding.risk}</span>
+                <span className={`shrink-0 font-mono text-[10px] font-semibold uppercase ${holding.risk === 'high' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{holding.risk}</span>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+              <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                 <Mini label="Value" value={thb(holding.marketValueTHB)} />
-                <Mini label="Alloc" value={`${holding.allocationPercent}% / ${holding.targetAllocationPercent}%`} />
+                <Mini label="Gain/loss" value={
+                  <span className={gainLoss < 0 ? 'text-[#c2410c]' : 'text-[#59634a]'}>{thb(gainLoss)}</span>
+                } />
+                <Mini label="Alloc" value={`${holding.allocationPercent ?? 0}% / ${holding.targetAllocationPercent ?? 0}%`} />
                 <Mini label="DCA" value={holding.dcaStatus ?? 'review'} />
               </div>
-              <p className="mt-3 text-xs leading-5 text-[#666666]">{holding.notes}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span className="pill">{asset?.sourceOfTruth ?? 'manual'}{holding.sourceStatus?.isStale ? ' / stale' : ''}</span>
+                <span className="text-[#777777]">updated {holding.lastUpdated ?? 'manual'}</span>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[#666666] break-words">{holding.notes}</p>
               {Math.abs(drift) >= 2 ? <button className="btn-secondary mt-4" type="button" onClick={() => queueDriftReview(holding)}>Queue Drift Review</button> : null}
             </article>
           )
@@ -875,61 +853,49 @@ const AllocationTab = ({
       </SectionPanel>
 
       <SectionPanel label="Drift detection" title="Allocation variance" endSlot={<span className="pill">{driftHoldings.length} above threshold</span>}>
-        <div className="overflow-x-auto rounded-[24px] border border-black/[0.05] bg-white/75">
-          <table className="w-full min-w-[600px] text-left text-sm">
-            <thead className="border-b border-black/[0.05] font-mono text-[9px] uppercase tracking-[0.12em] text-[#777777]">
-              <tr>
-                <th className="px-4 py-3">Holding</th>
-                <th className="px-4 py-3">Value THB</th>
-                <th className="px-4 py-3">Current %</th>
-                <th className="px-4 py-3">Target %</th>
-                <th className="px-4 py-3">Drift</th>
-                <th className="px-4 py-3">Posture</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {holdings.map((holding) => {
-                const asset = financeAssets.find((item) => item.id === holding.assetId)
-                const currentPct = holding.allocationPercent ?? 0
-                const targetPct = holding.targetAllocationPercent ?? 0
-                const drift = currentPct - targetPct
-                const isDrifted = Math.abs(drift) >= 2
-                return (
-                  <tr key={holding.id} className={`border-b border-black/[0.04] last:border-b-0 ${isDrifted ? 'bg-[#fffaf4]' : ''}`}>
-                    <td className="px-4 py-3 font-semibold">{asset?.symbol ?? holding.assetId}</td>
-                    <td className="px-4 py-3">{thb(holding.marketValueTHB)}</td>
-                    <td className="px-4 py-3">{currentPct}%</td>
-                    <td className="px-4 py-3">{targetPct}%</td>
-                    <td className={`px-4 py-3 font-semibold ${drift > 0 ? 'text-[#c2410c]' : drift < 0 ? 'text-[#59634a]' : ''}`}>
+        <div className="grid gap-3 md:grid-cols-2">
+          {holdings.map((holding) => {
+            const asset = financeAssets.find((item) => item.id === holding.assetId)
+            const currentPct = holding.allocationPercent ?? 0
+            const targetPct = holding.targetAllocationPercent ?? 0
+            const drift = currentPct - targetPct
+            const isDrifted = Math.abs(drift) >= 2
+            return (
+              <div key={holding.id} className={`rounded-2xl border p-4 ${isDrifted ? 'border-[#ead7c3] bg-[#fffaf4]' : 'border-black/[0.05] bg-[#faf9f8]'}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold break-words">{asset?.symbol ?? holding.assetId}</p>
+                    <p className="mt-0.5 text-xs text-[#777777]">{thb(holding.marketValueTHB)}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className={`font-mono text-xs font-bold ${drift > 0 ? 'text-[#c2410c]' : drift < 0 ? 'text-[#59634a]' : ''}`}>
                       {drift > 0 ? `+${drift.toFixed(1)}%` : `${drift.toFixed(1)}%`}
-                    </td>
-                    <td className="px-4 py-3"><span className="pill">{holding.currentPosture ?? '—'}</span></td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {isDrifted ? (
-                          <InvestmentActionButton
-                            actionType="finance.resolveAllocationDrift"
-                            description={`Resolve allocation drift for ${asset?.symbol ?? holding.assetId}`}
-                            payload={{ holdingId: holding.id }}
-                            createActionRequest={createActionRequest}
-                            label="แก้ไขดริฟท์"
-                          />
-                        ) : null}
-                        <InvestmentActionButton
-                          actionType="finance.markRebalanceReviewed"
-                          description={`Mark rebalance reviewed for ${asset?.symbol ?? holding.assetId}`}
-                          payload={{ holdingId: holding.id }}
-                          createActionRequest={createActionRequest}
-                          label="รีวิวแล้ว"
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                    </span>
+                    <p className="font-mono text-[10px] text-[#777777]">{currentPct}% → {targetPct}%</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="pill">{holding.currentPosture ?? '—'}</span>
+                  {isDrifted ? (
+                    <InvestmentActionButton
+                      actionType="finance.resolveAllocationDrift"
+                      description={`Resolve allocation drift for ${asset?.symbol ?? holding.assetId}`}
+                      payload={{ holdingId: holding.id }}
+                      createActionRequest={createActionRequest}
+                      label="แก้ไขดริฟท์"
+                    />
+                  ) : null}
+                  <InvestmentActionButton
+                    actionType="finance.markRebalanceReviewed"
+                    description={`Mark rebalance reviewed for ${asset?.symbol ?? holding.assetId}`}
+                    payload={{ holdingId: holding.id }}
+                    createActionRequest={createActionRequest}
+                    label="รีวิวแล้ว"
+                  />
+                </div>
+              </div>
+            )
+          })}
         </div>
         <p className="mt-4 text-sm leading-6 text-[#666666]">Holdings highlighted if drift exceeds ±2%. Allocation changes require manual review through ActionRequest approval. No auto rebalance.</p>
       </SectionPanel>
@@ -985,49 +951,39 @@ const TransactionsTab = ({
       {transactions.length === 0 ? (
         <p className="text-sm text-[#777777]">ยังไม่มีรายการเดินบัญชี</p>
       ) : (
-        <div className="overflow-x-auto rounded-[24px] border border-black/[0.05] bg-white/75">
-          <table className="w-full min-w-[600px] text-left text-sm">
-            <thead className="border-b border-black/[0.05] font-mono text-[9px] uppercase tracking-[0.12em] text-[#777777]">
-              <tr>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Description</th>
-                <th className="px-4 py-3">Amount</th>
-                <th className="px-4 py-3">Notes</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx) => {
-                const asset = financeAssets.find((a) => a.id === tx.assetId)
-                return (
-                  <tr key={tx.id} className="border-b border-black/[0.04] last:border-b-0">
-                    <td className="px-4 py-3 text-xs text-[#777777]">{tx.occurredAt}</td>
-                    <td className="px-4 py-3"><span className="pill">{tx.type}</span></td>
-                    <td className="px-4 py-3 font-semibold">{tx.description}{asset ? <span className="block text-xs font-normal text-[#777777]">{asset.symbol}</span> : null}</td>
-                    <td className={`px-4 py-3 font-semibold ${tx.amountTHB < 0 || tx.type === 'sell' || tx.type === 'expense' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{thb(tx.amountTHB)}</td>
-                    <td className="px-4 py-3 text-xs text-[#777777]">{tx.notes ?? ''}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        <button
-                          className="btn-secondary"
-                          type="button"
-                          onClick={() => openEditTransactionNote(tx.id, tx.notes ?? '', tx.description)}
-                        >แก้ไข</button>
-                        <InvestmentActionButton
-                          actionType="finance.archiveTransaction"
-                          description={`Archive transaction ${tx.description}`}
-                          payload={{ transactionId: tx.id }}
-                          createActionRequest={createActionRequest}
-                          label="ลบ"
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {transactions.map((tx) => {
+            const asset = financeAssets.find((a) => a.id === tx.assetId)
+            return (
+              <div key={tx.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold break-words">{tx.description}{asset ? <span className="text-xs font-normal text-[#777777]"> / {asset.symbol}</span> : null}</p>
+                    <p className="mt-0.5 text-xs text-[#777777]">{tx.occurredAt}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className={`font-semibold ${tx.amountTHB < 0 || tx.type === 'sell' || tx.type === 'expense' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{thb(tx.amountTHB)}</span>
+                    <p className="text-xs text-[#777777]"><span className="pill">{tx.type}</span></p>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs leading-5 text-[#666666] break-words">{tx.notes ?? ''}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => openEditTransactionNote(tx.id, tx.notes ?? '', tx.description)}
+                  >แก้ไข</button>
+                  <InvestmentActionButton
+                    actionType="finance.archiveTransaction"
+                    description={`Archive transaction ${tx.description}`}
+                    payload={{ transactionId: tx.id }}
+                    createActionRequest={createActionRequest}
+                    label="ลบ"
+                  />
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
     </SectionPanel>
