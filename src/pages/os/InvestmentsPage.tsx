@@ -7,7 +7,6 @@ import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
-import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
 import { getSupportedFinnhubSymbols } from '../../core/connectors'
 import { useOs } from '../../core/os/OsContext'
 import type { ActionRequest, Holding } from '../../types/models'
@@ -91,7 +90,6 @@ const initialManualAssetDraft: ManualAssetDraft = {
 export const InvestmentsPage = () => {
   const {
     data,
-    sourceStatuses,
     providerStatuses,
     pendingApprovals,
     changeLogs,
@@ -385,25 +383,14 @@ export const InvestmentsPage = () => {
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
-          <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">การลงทุน / แกนหลัก Aequitas</p>
-            <h2 className="mt-4 max-w-4xl break-words text-3xl font-extrabold leading-[0.92] tracking-tight md:text-5xl lg:text-7xl">การลงทุน / หุ้น</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">ข้อมูลพอร์ตถูกป้อนด้วยมือเป็นแหล่งความจริงหลัก Finnhub และ Thai NAV เป็นแหล่งเสริมเท่านั้น ไม่มีการซื้อขายอัตโนมัติ และแหล่งเสริมไม่สามารถเขียนทับข้อมูลของ Por</p>
-          </div>
-          <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">หมายเหตุการจัดสรรจาก AI</p>
-            <p className="mt-4 text-xl font-semibold leading-snug">สัดส่วน Growth แน่นเกินไป</p>
-            <p className="mt-3 text-sm leading-6 text-[#666666]">NVDA และ PLTR สูงกว่าเป้า ควรอนุมัติ DCA หลักก่อน แล้วแก้ไขดริฟท์ก่อนเพิ่มความเสี่ยง</p>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-3 md:grid-cols-6">
-          <SourceStatusBadge status={sourceStatuses.investments} />
-          <SourceStatusBadge status={sourceStatuses.finnhub} />
-          <Metric label="มูลค่ารวม" value={thb(totalValue)} />
-          <Metric label="ปันผลประมาณการ" value={thb(expectedDividends)} />
-          <Metric label="DCA รายเดือน" value={thb(monthlyDcaTarget)} />
-          <Metric label="รายการดริฟท์" value={driftHoldings.length} />
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">การลงทุน / แกนหลัก Aequitas</p>
+        <h2 className="mt-4 text-2xl font-extrabold leading-[0.92] tracking-tight">การลงทุน / หุ้น</h2>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <OsHeroMetric icon="◆" value={thb(totalValue)} label="มูลค่าพอร์ต" helper="รวมทุกประเภท" color="neutral" progress={100} />
+          <OsHeroMetric icon="○" value={thb(cashPosture)} label="เงินสดรอจัดสรร" helper="สำรอง" color="blue" progress={totalValue > 0 ? (cashPosture / totalValue) * 100 : 0} />
+          <OsHeroMetric icon="↓" value={thb(monthlyDcaTarget)} label="แผน DCA เดือนนี้" helper="เป้าหมายรายเดือน" color="green" progress={totalValue > 0 ? (monthlyDcaTarget / totalValue) * 100 : 0} />
+          <OsHeroMetric icon="☆" value={thb(expectedDividends)} label="ปันผลประมาณการ" helper="ต่อปี" color="purple" progress={totalValue > 0 ? (expectedDividends / totalValue) * 100 : 0} />
+          <OsHeroMetric icon="△" value={`${driftHoldings.length} รายการ`} label="ความคลาดเคลื่อน" helper="สัดส่วนที่ดริฟท์" color={driftHoldings.length > 0 ? 'amber' : 'green'} progress={Math.min(driftHoldings.length * 10, 100)} />
         </div>
       </header>
 
@@ -576,6 +563,36 @@ export const InvestmentsPage = () => {
     </section>
   )
 }
+
+const OsHeroMetric = ({
+  icon,
+  value,
+  label,
+  helper,
+  color,
+  progress,
+}: {
+  icon: string
+  value: string
+  label: string
+  helper: string
+  color: string
+  progress: number
+}) => (
+  <div className={`os-hero-metric os-hero-metric-${color}`}>
+    <div className="flex items-center gap-3">
+      <span className={`os-icon-badge os-icon-badge-${color}`}>{icon}</span>
+      <div className="min-w-0 flex-1">
+        <p className="os-hero-value">{value}</p>
+        <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">{label}</p>
+      </div>
+    </div>
+    <div className="mt-3 os-progress-rail">
+      <div className={`os-progress-fill-${color}`} style={{ width: `${Math.min(progress, 100)}%` }} />
+    </div>
+    <p className="os-hero-sub">{helper}</p>
+  </div>
+)
 
 const Metric = ({ label, value }: { label: string; value: number | string }) => (
   <div className="rounded-2xl border border-black/[0.04] bg-white/75 px-4 py-3">

@@ -6,14 +6,14 @@ import { AISuggestionImportPanel } from '../components/shared/AISuggestionImport
 import { ModuleAISummaryPanel } from '../components/shared/ModuleAISummaryPanel'
 
 const links = [
-  { to: '/os', label: 'Command Center', end: true },
-  { to: '/os/studio', label: 'Studio' },
-  { to: '/os/finance', label: 'Capital' },
-  { to: '/os/finance/investments', label: 'Investments' },
-  { to: '/os/capital', label: 'Reserves' },
-  { to: '/os/finance/trading-lab', label: 'Trading Lab' },
-  { to: '/os/ai', label: 'AI Workspace' },
-  { to: '/os/settings', label: 'Settings' },
+  { to: '/os', label: 'Command Center', icon: '⊞', end: true },
+  { to: '/os/studio', label: 'Studio', icon: '◇' },
+  { to: '/os/finance', label: 'Capital', icon: '◎' },
+  { to: '/os/finance/investments', label: 'Investments', icon: '◆' },
+  { to: '/os/capital', label: 'Reserves', icon: '○' },
+  { to: '/os/finance/trading-lab', label: 'Trading Lab', icon: '△' },
+  { to: '/os/ai', label: 'AI Workspace', icon: '✦' },
+  { to: '/os/settings', label: 'Settings', icon: '⚙' },
 ]
 
 export const OSLayout = () => {
@@ -37,16 +37,17 @@ export const OSLayout = () => {
               </div>
             ))}
           </div>
-          <nav className="space-y-1.5">
+          <nav className="space-y-0.5">
             {links.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 end={link.end}
                 className={({ isActive }) =>
-                  `os-nav-link block rounded-2xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? 'bg-[var(--bb-accent)] text-white shadow-[0_10px_24px_-12px_var(--bb-accent)]' : 'text-[#4E463E] hover:bg-[var(--bb-accent-soft)] hover:text-[var(--bb-accent-strong)]'}`
+                  `os-sidebar-link ${isActive ? 'active' : ''}`
                 }
               >
+                <span className="os-sidebar-icon">{link.icon}</span>
                 {link.label}
               </NavLink>
             ))}

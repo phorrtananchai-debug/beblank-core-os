@@ -18,37 +18,31 @@ const getTone = (severity: SiteIssue['severity'] | TimelineItem['state'] | Task[
 
 const HeroMetricCard = ({
   label,
+  icon,
+  iconColor,
   value,
   sub,
-  accent = 'neutral',
+  progress,
 }: {
   label: string
+  icon: string
+  iconColor: string
   value: string
   sub: string
-  accent?: 'neutral' | 'amber' | 'red' | 'green' | 'blue'
-}) => {
-  const borderMap: Record<string, string> = {
-    neutral: 'border-[var(--bb-neutral-border)]',
-    amber: 'border-[var(--bb-amber-border)]',
-    red: 'border-[var(--bb-red-border)]',
-    green: 'border-[var(--bb-green-border)]',
-    blue: 'border-[var(--bb-blue-border)]',
-  }
-  const bgMap: Record<string, string> = {
-    neutral: 'bg-[var(--bb-neutral-soft)]',
-    amber: 'bg-[var(--bb-amber-soft)]',
-    red: 'bg-[var(--bb-red-soft)]',
-    green: 'bg-[var(--bb-green-soft)]',
-    blue: 'bg-[var(--bb-blue-soft)]',
-  }
-  return (
-    <div className={`rounded-2xl border p-4 ${borderMap[accent]} ${bgMap[accent]}`}>
-      <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p>
-      <p className="mt-1.5 text-2xl font-extrabold tracking-tight">{value}</p>
-      <p className="mt-1 text-xs leading-4 text-[var(--bb-text-muted)]">{sub}</p>
-    </div>
-  )
-}
+  progress?: { value: number; color: string }
+}) => (
+  <div className={`os-hero-metric os-hero-metric-${iconColor}`}>
+    <span className={`os-icon-badge os-icon-badge-${iconColor}`}>{icon}</span>
+    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p>
+    <p className="os-hero-value">{value}</p>
+    <p className="os-hero-sub">{sub}</p>
+    {progress && (
+      <div className="os-progress-rail">
+        <div className={`os-progress-fill os-progress-fill-${progress.color}`} style={{ width: `${progress.value}%` }} />
+      </div>
+    )}
+  </div>
+)
 
 const FinanceTile = ({
   eyebrow,
@@ -144,6 +138,10 @@ export const CommandCenterPage = () => {
   const attentionItems = alerts.length + atRiskTimeline.length
   const topAttention = alerts[0]?.label || atRiskTimeline[0]?.label || ''
 
+  const highSeverityCount = data.siteIssues.filter((i) => i.severity === 'high').length
+  const alertProgress = attentionItems > 0 ? Math.round((highSeverityCount / attentionItems) * 100) : 0
+  const financeProgress = totalAssets > 0 ? Math.round((portfolioValue / totalAssets) * 100) : 0
+
   const queueTodayFocusReview = () => {
     createActionRequest({
       module: 'studio',
@@ -155,38 +153,44 @@ export const CommandCenterPage = () => {
 
   return (
     <section className="command-center-space space-y-6">
-      {/* LEVEL 1: HERO + SUMMARY ROW */}
+      {/* HERO */}
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-5 md:p-6">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">
-          วันนี้ / ศูนย์ควบคุม
-        </p>
-        <h2 className="mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">
-          พื้นผิวปฏิบัติการของ Por
+        <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">
+          ศูนย์ควบคุมวันนี้
         </h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">
+          Command Center
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <HeroMetricCard
             label="ต้องตรวจสอบ"
+            icon="!"
+            iconColor={attentionItems > 0 ? 'red' : 'green'}
             value={attentionItems > 0 ? `${attentionItems} รายการ` : 'ปกติ'}
             sub={topAttention || 'ไม่มีรายการที่ต้องตรวจสอบ'}
-            accent={attentionItems > 2 ? 'red' : attentionItems > 0 ? 'amber' : 'green'}
+            progress={attentionItems > 0 ? { value: alertProgress, color: 'red' } : undefined}
           />
           <HeroMetricCard
             label="รออนุมัติ"
+            icon="✓"
+            iconColor={pendingApprovals.length > 0 ? 'amber' : 'green'}
             value={pendingApprovals.length > 0 ? `${pendingApprovals.length} รายการ` : 'ไม่มี'}
             sub={pendingApprovals[0]?.description?.slice(0, 28) || 'ไม่มีรายการรออนุมัติ'}
-            accent={pendingApprovals.length > 0 ? 'amber' : 'green'}
           />
           <HeroMetricCard
             label="ฐานะการเงิน"
+            icon="◎"
+            iconColor="neutral"
             value={formatTHB(totalAssets)}
             sub={`พอร์ต ${formatTHB(portfolioValue)} | สำรอง ${formatTHB(reserveValue)}`}
-            accent="neutral"
+            progress={{ value: financeProgress, color: 'neutral' }}
           />
           <HeroMetricCard
             label="ข้อเสนอแนะ AI"
+            icon="✦"
+            iconColor={unreviewedSuggestions.length > 0 ? 'blue' : 'neutral'}
             value={unreviewedSuggestions.length > 0 ? `${unreviewedSuggestions.length} ต้องการรีวิว` : 'ไม่มี'}
             sub={primarySuggestion?.title?.slice(0, 28) || 'ไม่มีข้อเสนอแนะใหม่'}
-            accent={unreviewedSuggestions.length > 0 ? 'blue' : 'neutral'}
           />
         </div>
       </header>
@@ -195,12 +199,12 @@ export const CommandCenterPage = () => {
       <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
         <main className="space-y-6">
           {/* — Focus Queue + Project Pulse — */}
-          <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
-            <article className="panel panel-float reveal-soft">
+          <div className="flex flex-col gap-5 lg:flex-row">
+            <div className="os-section-card reveal-soft flex-1">
               <div className="panel-header">
                 <div>
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">โฟกัสวันนี้</p>
-                  <h3>คิวงาน</h3>
+                  <h3>คิวงานวันนี้</h3>
                 </div>
                 <button className="btn-primary" type="button" onClick={queueTodayFocusReview}>
                   เพิ่มรีวิว
@@ -219,13 +223,13 @@ export const CommandCenterPage = () => {
               <p className="mt-4 text-xs leading-5 text-[var(--bb-text-muted)]">
                 UI Action → ActionRequest → อนุมัติ → mock → ChangeLog → Snapshot
               </p>
-            </article>
+            </div>
 
-            <article className="panel panel-float reveal-soft reveal-delay-1">
+            <div className="os-section-card reveal-soft reveal-delay-1">
               <div className="panel-header">
                 <div>
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">งานสตูดิโอ</p>
-                  <h3>ชีพจรโปรเจค</h3>
+                  <h3>ชีพจรโปรเจกต์</h3>
                 </div>
                 <span className="pill">{activeProjects.length} กำลังดำเนินการ</span>
               </div>
@@ -247,15 +251,15 @@ export const CommandCenterPage = () => {
                   ))}
                 </div>
               </div>
-            </article>
+            </div>
           </div>
 
           {/* — Financial Posture — */}
-          <section className="panel panel-float reveal-soft reveal-delay-2">
+          <div className="os-section-card reveal-soft reveal-delay-2">
             <div className="panel-header">
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">การเงิน</p>
-                <h3>ฐานะการเงิน</h3>
+                <h3>สรุปการเงิน</h3>
               </div>
               <span className="pill">ป้อนด้วยมือ</span>
             </div>
@@ -277,7 +281,7 @@ export const CommandCenterPage = () => {
                 warning
               />
             </div>
-          </section>
+          </div>
 
           {/* — Pending Approvals — */}
           <div className="reveal-soft reveal-delay-3">
@@ -289,7 +293,7 @@ export const CommandCenterPage = () => {
           </div>
 
           {/* — Activity Timeline — */}
-          <section className="panel panel-float reveal-soft reveal-delay-4">
+          <div className="os-section-card reveal-soft reveal-delay-4">
             <div className="panel-header">
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">กิจกรรม</p>
@@ -297,21 +301,21 @@ export const CommandCenterPage = () => {
               </div>
               <span className="pill">{activity.length}</span>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {activity.map((item) => (
-                <div key={item.id} className="grid grid-cols-[0.8rem_1fr] gap-3 border-b border-black/[0.05] pb-3 last:border-b-0">
+                <div key={item.id} className="grid grid-cols-[0.8rem_1fr] gap-3 border-b border-black/[0.05] pb-2 last:border-b-0">
                   <span className={`mt-1 h-2 w-2 rounded-full bg-current ${item.tone}`} />
                   <div>
                     <p className="text-sm font-semibold">{item.label}</p>
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{item.meta}</p>
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-[#777777]">{item.meta}</p>
                   </div>
                 </div>
               ))}
             </div>
-          </section>
+          </div>
 
           {/* — AI Suggestions (subdued) — */}
-          <section className="panel reveal-soft reveal-delay-5">
+          <div className="os-section-card reveal-soft reveal-delay-5">
             <div className="panel-header">
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">AI</p>
@@ -331,13 +335,13 @@ export const CommandCenterPage = () => {
                 <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีข้อเสนอแนะ AI</p>
               )}
             </div>
-          </section>
+          </div>
         </main>
 
         {/* LEVEL 3: REFERENCE RAIL */}
         <aside className="intelligence-rail space-y-4">
           {/* Alerts */}
-          <section className="panel rail-panel">
+          <section className="os-reference-card">
             <div className="panel-header">
               <h3>การแจ้งเตือน / ความเสี่ยง</h3>
               <span className="pill">{alerts.length}</span>
@@ -355,7 +359,7 @@ export const CommandCenterPage = () => {
             </div>
           </section>
 
-          <section className="panel rail-panel">
+          <section className="os-reference-card">
             <div className="panel-header">
               <h3>สถานะแหล่งข้อมูล</h3>
             </div>

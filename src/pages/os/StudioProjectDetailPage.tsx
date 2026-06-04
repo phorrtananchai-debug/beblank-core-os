@@ -145,6 +145,10 @@ export const StudioProjectDetailPage = () => {
     queueAction('studio.movePhaseToReview', `Move ${phase.phase} phase to review`, { phaseId: phase.id })
   }
 
+  const pendingReviewCount = reviews.filter((r) => r.status === 'pending').length
+  const openSiteIssueCount = siteIssues.filter((i) => i.status === 'open').length
+  const inspectionTotal = pendingReviewCount + openSiteIssueCount
+
   return (
     <section className="studio-project-detail space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
@@ -154,22 +158,50 @@ export const StudioProjectDetailPage = () => {
         >
           &larr; กลับไปหน้ารวมโปรเจค
         </Link>
-        <div className="mt-5 grid gap-6 xl:grid-cols-[1fr_0.4fr]">
-          <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">
-              {project.client} / {project.location}
-            </p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">
-              {project.name}
-            </h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">{project.operationalNotes}</p>
-          </div>
-          <div className="intelligence-card space-y-3 rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <DetailLabel label="สถานะ" value={project.status} />
-            <DetailLabel label="เฟส" value={project.phase ?? '—'} />
-            <DetailLabel label="ไทม์ไลน์" value={project.timelineStatus ?? 'steady'} tone={statusClass(project.timelineStatus ?? 'steady')} />
-            <DetailLabel label="เจ้าของ" value={project.owner} />
-          </div>
+        <div className="mt-5">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">
+            {project.client} / {project.location}
+          </p>
+          <h2 className="mt-4 max-w-4xl text-2xl font-extrabold leading-[0.92] tracking-tight">
+            {project.name}
+          </h2>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <MetricCard
+            icon="◆"
+            label="สถานะ"
+            value={project.status}
+            color={statusClass(project.status)}
+            helper=""
+          />
+          <MetricCard
+            icon="▶"
+            label="เฟสปัจจุบัน"
+            value={project.phase ?? '—'}
+            color=""
+            helper=""
+          />
+          <MetricCard
+            icon="◈"
+            label="ไทม์ไลน์"
+            value={project.timelineStatus ?? 'steady'}
+            color={statusClass(project.timelineStatus ?? 'steady')}
+            helper=""
+          />
+          <MetricCard
+            icon="!"
+            label="สิ่งที่ต้องตรวจสอบ"
+            value={`${inspectionTotal} รายการ`}
+            color={inspectionTotal > 0 ? 'text-[#c2410c]' : 'text-[#59634a]'}
+            helper="รีวิว + ปัญหา"
+          />
+          <MetricCard
+            icon="≡"
+            label="WorkScope"
+            value={`${workScopeSections.length} หมวด`}
+            color=""
+            helper=""
+          />
         </div>
       </header>
 
@@ -247,19 +279,33 @@ export const StudioProjectDetailPage = () => {
   )
 }
 
-const DetailLabel = ({ label, tone, value }: { label: string; tone?: string; value: string }) => (
-  <div>
-    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
-    <p className={`mt-1 text-sm font-semibold ${tone ?? ''}`}>{value}</p>
-  </div>
-)
-
-const MetricCard = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-2xl border border-black/[0.04] bg-white/70 px-4 py-3">
-    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
-    <p className="mt-2 text-xl font-bold">{value}</p>
-  </div>
-)
+const MetricCard = ({
+  label,
+  value,
+  icon,
+  color,
+  helper,
+}: {
+  label: string
+  value: string
+  icon?: string
+  color?: string
+  helper?: string
+}) => {
+  const toneClass = color?.replace('text-[', '').replace(']', '') ?? ''
+  const glowColor =
+    toneClass === '#c2410c' ? 'red' :
+    toneClass === '#9a6a1f' ? 'amber' :
+    toneClass === '#59634a' ? 'green' : 'neutral'
+  return (
+    <div className={`os-hero-metric os-hero-metric-${glowColor}`}>
+      {icon && <span className={`os-icon-badge os-icon-badge-${glowColor}`}>{icon}</span>}
+      <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p>
+      <p className={`os-hero-value ${color ?? ''}`}>{value}</p>
+      {helper && <p className="os-hero-sub">{helper}</p>}
+    </div>
+  )
+}
 
 const OverviewSection = ({
   artworkRecords,
