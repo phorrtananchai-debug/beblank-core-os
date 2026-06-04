@@ -18,7 +18,7 @@ import { LoginPage } from '../pages/public/LoginPage'
 import { ProjectDetailPage } from '../pages/public/ProjectDetailPage'
 import { ProjectsPage } from '../pages/public/ProjectsPage'
 import { ServicesPage } from '../pages/public/ServicesPage'
-import { ProtectedRoute } from '../routes/ProtectedRoute'
+import { ProtectedRoute } from './ProtectedRoute'
 
 export const AppRoutes = () => {
   return (
@@ -71,4 +71,3 @@ export const AppRoutes = () => {
     </Routes>
   )
 }
-
