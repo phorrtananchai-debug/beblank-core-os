@@ -1,5 +1,6 @@
 ﻿import { type ReactNode, useMemo, useState } from 'react'
 import { InvestmentActionButton } from '../../components/investments/InvestmentActionButton'
+import { InvestmentInputDialog, type DialogMode } from '../../components/investments/InvestmentInputDialog'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
@@ -106,6 +107,13 @@ export const InvestmentsPage = () => {
   const [showAssetModal, setShowAssetModal] = useState(false)
   const [showAssetSuggestions, setShowAssetSuggestions] = useState(false)
   const [navDrafts, setNavDrafts] = useState<Record<string, string>>({})
+  const [dialogState, setDialogState] = useState<{
+    mode: DialogMode
+    initial: Record<string, unknown>
+    actionType: string
+    description: string
+    basePayload: Record<string, unknown>
+  } | null>(null)
 
   const totalValue = data.holdings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
   const driftHoldings = data.holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
@@ -257,6 +265,47 @@ export const InvestmentsPage = () => {
       actionType: 'finance.resolveAllocationDrift',
       description: `Resolve allocation drift review for ${assetName(holding.assetId)}`,
       payload: { holdingId: holding.id },
+    })
+  }
+
+  const handleDialogConfirm = (form: Record<string, unknown>) => {
+    if (!dialogState) return
+    createActionRequest({
+      module: 'finance',
+      actionType: dialogState.actionType,
+      description: dialogState.description,
+      payload: { ...dialogState.basePayload, ...form },
+    })
+    setDialogState(null)
+  }
+
+  const openEditTransactionNote = (transactionId: string, currentNotes: string, rowDescription: string) => {
+    setDialogState({
+      mode: 'edit-transaction-note',
+      initial: { notes: currentNotes },
+      actionType: 'finance.editTransactionNote',
+      description: `Edit note for ${rowDescription}`,
+      basePayload: { transactionId },
+    })
+  }
+
+  const openAdjustDcaTarget = (dcaId: string, currentAmount: number, assetLabel: string) => {
+    setDialogState({
+      mode: 'adjust-dca-target',
+      initial: { newAmountTHB: currentAmount },
+      actionType: 'finance.adjustDcaTarget',
+      description: `Adjust DCA target for ${assetLabel}`,
+      basePayload: { dcaId },
+    })
+  }
+
+  const openAddResearchNote = () => {
+    setDialogState({
+      mode: 'add-research-note',
+      initial: {},
+      actionType: 'finance.addResearchNote',
+      description: 'Add manual research note',
+      basePayload: {},
     })
   }
 
@@ -425,7 +474,7 @@ export const InvestmentsPage = () => {
       ) : null}
 
       {activeTab === 'transactions' ? (
-        <TransactionsTab createActionRequest={createActionRequest} financeAssets={data.financeAssets} transactions={data.transactions} />
+        <TransactionsTab createActionRequest={createActionRequest} financeAssets={data.financeAssets} openEditTransactionNote={openEditTransactionNote} transactions={data.transactions} />
       ) : null}
 
       {activeTab === 'dca' ? (
@@ -435,6 +484,7 @@ export const InvestmentsPage = () => {
           dcaImpactPreview={dcaImpactPreview}
           dcaQueue={dcaQueue}
           dcaRecords={data.dcaRecords}
+          openAdjustDcaTarget={openAdjustDcaTarget}
           queueDca={queueDca}
         />
       ) : null}
@@ -457,7 +507,7 @@ export const InvestmentsPage = () => {
       ) : null}
 
       {activeTab === 'research' ? (
-        <ResearchTab aiImports={data.aiImports} createActionRequest={createActionRequest} tradingStrategyNotes={data.tradingStrategyNotes} />
+        <ResearchTab aiImports={data.aiImports} openAddResearchNote={openAddResearchNote} tradingStrategyNotes={data.tradingStrategyNotes} />
       ) : null}
 
       {activeTab === 'ai' ? (
@@ -504,6 +554,15 @@ export const InvestmentsPage = () => {
             </div>
           </div>
         </div>
+      ) : null}
+
+      {dialogState ? (
+        <InvestmentInputDialog
+          mode={dialogState.mode}
+          initial={dialogState.initial}
+          onConfirm={handleDialogConfirm}
+          onCancel={() => setDialogState(null)}
+        />
       ) : null}
 
       <section className="grid gap-5 xl:grid-cols-2">
@@ -902,10 +961,12 @@ const AllocationTab = ({
 const TransactionsTab = ({
   createActionRequest,
   financeAssets,
+  openEditTransactionNote,
   transactions,
 }: {
   createActionRequest: (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
   financeAssets: Array<{ id: string; symbol?: string }>
+  openEditTransactionNote: (transactionId: string, currentNotes: string, rowDescription: string) => void
   transactions: Array<{ id: string; assetId?: string; occurredAt: string; type: string; description: string; amountTHB: number; notes?: string }>
 }) => (
   <div className="space-y-5">
@@ -948,13 +1009,11 @@ const TransactionsTab = ({
                     <td className="px-4 py-3 text-xs text-[#777777]">{tx.notes ?? ''}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
-                        <InvestmentActionButton
-                          actionType="finance.editTransactionNote"
-                          description={`Edit note for ${tx.description}`}
-                          payload={{ transactionId: tx.id, notes: prompt('แก้ไขบันทึก:', tx.notes) ?? tx.notes }}
-                          createActionRequest={createActionRequest}
-                          label="แก้ไข"
-                        />
+                        <button
+                          className="btn-secondary"
+                          type="button"
+                          onClick={() => openEditTransactionNote(tx.id, tx.notes ?? '', tx.description)}
+                        >แก้ไข</button>
                         <InvestmentActionButton
                           actionType="finance.archiveTransaction"
                           description={`Archive transaction ${tx.description}`}
@@ -981,6 +1040,7 @@ const DcaTab = ({
   dcaImpactPreview,
   dcaQueue,
   dcaRecords,
+  openAdjustDcaTarget,
   queueDca,
 }: {
   assetName: (id: string) => string
@@ -988,6 +1048,7 @@ const DcaTab = ({
   dcaImpactPreview: string
   dcaQueue: Array<{ assetId: string; cadence: string; plannedAmountTHB: number; status: string; nextRunDate: string }>
   dcaRecords: Array<{ id: string; assetId: string; cadence: string; plannedAmountTHB: number; status: string; nextRunDate: string }>
+  openAdjustDcaTarget: (dcaId: string, currentAmount: number, assetLabel: string) => void
   queueDca: () => void
 }) => {
   const monthlyDcaTarget = dcaRecords.reduce((s, r) => s + (r.status === 'planned' ? r.plannedAmountTHB : 0), 0)
@@ -1018,13 +1079,11 @@ const DcaTab = ({
                     createActionRequest={createActionRequest}
                     label="ข้ามรอบนี้"
                   />
-                  <InvestmentActionButton
-                    actionType="finance.adjustDcaTarget"
-                    description={`Adjust DCA target for ${assetName(record.assetId)}`}
-                    payload={{ dcaId: record.id, newAmountTHB: Number(prompt('จำนวนใหม่ (THB):', String(record.plannedAmountTHB)) ?? record.plannedAmountTHB) }}
-                    createActionRequest={createActionRequest}
-                    label="ปรับเป้า"
-                  />
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => openAdjustDcaTarget(record.id, record.plannedAmountTHB, assetName(record.assetId))}
+                  >ปรับเป้า</button>
                 </div>
               </div>
             ))}
@@ -1193,24 +1252,22 @@ const WatchlistTab = ({
 
 const ResearchTab = ({
   aiImports,
-  createActionRequest,
+  openAddResearchNote,
   tradingStrategyNotes,
 }: {
   aiImports: Array<{ id: string; module: string; title: string; diffPreview: string; reviewStatus: string }>
-  createActionRequest: (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
+  openAddResearchNote: () => void
   tradingStrategyNotes: Array<{ id: string; title: string; note: string; riskLevel: string; status?: string; tags?: string[] }>
 }) => (
   <div className="space-y-5">
     <SectionPanel label="Research" title="Strategy notes and thesis" endSlot={
       <div className="flex flex-wrap gap-2">
         <span className="pill">{tradingStrategyNotes.length} notes</span>
-        <InvestmentActionButton
-          actionType="finance.addResearchNote"
-          description="Add manual research note"
-          payload={{ title: prompt('หัวข้อ:', 'Research note') ?? 'Research note', note: prompt('บันทึก:', '') ?? '', riskLevel: 'medium' }}
-          createActionRequest={createActionRequest}
-          label="เพิ่มบันทึก"
-        />
+        <button
+          className="btn-secondary"
+          type="button"
+          onClick={openAddResearchNote}
+        >เพิ่มบันทึก</button>
       </div>
     }>
       {tradingStrategyNotes.length === 0 ? (
