@@ -18,7 +18,7 @@ export const DeleteLedgerDialog = ({ row, onConfirm, onCancel }: Props) => {
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Delete / ลบ</p>
             <h3>Confirm Delete / ยืนยันการลบ</h3>
           </div>
-          <button className="btn-secondary" type="button" onClick={onCancel}>Close</button>
+          <button className="btn-secondary" type="button" onClick={onCancel}>ปิด</button>
         </div>
 
         <div className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">

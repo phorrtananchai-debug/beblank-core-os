@@ -69,9 +69,9 @@ export const LedgerTable = ({ rows, callbacks }: Props) => {
       <div className="panel">
         <div className="panel-header">
           <h3>Ledger / บัญชีรายการ</h3>
-          <button className="btn-primary" type="button" onClick={callbacks.onAdd}>Add Row</button>
+          <button className="btn-primary" type="button" onClick={callbacks.onAdd}>เพิ่มรายการ</button>
         </div>
-        <p className="text-sm text-[#666666]">ไม่มีรายการเดินบัญชี  เพิ่มรายการแรก</p>
+        <p className="text-sm text-[#666666]">ไม่มีรายการเดินบัญชี เพิ่มรายการแรก</p>
       </div>
     )
   }
@@ -132,8 +132,8 @@ export const LedgerTable = ({ rows, callbacks }: Props) => {
             </div>
             {row.notes ? <p className="mt-2 text-xs leading-5 text-[#666666] break-words">{row.notes}</p> : null}
             <div className="mt-3 flex flex-wrap gap-2">
-              <button className="btn-secondary !px-2.5 !py-1 text-xs" type="button" onClick={() => callbacks.onEdit(row)}>Edit</button>
-              <button className="btn-secondary !px-2.5 !py-1 text-xs !text-[#c2410c]" type="button" onClick={() => callbacks.onDelete(row)}>Delete</button>
+                    <button className="btn-secondary !px-2.5 !py-1 text-xs" type="button" onClick={() => callbacks.onEdit(row)}>แก้ไข</button>
+                    <button className="btn-secondary !px-2.5 !py-1 text-xs !text-[#c2410c]" type="button" onClick={() => callbacks.onDelete(row)}>ลบ</button>
             </div>
           </div>
         ))}

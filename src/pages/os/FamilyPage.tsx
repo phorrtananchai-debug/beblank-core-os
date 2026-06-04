@@ -71,8 +71,8 @@ export const FamilyPage = () => {
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="panel panel-float">
           <div className="panel-header">
-            <h3>Reserve health / สถานะสำรอง</h3>
-            <button className="btn-primary" type="button" onClick={queueReserveTransfer}>Queue Reserve Transfer</button>
+            <h3 className="os-level-1-title">Reserve health / สถานะสำรอง</h3>
+            <button className="btn-primary" type="button" onClick={queueReserveTransfer}>โอนเข้า</button>
           </div>
           <div className="space-y-3">
             {data.reserveRows.length === 0 ? (
@@ -98,8 +98,8 @@ export const FamilyPage = () => {
           </div>
         </div>
 
-        <div className="panel panel-float">
-          <div className="panel-header"><h3>Obligations / ภาระผูกพัน</h3><span className="pill">debt {thb(debtTotal)}</span></div>
+        <div className="os-level-2">
+          <div className="panel-header"><h3 className="os-level-2-title">Obligations / ภาระผูกพัน</h3><span className="pill">หนี้ {thb(debtTotal)}</span></div>
           <div className="space-y-3">
             {data.familyFinanceRecords.length === 0 ? (
               <p className="text-sm text-[#666666]">ไม่มีภาระผูกพัน</p>
@@ -152,7 +152,7 @@ export const FamilyPage = () => {
       ) : null}
 
       <div className="panel">
-        <div className="panel-header"><h3>Snapshot summaries / สรุปสถานะ</h3><span className="pill">manual posture</span></div>
+        <div className="panel-header"><h3>Snapshot summaries / สรุปสถานะ</h3><span className="pill">สถานะปัจจุบัน</span></div>
         {data.financeSnapshots.filter((snapshot) => snapshot.module === 'family-office').length === 0 ? (
           <p className="text-sm text-[#666666]">ไม่มี snapshot</p>
         ) : (

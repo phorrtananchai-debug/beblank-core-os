@@ -13,23 +13,23 @@ export const AISuggestionImportPanel = ({ onImport }: Props) => {
   return (
     <section className="panel">
       <div className="panel-header">
-        <h3>AI Suggestion Import</h3>
+        <h3>นำเข้าข้อเสนอแนะ AI</h3>
       </div>
-      <p className="text-sm text-[#6e675d]">Paste Jarvis B summary, preview, then queue approval.</p>
+      <p className="text-sm text-[#6e675d]">วางสรุปจาก Jarvis B ตรวจสอบ แล้วส่งขออนุมัติ</p>
       <div className="mt-3 space-y-2">
-        <input className="input" value={module} onChange={(e) => setModule(e.target.value)} placeholder="Module" />
-        <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
+        <input className="input" value={module} onChange={(e) => setModule(e.target.value)} placeholder="โมดูล" />
+        <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="หัวข้อ" />
         <textarea
           className="input h-20"
           value={recommendation}
           onChange={(e) => setRecommendation(e.target.value)}
-          placeholder="Recommendation"
+          placeholder="คำแนะนำ"
         />
         <textarea
           className="input h-16"
           value={riskNotes}
           onChange={(e) => setRiskNotes(e.target.value)}
-          placeholder="Risk notes"
+          placeholder="หมายเหตุความเสี่ยง"
         />
       </div>
       <button
@@ -42,7 +42,7 @@ export const AISuggestionImportPanel = ({ onImport }: Props) => {
           setRiskNotes('')
         }}
       >
-        Import Suggestion
+        นำเข้า
       </button>
     </section>
   )

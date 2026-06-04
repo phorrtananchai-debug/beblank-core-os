@@ -33,22 +33,22 @@ export const FamilyOfficePage = () => {
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Family Office / cash discipline</p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Private operating finance, without ERP noise.</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Cash reserve, obligations, project collections, debt, expenses, runway, and manual ledger rows for calm back-office control.</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">ครอบครัว / วินัยการเงิน</p>
+            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">การเงินส่วนตัวของสตูดิโอ ไม่มี ERP</h2>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">เงินสำรอง ภาระผูกพัน รายรับจากโปรเจค หนี้สิน ค่าใช้จ่าย สภาพคล่อง และรายการเดินบัญชี สำหรับควบคุมการเงินแบบไม่ซับซ้อน</p>
           </div>
           <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Reserve risk note</p>
-            <p className="mt-4 text-xl font-semibold leading-snug">Studio reserve is on watch.</p>
-            <p className="mt-3 text-sm leading-6 text-[#666666]">Runway is healthy overall, but equipment spend should wait until project payment clears.</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ความเสี่ยงเงินสำรอง</p>
+            <p className="mt-4 text-xl font-semibold leading-snug">เงินสำรองสตูดิโออยู่ในระดับเฝ้าระวัง</p>
+            <p className="mt-3 text-sm leading-6 text-[#666666]">สภาพคล่องโดยรวมยังดี แต่อุปกรณ์ควรชะลอจนกว่าเงินโปรเจคจะชำระ</p>
           </div>
         </div>
         <div className="mt-6 grid gap-3 md:grid-cols-5">
           <SourceStatusBadge status={sourceStatuses.familyOffice} />
-          <Metric label="Monthly inflow" value={thb(inflow)} />
-          <Metric label="Known outflow" value={thb(outflow)} />
-          <Metric label="Reserve" value={thb(reserveTotal)} />
-          <Metric label="Runway" value={`${runwayMonths} months`} />
+          <Metric label="รายรับ/เดือน" value={thb(inflow)} />
+          <Metric label="รายจ่าย/เดือน" value={thb(outflow)} />
+          <Metric label="เงินสำรอง" value={thb(reserveTotal)} />
+          <Metric label="สภาพคล่อง" value={`${runwayMonths} เดือน`} />
         </div>
       </header>
 

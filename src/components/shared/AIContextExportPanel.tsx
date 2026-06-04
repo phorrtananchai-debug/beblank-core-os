@@ -9,9 +9,9 @@ export const AIContextExportPanel = ({ contexts }: { contexts: AIContext[] }) =>
   return (
     <section className="panel">
       <div className="panel-header">
-        <h3>AI Context Export</h3>
+        <h3>ส่งออกบริบท AI</h3>
       </div>
-      <p className="text-sm text-[#6e675d]">Manual-first: export context and send to Jarvis B yourself.</p>
+      <p className="text-sm text-[#6e675d]">ป้อนด้วยตนเอง: ส่งออกบริบทและส่งให้ Jarvis B เอง</p>
       <select
         className="mt-3 w-full rounded-xl border border-[#dad3c7] bg-white px-3 py-2 text-sm"
         value={selectedId}

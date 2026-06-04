@@ -6,7 +6,7 @@ export const ModuleAISummaryPanel = ({ moduleName, suggestions }: { moduleName: 
   return (
     <section className="panel">
       <div className="panel-header">
-        <h3>{moduleName} AI Summary</h3>
+        <h3>{moduleName} — สรุป AI</h3>
         <span className="pill">{scoped.length}</span>
       </div>
       {scoped.length === 0 ? (

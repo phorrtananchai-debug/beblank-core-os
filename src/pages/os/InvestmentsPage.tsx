@@ -23,15 +23,15 @@ const statusClass = (status: string) => {
 type InvestmentsTab = 'overview' | 'portfolio' | 'holdings' | 'allocation' | 'transactions' | 'dca' | 'dividends' | 'watchlist' | 'research' | 'ai'
 
 const tabs: Array<{ key: InvestmentsTab; label: string }> = [
-  { key: 'overview', label: 'overview' },
-  { key: 'portfolio', label: 'portfolio' },
-  { key: 'holdings', label: 'holdings' },
-  { key: 'allocation', label: 'allocation' },
-  { key: 'transactions', label: 'transactions' },
+  { key: 'overview', label: 'ภาพรวม' },
+  { key: 'portfolio', label: 'พอร์ต' },
+  { key: 'holdings', label: 'กองทุน' },
+  { key: 'allocation', label: 'จัดสรร' },
+  { key: 'transactions', label: 'ธุรกรรม' },
   { key: 'dca', label: 'DCA' },
-  { key: 'dividends', label: 'dividends' },
-  { key: 'watchlist', label: 'watchlist' },
-  { key: 'research', label: 'research' },
+  { key: 'dividends', label: 'ปันผล' },
+  { key: 'watchlist', label: 'ติดตาม' },
+  { key: 'research', label: 'วิจัย' },
   { key: 'ai', label: 'AI' },
 ]
 
@@ -363,21 +363,21 @@ export const InvestmentsPage = () => {
     <article className="rounded-[28px] border border-black/[0.05] bg-white/80 p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-lg font-bold">Preview before approval</p>
-          <p className="mt-2 text-sm leading-6 text-[#666666]">Draft only. The holding is created only after approval through ActionRequest and the mock Sheet adapter.</p>
+          <p className="text-lg font-bold">ตรวจสอบก่อนอนุมัติ</p>
+          <p className="mt-2 text-sm leading-6 text-[#666666]">แบบร่างเท่านั้น สินทรัพย์จะถูกสร้างเมื่ออนุมัติผ่าน ActionRequest และ mock Sheet adapter</p>
         </div>
         <span className="pill">source: manual</span>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Mini label="Cost basis" value={thb(manualPreview.costBasisTHB)} />
-        <Mini label="Current value" value={thb(manualPreview.currentValueTHB)} />
-        <Mini label="Helper source" value={helperSource} />
-        <Mini label="Allocation impact" value={`${manualPreview.allocationImpact.toFixed(1)}%`} />
-        <Mini label="DCA impact" value={manualPreview.dcaImpact} />
-        <Mini label="Source status" value={isThaiAsset ? 'Thai NAV/manual sheet helper' : 'Finnhub helper for US only'} />
+        <Mini label="ต้นทุน" value={thb(manualPreview.costBasisTHB)} />
+        <Mini label="มูลค่าปัจจุบัน" value={thb(manualPreview.currentValueTHB)} />
+        <Mini label="แหล่งที่มา" value={helperSource} />
+        <Mini label="ผลกระทบจัดสรร" value={`${manualPreview.allocationImpact.toFixed(1)}%`} />
+        <Mini label="ผลกระทบ DCA" value={manualPreview.dcaImpact} />
+        <Mini label="สถานะแหล่ง" value={isThaiAsset ? 'Thai NAV / ช่วยป้อน' : 'Finnhub สำหรับ US เท่านั้น'} />
       </div>
       {manualPreview.missingDataWarning ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-[#fffaf4] p-3 text-xs leading-5 text-[#9a4f18]">{manualPreview.missingDataWarning}</p> : null}
-      <p className="mt-4 text-xs leading-5 text-[#666666]">Finnhub remains helper-only for US assets. It never overwrites units, average cost, allocation, manual notes, or Thai NAV rows.</p>
+      <p className="mt-4 text-xs leading-5 text-[#666666]">Finnhub เป็นแหล่งเสริมสำหรับสินทรัพย์ US เท่านั้น ไม่สามารถเขียนทับหน่วย ต้นทุนถัวเฉลี่ย สัดส่วน หรือบันทึกของ Por ได้</p>
       {withSubmit ? <button className="btn-primary mt-5 w-full" type="button" onClick={queueManualAssetAdd}>Queue for Approval</button> : null}
     </article>
   )
@@ -387,23 +387,23 @@ export const InvestmentsPage = () => {
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Investments / early Aequitas core</p>
-            <h2 className="mt-4 max-w-4xl break-words text-3xl font-extrabold leading-[0.92] tracking-tight md:text-5xl lg:text-7xl">Investments / Stocks</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Manual portfolio input is the source of truth. Finnhub and Thai NAV are helper sources only. No broker execution, no auto trading, and no helper source can overwrite Por's manual records.</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">การลงทุน / แกนหลัก Aequitas</p>
+            <h2 className="mt-4 max-w-4xl break-words text-3xl font-extrabold leading-[0.92] tracking-tight md:text-5xl lg:text-7xl">การลงทุน / หุ้น</h2>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">ข้อมูลพอร์ตถูกป้อนด้วยมือเป็นแหล่งความจริงหลัก Finnhub และ Thai NAV เป็นแหล่งเสริมเท่านั้น ไม่มีการซื้อขายอัตโนมัติ และแหล่งเสริมไม่สามารถเขียนทับข้อมูลของ Por</p>
           </div>
           <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">AI allocation note</p>
-            <p className="mt-4 text-xl font-semibold leading-snug">Growth sleeve is slightly crowded.</p>
-            <p className="mt-3 text-sm leading-6 text-[#666666]">NVDA and PLTR sit above target. Approve core DCA first, then resolve drift before adding more satellite risk.</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">หมายเหตุการจัดสรรจาก AI</p>
+            <p className="mt-4 text-xl font-semibold leading-snug">สัดส่วน Growth แน่นเกินไป</p>
+            <p className="mt-3 text-sm leading-6 text-[#666666]">NVDA และ PLTR สูงกว่าเป้า ควรอนุมัติ DCA หลักก่อน แล้วแก้ไขดริฟท์ก่อนเพิ่มความเสี่ยง</p>
           </div>
         </div>
         <div className="mt-6 grid gap-3 md:grid-cols-6">
           <SourceStatusBadge status={sourceStatuses.investments} />
           <SourceStatusBadge status={sourceStatuses.finnhub} />
-          <Metric label="Total THB" value={thb(totalValue)} />
-          <Metric label="Dividend estimate" value={thb(expectedDividends)} />
-          <Metric label="Monthly DCA" value={thb(monthlyDcaTarget)} />
-          <Metric label="Drift reviews" value={driftHoldings.length} />
+          <Metric label="มูลค่ารวม" value={thb(totalValue)} />
+          <Metric label="ปันผลประมาณการ" value={thb(expectedDividends)} />
+          <Metric label="DCA รายเดือน" value={thb(monthlyDcaTarget)} />
+          <Metric label="รายการดริฟท์" value={driftHoldings.length} />
         </div>
       </header>
 
@@ -520,8 +520,8 @@ export const InvestmentsPage = () => {
             <section className="panel panel-float">
               <div className="panel-header">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Manual source of truth</p>
-                  <h3>Add asset to early Aequitas ledger</h3>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">แหล่งข้อมูลหลัก</p>
+                  <h3>เพิ่มสินทรัพย์ในสมุด Aequitas</h3>
                 </div>
                 <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal</button>
               </div>
@@ -543,10 +543,10 @@ export const InvestmentsPage = () => {
           <div className="modal-panel">
             <div className="panel-header">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Add Asset Modal</p>
-                <h3>Preview before approval</h3>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">เพิ่มสินทรัพย์</p>
+                <h3>ตรวจสอบก่อนอนุมัติ</h3>
               </div>
-              <button className="btn-secondary" type="button" onClick={() => setShowAssetModal(false)}>Close</button>
+              <button className="btn-secondary" type="button" onClick={() => setShowAssetModal(false)}>ปิด</button>
             </div>
             <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
               {renderAssetInputs(true)}
@@ -631,27 +631,27 @@ const OverviewTab = ({
   totalValue: number
 }) => (
   <div className="space-y-5">
-    <SectionPanel label="Portfolio summary" title="Manual wealth notebook">
+    <SectionPanel label="สรุปพอร์ต" title="สมุดบันทึกความมั่งคั่ง">
       <div className="grid gap-3 md:grid-cols-6">
-        <Metric label="Total THB" value={thb(totalValue)} />
-        <Metric label="Monthly DCA" value={thb(monthlyDcaTarget)} />
-        <Metric label="Dividend estimate" value={thb(expectedDividends)} />
-        <Metric label="Cash reserve" value={thb(cashPosture)} />
-        <Metric label="Drift items" value={driftHoldings.length} />
-        <Metric label="Allocation groups" value={Object.keys(holdingsByCategory).length} />
+        <Metric label="มูลค่ารวม" value={thb(totalValue)} />
+        <Metric label="DCA ต่อเดือน" value={thb(monthlyDcaTarget)} />
+        <Metric label="ปันผลประมาณการ" value={thb(expectedDividends)} />
+        <Metric label="เงินสดสำรอง" value={thb(cashPosture)} />
+        <Metric label="รายการดริฟท์" value={driftHoldings.length} />
+        <Metric label="กลุ่มจัดสรร" value={Object.keys(holdingsByCategory).length} />
       </div>
-      <p className="mt-4 text-sm leading-6 text-[#666666]">Portfolio rows stay manual-first. Helper prices help estimate value, but never overwrite units, average cost, allocation, or notes entered by Por.</p>
+      <p className="mt-4 text-sm leading-6 text-[#666666]">พอร์ตทั้งหมดป้อนด้วยมือ ราคาช่วยประมาณมูลค่าแต่ไม่เขียนทับหน่วย ต้นทุนถัวเฉลี่ย การจัดสรร หรือบันทึกของ Por</p>
     </SectionPanel>
-    <SectionPanel label="Posture breakdown" title="Core / Growth / Income / Reserve / Thai">
+    <SectionPanel label="สัดส่วนพอร์ต" title="Core / Growth / Income / Reserve / Thai">
       <div className="grid gap-3 md:grid-cols-5">
         {Object.entries(holdingsByCategory).map(([category, value]) => <Metric key={category} label={category} value={thb(value)} />)}
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <Mini label="Cash / dry powder" value={thb(cashPosture)} />
-        <Mini label="High-risk holdings" value={String(riskPosture)} />
-        <Mini label="DCA impact" value={`${dcaImpactPreview}% of portfolio`} />
+        <Mini label="เงินสดสำรอง" value={thb(cashPosture)} />
+        <Mini label="ความเสี่ยงสูง" value={String(riskPosture)} />
+        <Mini label="ผลกระทบ DCA" value={`${dcaImpactPreview}% ของพอร์ต`} />
       </div>
-      <p className="mt-4 text-sm leading-6 text-[#666666]">Holdings grouped by asset category. Target allocation and drift are reviewed in the Allocation tab.</p>
+      <p className="mt-4 text-sm leading-6 text-[#666666]">จัดกลุ่มตามประเภทสินทรัพย์ เป้าหมายและการดริฟท์ตรวจสอบได้ในแท็บจัดสรร</p>
     </SectionPanel>
   </div>
 )
@@ -677,40 +677,40 @@ const PortfolioTab = ({
 }) => (
   <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
     <main className="space-y-5">
-      <SectionPanel label="Manual source of truth" title="Add asset to early Aequitas ledger" endSlot={<button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal</button>}>
+      <SectionPanel label="แหล่งข้อมูลหลัก" title="เพิ่มสินทรัพย์ในสมุด Aequitas" endSlot={<button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>เปิด Modal</button>}>
         <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
           {renderAssetInputs()}
           {renderApprovalPreview()}
         </div>
       </SectionPanel>
 
-      <SectionPanel label="Finnhub manual market refresh" title="Delayed quote cache / THB posture" endSlot={
+      <SectionPanel label="รีเฟรชราคา Finnhub" title="แคชราคาล่าช้า / สภาพ THB" endSlot={
         <div className="flex flex-wrap gap-2">
-          <button className="btn-secondary" type="button" onClick={queueMarketSourceReview}>Review Stale Source</button>
-          <button className="btn-primary" type="button" onClick={queueMarketRefresh}>Refresh Market Data</button>
+          <button className="btn-secondary" type="button" onClick={queueMarketSourceReview}>ตรวจสอบแหล่ง</button>
+          <button className="btn-primary" type="button" onClick={queueMarketRefresh}>รีเฟรชราคา</button>
         </div>
       }>
         <div className="grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
           <article className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-lg font-bold">Connector status</p>
-                <p className="mt-2 text-sm leading-6 text-[#666666]">Manual approved refresh only. Missing key or failed request keeps mock/fallback prices visible.</p>
+                <p className="text-lg font-bold">สถานะ Connector</p>
+                <p className="mt-2 text-sm leading-6 text-[#666666]">รีเฟรชที่อนุมัติด้วยตนเองเท่านั้น ถ้าไม่มีคีย์หรือคำขอล้มเหลว ราคา mock/fallback จะยังแสดงอยู่</p>
               </div>
               <span className="pill">{finnhubProvider?.mode ?? 'fallback'}</span>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <Mini label="Last sync" value={finnhubProvider?.lastUpdated ? new Date(finnhubProvider.lastUpdated).toLocaleString() : 'not synced'} />
-              <Mini label="Stale" value={finnhubProvider?.stale ? 'yes' : 'no'} />
-              <Mini label="Fallback used" value={finnhubProvider?.fallbackUsed ? 'yes' : 'no'} />
-              <Mini label="Execution" value="none / read only" />
+              <Mini label="ซิงค์ล่าสุด" value={finnhubProvider?.lastUpdated ? new Date(finnhubProvider.lastUpdated).toLocaleString() : 'ไม่ได้ซิงค์'} />
+              <Mini label="ข้อมูลเก่า" value={finnhubProvider?.stale ? 'ใช่' : 'ไม่'} />
+              <Mini label="ใช้ Fallback" value={finnhubProvider?.fallbackUsed ? 'ใช่' : 'ไม่'} />
+              <Mini label="การทำงาน" value="ไม่มี / อ่านอย่างเดียว" />
             </div>
             <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-[#777777]">Supported: {supportedMarketSymbols.join(' / ')}</p>
             {finnhubProvider?.error ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-white/80 p-3 text-xs leading-5 text-[#9a4f18]">{finnhubProvider.error}</p> : null}
           </article>
           <article className="rounded-[28px] border border-black/[0.05] bg-white/75 p-5">
             <div className="flex items-center justify-between gap-4">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Sheet cache rows</p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">แถวแคชชีท</p>
               <span className="pill">{marketSymbols.length} symbols</span>
             </div>
             <div className="mt-4 grid gap-2 md:grid-cols-2">
@@ -757,7 +757,7 @@ const HoldingsTab = ({
   totalValue: number
 }) => (
   <div className="space-y-5">
-    <SectionPanel label="Holdings" title="Allocation posture" endSlot={<button className="btn-primary" type="button">Queue Manual Tx</button>}>
+    <SectionPanel label="กองทุนทั้งหมด" title="สัดส่วนการถือครอง" endSlot={<button className="btn-primary" type="button">เพิ่มรายการ</button>}>
       <div className="grid gap-3 lg:grid-cols-2">
         {holdings.map((holding) => {
           const asset = financeAssets.find((item) => item.id === holding.assetId)
@@ -774,11 +774,11 @@ const HoldingsTab = ({
                 <span className={`shrink-0 font-mono text-[10px] font-semibold uppercase ${holding.risk === 'high' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{holding.risk}</span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                <Mini label="Value" value={thb(holding.marketValueTHB)} />
-                <Mini label="Gain/loss" value={
+                <Mini label="มูลค่า" value={thb(holding.marketValueTHB)} />
+                <Mini label="กำไร/ขาดทุน" value={
                   <span className={gainLoss < 0 ? 'text-[#c2410c]' : 'text-[#59634a]'}>{thb(gainLoss)}</span>
                 } />
-                <Mini label="Alloc" value={`${holding.allocationPercent ?? 0}% / ${holding.targetAllocationPercent ?? 0}%`} />
+                <Mini label="สัดส่วน" value={`${holding.allocationPercent ?? 0}% / ${holding.targetAllocationPercent ?? 0}%`} />
                 <Mini label="DCA" value={holding.dcaStatus ?? 'review'} />
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
@@ -793,7 +793,7 @@ const HoldingsTab = ({
       </div>
     </SectionPanel>
 
-    <SectionPanel label="Thai NAV foundation" title="Manual NAV / future Sheet NAV bridge" endSlot={<span className="pill">no Finnhub</span>}>
+    <SectionPanel label="Thai NAV Foundation" title="NAV ป้อนด้วยมือ / สะพาน NAV ในอนาคต" endSlot={<span className="pill">ไม่มี Finnhub</span>}>
       <div className="grid gap-3 lg:grid-cols-3">
         {thaiNavAssets.map((asset) => {
           const valueTHB = asset.valueTHB ?? (asset.units ?? 0) * asset.nav
@@ -809,9 +809,9 @@ const HoldingsTab = ({
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                 <Mini label="NAV" value={thb(asset.nav)} />
-                <Mini label="Units" value={(asset.units ?? 0).toLocaleString()} />
-                <Mini label="Value" value={thb(valueTHB)} />
-                <Mini label="Alloc impact" value={`${allocation.toFixed(1)}%`} />
+                <Mini label="หน่วย" value={(asset.units ?? 0).toLocaleString()} />
+                <Mini label="มูลค่า" value={thb(valueTHB)} />
+                <Mini label="ผลกระทบ" value={`${allocation.toFixed(1)}%`} />
               </div>
               <div className="mt-4 grid gap-2">
                 <input className="input" inputMode="decimal" value={navDrafts[asset.id] ?? String(asset.nav)} onChange={(event) => setNavDrafts((prev) => ({ ...prev, [asset.id]: event.target.value }))} />
@@ -823,7 +823,7 @@ const HoldingsTab = ({
           )
         })}
       </div>
-      <p className="mt-4 rounded-2xl border border-black/[0.04] bg-white/75 p-3 text-xs leading-5 text-[#666666]">Thai funds, RMF, and local NAV assets use manual NAV now and a future Google Sheet NAV bridge later. They never use Finnhub and never create holdings automatically.</p>
+      <p className="mt-4 rounded-2xl border border-black/[0.04] bg-white/75 p-3 text-xs leading-5 text-[#666666]">กองทุนไทย RMF และ NAV ในประเทศใช้การป้อน NAV ด้วยตนเอง และในอนาคตจะใช้สะพาน Google Sheet NAV พวกนี้ไม่ใช้ Finnhub และไม่สร้างสินทรัพย์อัตโนมัติ</p>
     </SectionPanel>
   </div>
 )
@@ -845,14 +845,14 @@ const AllocationTab = ({
 
   return (
     <div className="space-y-5">
-      <SectionPanel label="Allocation" title="Target vs current" endSlot={<span className="pill">{driftHoldings.length} drift items</span>}>
+      <SectionPanel label="จัดสรรพอร์ต" title="เป้าหมาย vs ปัจจุบัน" endSlot={<span className="pill">{driftHoldings.length} รายการดริฟท์</span>}>
         <div className="grid gap-3 md:grid-cols-4">
           {Object.entries(holdingsByCategory).map(([category, value]) => <Metric key={category} label={category} value={thb(value)} />)}
         </div>
-        <p className="mt-4 text-sm leading-6 text-[#666666]">Current allocation by category. Review drift in the table below. No auto rebalance — every allocation change requires manual review and approval.</p>
+        <p className="mt-4 text-sm leading-6 text-[#666666]">สัดส่วนปัจจุบันตามหมวดหมู่ ตรวจสอบดริฟท์ด้านล่าง ไม่มีการปรับสมดุลอัตโนมัติ — ทุกการเปลี่ยนแปลงต้องผ่านการตรวจสอบและอนุมัติ</p>
       </SectionPanel>
 
-      <SectionPanel label="Drift detection" title="Allocation variance" endSlot={<span className="pill">{driftHoldings.length} above threshold</span>}>
+      <SectionPanel label="ตรวจจับดริฟท์" title="ความคลาดเคลื่อนของสัดส่วน" endSlot={<span className="pill">{driftHoldings.length} รายการเกินเกณฑ์</span>}>
         <div className="grid gap-3 md:grid-cols-2">
           {holdings.map((holding) => {
             const asset = financeAssets.find((item) => item.id === holding.assetId)
@@ -897,10 +897,10 @@ const AllocationTab = ({
             )
           })}
         </div>
-        <p className="mt-4 text-sm leading-6 text-[#666666]">Holdings highlighted if drift exceeds ±2%. Allocation changes require manual review through ActionRequest approval. No auto rebalance.</p>
+        <p className="mt-4 text-sm leading-6 text-[#666666]">รายการที่ไฮไลต์ถ้าดริฟท์เกิน ±2% การเปลี่ยนแปลงสัดส่วนต้องผ่านการตรวจสอบและอนุมัติ ไม่มีการปรับสมดุลอัตโนมัติ</p>
       </SectionPanel>
 
-      <SectionPanel label="Cash allocation" title="Reserve posture">
+      <SectionPanel label="จัดสรรเงินสด" title="สถานะเงินสำรอง">
         {holdings.filter((h) => financeAssets.find((a) => a.id === h.assetId)?.category === 'cash').map((holding) => {
           const asset = financeAssets.find((a) => a.id === holding.assetId)
           return (
@@ -936,7 +936,7 @@ const TransactionsTab = ({
   transactions: Array<{ id: string; assetId?: string; occurredAt: string; type: string; description: string; amountTHB: number; notes?: string }>
 }) => (
   <div className="space-y-5">
-    <SectionPanel label="Transactions" title="Recent manual activity" endSlot={
+    <SectionPanel label="ธุรกรรม" title="รายการล่าสุด" endSlot={
       <div className="flex flex-wrap gap-2">
         <span className="pill">{transactions.length} rows</span>
         <InvestmentActionButton
@@ -1010,9 +1010,9 @@ const DcaTab = ({
   const monthlyDcaTarget = dcaRecords.reduce((s, r) => s + (r.status === 'planned' ? r.plannedAmountTHB : 0), 0)
   return (
     <div className="space-y-5">
-      <SectionPanel label="DCA" title="Monthly investment plan" endSlot={<div className="flex flex-wrap gap-2"><span className="pill">{thb(monthlyDcaTarget)} monthly</span><button className="btn-primary" type="button" onClick={queueDca}>Queue DCA Contribution</button></div>}>
+      <SectionPanel label="DCA" title="แผนลงทุนประจำ" endSlot={<div className="flex flex-wrap gap-2"><span className="pill">{thb(monthlyDcaTarget)} ต่อเดือน</span><button className="btn-primary" type="button" onClick={queueDca}>ดำเนินการ DCA</button></div>}>
         <p className="mb-3 rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3 text-xs leading-5 text-[#666666]">
-          Preview impact: the next DCA adds about {dcaImpactPreview}% of the current portfolio after approval. Approval creates a transaction, ChangeLog, and Snapshot.
+          ผลกระทบเบื้องต้น: DCA ครั้งถัดไปจะเพิ่มประมาณ {dcaImpactPreview}% ของพอร์ตหลังอนุมัติ การอนุมัติจะสร้างธุรกรรม รายการเปลี่ยนแปลง และ Snapshot
         </p>
         {dcaQueue.length === 0 && dcaRecords.length === 0 ? (
           <p className="text-sm text-[#777777]">ยังไม่มีแผน DCA</p>
@@ -1046,7 +1046,7 @@ const DcaTab = ({
           </div>
         )}
       </SectionPanel>
-      <SectionPanel label="DCA allocation" title="Suggested split">
+      <SectionPanel label="สัดส่วน DCA" title="สัดส่วนแนะนำ">
         <div className="grid gap-3 md:grid-cols-3">
           {dcaRecords.filter((r) => r.status === 'planned').map((record) => {
             const pct = monthlyDcaTarget > 0 ? ((record.plannedAmountTHB / monthlyDcaTarget) * 100).toFixed(0) : '0'
@@ -1078,7 +1078,7 @@ const DividendsTab = ({
   expectedDividends: number
 }) => (
   <div className="space-y-5">
-    <SectionPanel label="Dividends" title="Income layer summary" endSlot={<span className="pill">{thb(expectedDividends)} estimated</span>}>
+    <SectionPanel label="ปันผล" title="สรุปชั้นรายได้" endSlot={<span className="pill">{thb(expectedDividends)} ประมาณการ</span>}>
       {dividendRecords.length === 0 ? (
         <p className="text-sm text-[#777777]">ยังไม่มีข้อมูลปันผล</p>
       ) : (
@@ -1120,12 +1120,12 @@ const DividendsTab = ({
         </div>
       )}
     </SectionPanel>
-    <SectionPanel label="Income estimate" title="Monthly / annual projection">
+    <SectionPanel label="ประมาณการรายได้" title="ประมาณการรายเดือน/รายปี">
       <div className="grid gap-3 md:grid-cols-2">
-        <Mini label="Monthly estimate" value={thb(Math.round(expectedDividends / 12))} />
-        <Mini label="Annual estimate" value={thb(expectedDividends)} />
+        <Mini label="ประมาณการต่อเดือน" value={thb(Math.round(expectedDividends / 12))} />
+        <Mini label="ประมาณการต่อปี" value={thb(expectedDividends)} />
       </div>
-      <p className="mt-3 text-sm leading-6 text-[#666666]">Estimated from expected dividend rows. Actual pay dates and amounts depend on statement review.</p>
+      <p className="mt-3 text-sm leading-6 text-[#666666]">ประมาณจากรายการปันผลที่คาดไว้ วันที่และจำนวนเงินจริงขึ้นอยู่กับการตรวจสอบใบแจ้งยอด</p>
     </SectionPanel>
   </div>
 )
@@ -1140,7 +1140,7 @@ const WatchlistTab = ({
   tradingWatchlist: Array<{ id: string; symbol: string; thesis: string; risk: string; status: string; notes: string }>
 }) => (
   <div className="space-y-5">
-    <SectionPanel label="Watchlist" title="Symbols under observation" endSlot={<span className="pill">{tradingWatchlist.length} symbols</span>}>
+    <SectionPanel label="รายการติดตาม" title="สินทรัพย์ที่เฝ้าดู" endSlot={<span className="pill">{tradingWatchlist.length} รายการ</span>}>
       {tradingWatchlist.length === 0 ? (
         <p className="text-sm text-[#777777]">ยังไม่มีสินทรัพย์ในรายการติดตาม</p>
       ) : (
@@ -1187,7 +1187,7 @@ const WatchlistTab = ({
       )}
     </SectionPanel>
     {tradingSignals.filter((s) => s.signal === 'watch').length > 0 ? (
-      <SectionPanel label="Signals" title="Sandbox observations" endSlot={<span className="pill">{tradingSignals.length} signals</span>}>
+      <SectionPanel label="สัญญาณ" title="การสังเกตใน Sandbox" endSlot={<span className="pill">{tradingSignals.length} สัญญาณ</span>}>
         <div className="grid gap-3 md:grid-cols-2">
           {tradingSignals.map((signal) => (
             <div key={signal.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
@@ -1216,7 +1216,7 @@ const ResearchTab = ({
   tradingStrategyNotes: Array<{ id: string; title: string; note: string; riskLevel: string; status?: string; tags?: string[] }>
 }) => (
   <div className="space-y-5">
-    <SectionPanel label="Research" title="Strategy notes and thesis" endSlot={
+    <SectionPanel label="วิจัย" title="บันทึกกลยุทธ์และทฤษฎี" endSlot={
       <div className="flex flex-wrap gap-2">
         <span className="pill">{tradingStrategyNotes.length} notes</span>
         <button
@@ -1249,7 +1249,7 @@ const ResearchTab = ({
       )}
     </SectionPanel>
     {aiImports.filter((imp) => imp.module === 'Finance' || imp.module === 'Trading Lab').length > 0 ? (
-      <SectionPanel label="AI import notes" title="AI-sourced suggestions" endSlot={<span className="pill">{aiImports.filter((imp) => imp.module === 'Finance' || imp.module === 'Trading Lab').length} imports</span>}>
+      <SectionPanel label="บันทึกจาก AI" title="ข้อเสนอแนะจาก AI" endSlot={<span className="pill">{aiImports.filter((imp) => imp.module === 'Finance' || imp.module === 'Trading Lab').length} รายการ</span>}>
         <div className="space-y-3">
           {aiImports.filter((imp) => imp.module === 'Finance' || imp.module === 'Trading Lab').map((importItem) => (
             <div key={importItem.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
@@ -1284,7 +1284,7 @@ const AiTab = ({
   const financeObservations = aiObservations.filter((obs) => obs.reviewStatus !== 'archived')
   return (
     <div className="space-y-5">
-      <SectionPanel label="AI context" title="Finance & investment reading">
+      <SectionPanel label="บริบท AI" title="ข้อมูลการเงินและการลงทุนสำหรับ AI">
         {financeContexts.length === 0 ? (
           <p className="text-sm text-[#777777]">ไม่มีบริบท AI สำหรับโมดูลการลงทุน</p>
         ) : (
@@ -1299,7 +1299,7 @@ const AiTab = ({
         )}
       </SectionPanel>
       {financeDigests.length > 0 ? (
-        <SectionPanel label="AI digests" title="Finance posture summaries" endSlot={<span className="pill">{financeDigests.length} digests</span>}>
+        <SectionPanel label="สรุป AI" title="สรุปสถานะการเงิน" endSlot={<span className="pill">{financeDigests.length} รายการ</span>}>
           <div className="space-y-3">
             {financeDigests.map((digest) => (
               <div key={digest.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
@@ -1312,7 +1312,7 @@ const AiTab = ({
         </SectionPanel>
       ) : null}
       {financeObservations.length > 0 ? (
-        <SectionPanel label="AI observations" title="Investment observations" endSlot={
+        <SectionPanel label="ข้อสังเกต AI" title="ข้อสังเกตการลงทุน" endSlot={
           <div className="flex flex-wrap gap-2">
             <span className="pill">{financeObservations.length} items</span>
             <InvestmentActionButton
@@ -1349,7 +1349,7 @@ const AiTab = ({
           </div>
         </SectionPanel>
       ) : null}
-      <p className="text-sm leading-6 text-[#666666]">AI panels below are shared across all OS modules.</p>
+      <p className="text-sm leading-6 text-[#666666]">แผง AI ด้านล่างใช้ร่วมกันทุกโมดูลของ OS</p>
     </div>
   )
 }

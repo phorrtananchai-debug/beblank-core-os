@@ -8,8 +8,8 @@ export const StudioPage = () => {
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-3xl font-semibold">Studio Work</h2>
-        <p className="text-sm text-[#615a50]">Project workspace, WorkScope, timeline, document control, site watch.</p>
+        <h2 className="text-3xl font-semibold">สตูดิโอ</h2>
+        <p className="text-sm text-[#615a50]">พื้นที่ทำงานโปรเจค WorkScope ไทม์ไลน์ ควบคุมเอกสาร ไซต์หน้างาน</p>
       </header>
 
       <SourceStatusBadge status={sourceStatuses.studio} />

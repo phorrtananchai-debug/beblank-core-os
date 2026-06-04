@@ -63,7 +63,7 @@ export const LedgerForm = ({ initial, onSubmit, onCancel, title }: Props) => {
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Ledger / บัญชีรายการ</p>
             <h3>{title}</h3>
           </div>
-          <button className="btn-secondary" type="button" onClick={onCancel}>Close</button>
+          <button className="btn-secondary" type="button" onClick={onCancel}>ปิด</button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

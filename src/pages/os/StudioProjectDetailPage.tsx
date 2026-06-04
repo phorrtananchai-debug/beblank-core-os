@@ -67,9 +67,9 @@ export const StudioProjectDetailPage = () => {
           className="mb-6 inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#777777] transition hover:bg-black/[0.05] hover:text-[#111111]"
           to="/os/studio/projects"
         >
-          &larr; Back to projects
+          &larr; กลับไปหน้ารวมโปรเจค
         </Link>
-        <EmptyState title="Project not found" body="The project ID in the URL does not match any known project. Check the route or select a project from the list." />
+        <EmptyState title="ไม่พบโปรเจค" body="ID โปรเจคใน URL ไม่ตรงกับโปรเจคที่มี ตรวจสอบเส้นทางหรือเลือกโปรเจคจากรายการ" />
       </section>
     )
   }
@@ -152,7 +152,7 @@ export const StudioProjectDetailPage = () => {
           className="inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#777777] transition hover:bg-black/[0.05] hover:text-[#111111]"
           to="/os/studio/projects"
         >
-          &larr; Back to projects
+          &larr; กลับไปหน้ารวมโปรเจค
         </Link>
         <div className="mt-5 grid gap-6 xl:grid-cols-[1fr_0.4fr]">
           <div>
@@ -165,10 +165,10 @@ export const StudioProjectDetailPage = () => {
             <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">{project.operationalNotes}</p>
           </div>
           <div className="intelligence-card space-y-3 rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <DetailLabel label="Status" value={project.status} />
-            <DetailLabel label="Phase" value={project.phase ?? '—'} />
-            <DetailLabel label="Timeline" value={project.timelineStatus ?? 'steady'} tone={statusClass(project.timelineStatus ?? 'steady')} />
-            <DetailLabel label="Owner" value={project.owner} />
+            <DetailLabel label="สถานะ" value={project.status} />
+            <DetailLabel label="เฟส" value={project.phase ?? '—'} />
+            <DetailLabel label="ไทม์ไลน์" value={project.timelineStatus ?? 'steady'} tone={statusClass(project.timelineStatus ?? 'steady')} />
+            <DetailLabel label="เจ้าของ" value={project.owner} />
           </div>
         </div>
       </header>
@@ -225,14 +225,14 @@ export const StudioProjectDetailPage = () => {
       <section>
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">AI Studio context</p>
-            <h3>Operational reading</h3>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">บริบท AI สตูดิโอ</p>
+            <h3>ข้อมูลสนับสนุนการทำงาน</h3>
           </div>
-          <span className="pill">{aiContexts.length} contexts</span>
+          <span className="pill">{aiContexts.length} รายการ</span>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {aiContexts.length === 0 ? (
-            <p className="text-sm text-[#777777]">No AI contexts available for the studio module.</p>
+            <p className="text-sm text-[#777777]">ไม่มีบริบท AI สำหรับโมดูลสตูดิโอ</p>
           ) : (
             aiContexts.map((ctx) => (
               <div key={ctx.id} className="panel panel-float">
@@ -287,20 +287,20 @@ const OverviewSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Project overview</p>
-        <h3>Linked data summary</h3>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ภาพรวมโปรเจค</p>
+        <h3>สรุปข้อมูลที่เชื่อมโยง</h3>
       </div>
       <span className="pill">{project.name}</span>
     </div>
     <div className="mt-5 grid gap-4 md:grid-cols-4">
-      <MetricCard label="WorkScope sections" value={String(workScopeSections.length)} />
-      <MetricCard label="Timeline phases" value={String(timelinePhases.length)} />
-      <MetricCard label="Documents" value={String(documents.length)} />
-      <MetricCard label="Site watch items" value={String(siteWatchUpdates.length + siteIssues.length)} />
-      <MetricCard label="Reviews" value={String(reviews.length)} />
-      <MetricCard label="Artwork references" value={String(artworkRecords.length)} />
-      <MetricCard label="Creative briefs" value={String(creativeBriefs.length)} />
-      <MetricCard label="Timeline milestones" value={String(timelineItems.length)} />
+      <MetricCard label="WorkScope" value={String(workScopeSections.length)} />
+      <MetricCard label="ไทม์ไลน์เฟส" value={String(timelinePhases.length)} />
+      <MetricCard label="เอกสาร" value={String(documents.length)} />
+      <MetricCard label="ไซต์หน้างาน" value={String(siteWatchUpdates.length + siteIssues.length)} />
+      <MetricCard label="รีวิว" value={String(reviews.length)} />
+      <MetricCard label="อาร์ตเวิร์ก" value={String(artworkRecords.length)} />
+      <MetricCard label="บรีฟ" value={String(creativeBriefs.length)} />
+      <MetricCard label="เหตุการณ์สำคัญ" value={String(timelineItems.length)} />
     </div>
   </section>
 )
@@ -319,13 +319,13 @@ const WorkScopeSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio backbone</p>
-        <h3>WorkScope sections</h3>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">โครงสร้างสตูดิโอ</p>
+        <h3>หมวดงาน</h3>
       </div>
-      <span className="pill">{workScopeSections.length} sections</span>
+      <span className="pill">{workScopeSections.length} หมวด</span>
     </div>
     {workScopeSections.length === 0 ? (
-      <p className="text-sm text-[#777777]">No WorkScope sections linked to this project.</p>
+      <p className="text-sm text-[#777777]">ไม่มีหมวดงานที่เชื่อมโยงกับโปรเจคนี้</p>
     ) : (
       <div className="space-y-3">
         {workScopeSections.map((scope) => (
@@ -334,7 +334,7 @@ const WorkScopeSection = ({
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{scope.code} / {scope.group}</p>
                 <p className="mt-1 text-sm font-semibold">{scope.title}</p>
-                <p className="mt-1 text-xs text-[#777777]">Phase: {scope.phase}</p>
+                <p className="mt-1 text-xs text-[#777777]">เฟส: {scope.phase}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(scope.operationalStatus)}`}>{scope.operationalStatus}</span>
@@ -373,18 +373,18 @@ const TimelineSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Project timeline</p>
-        <h3>Phases & milestones</h3>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ไทม์ไลน์โปรเจค</p>
+        <h3>เฟสและเหตุการณ์สำคัญ</h3>
       </div>
-      <span className="pill">{phases.length} phases / {timelineItems.length} milestones</span>
+      <span className="pill">{phases.length} เฟส / {timelineItems.length} เหตุการณ์</span>
     </div>
     {phases.length === 0 && timelineItems.length === 0 ? (
-      <p className="text-sm text-[#777777]">No timeline data linked to this project.</p>
+      <p className="text-sm text-[#777777]">ไม่มีข้อมูลไทม์ไลน์สำหรับโปรเจคนี้</p>
     ) : (
       <div className="grid gap-6 lg:grid-cols-2">
         {phases.length > 0 && (
           <div>
-            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Phases</p>
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">เฟส</p>
             <div className="space-y-3">
               {phases.map((phase) => (
                 <div key={phase.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
@@ -411,7 +411,7 @@ const TimelineSection = ({
         )}
         {timelineItems.length > 0 && (
           <div>
-            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Milestones</p>
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">เหตุการณ์สำคัญ</p>
             <div className="space-y-3">
               {timelineItems.map((item) => (
                 <div key={item.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
@@ -453,18 +453,18 @@ const SiteWatchSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Field awareness</p>
-        <h3>Site watch & issues</h3>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ข้อมูลหน้างาน</p>
+        <h3>ไซต์และการแจ้งปัญหา</h3>
       </div>
-      <span className="pill">{siteWatchUpdates.length} updates / {siteIssues.length} issues</span>
+      <span className="pill">{siteWatchUpdates.length} อัพเดต / {siteIssues.length} ปัญหา</span>
     </div>
     {siteWatchUpdates.length === 0 && siteIssues.length === 0 ? (
-      <p className="text-sm text-[#777777]">No site watch data linked to this project.</p>
+      <p className="text-sm text-[#777777]">ไม่มีข้อมูลหน้างานสำหรับโปรเจคนี้</p>
     ) : (
       <div className="grid gap-5 lg:grid-cols-2">
         {siteWatchUpdates.length > 0 && (
           <div className="space-y-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Watch updates</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">อัพเดตหน้างาน</p>
             {siteWatchUpdates.map((update) => (
               <div key={update.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -489,7 +489,7 @@ const SiteWatchSection = ({
         )}
         {siteIssues.length > 0 && (
           <div className="space-y-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Site issues</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ปัญหาหน้างาน</p>
             {siteIssues.map((issue) => (
               <div key={issue.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -527,13 +527,13 @@ const DocumentsSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Document operations</p>
-        <h3>Linked document packages</h3>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">จัดการเอกสาร</p>
+        <h3>ชุดเอกสารที่เชื่อมโยง</h3>
       </div>
-      <span className="pill">{documents.length} packages</span>
+      <span className="pill">{documents.length} ชุด</span>
     </div>
     {documents.length === 0 ? (
-      <p className="text-sm text-[#777777]">No documents linked to this project.</p>
+      <p className="text-sm text-[#777777]">ไม่มีเอกสารที่เชื่อมโยงกับโปรเจคนี้</p>
     ) : (
       <div className="space-y-3">
         {documents.map((document) => (
@@ -578,13 +578,13 @@ const ReviewsSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Review queue</p>
-        <h3>Studio reviews for this project</h3>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">คิวรีวิว</p>
+        <h3>รีวิวของโปรเจคนี้</h3>
       </div>
-      <span className="pill">{reviews.length} reviews</span>
+      <span className="pill">{reviews.length} รายการ</span>
     </div>
     {reviews.length === 0 ? (
-      <p className="text-sm text-[#777777]">No reviews linked to this project.</p>
+      <p className="text-sm text-[#777777]">ไม่มีรีวิวที่เชื่อมโยงกับโปรเจคนี้</p>
     ) : (
       <div className="space-y-3">
         {reviews.map((review) => (
