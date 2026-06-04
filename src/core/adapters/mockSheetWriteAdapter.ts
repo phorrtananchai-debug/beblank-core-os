@@ -3,10 +3,14 @@ import type {
   ActionRequest,
   AISuggestion,
   ChangeLogRecord,
+  DocumentRecord,
   FinanceLedgerRow,
   OsData,
+  SiteIssue,
+  SiteWatchUpdate,
   SnapshotRecord,
   SourceStatus,
+  StudioReview,
   StudioTimelinePhase,
   Task,
   TimelineItem,
@@ -31,6 +35,7 @@ const cloneData = (data: OsData): OsData => ({
   siteIssues: [...data.siteIssues],
   workScopeSections: [...data.workScopeSections],
   siteWatchUpdates: [...data.siteWatchUpdates],
+  artworkRecords: [...data.artworkRecords],
   creativeBriefs: [...data.creativeBriefs],
   studioReviews: [...data.studioReviews],
   financeAssets: [...data.financeAssets],
@@ -159,6 +164,118 @@ export const mockSheetWriteAdapter = (
             status: phase.status === 'complete' ? 'complete' : 'reviewed',
             risk: phase.risk === 'high' ? 'medium' : phase.risk,
             notes: `${phase.notes} Reviewed manually through Studio Timeline.`,
+          }
+        : phase,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.markWorkScopeComplete') {
+    const scopeId = String(request.payload.scopeId ?? '')
+    nextData.workScopeSections = nextData.workScopeSections.map((section): WorkScopeSection =>
+      section.id === scopeId ? { ...section, operationalStatus: 'complete' } : section,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.flagWorkScopeBlocked') {
+    const scopeId = String(request.payload.scopeId ?? '')
+    nextData.workScopeSections = nextData.workScopeSections.map((section): WorkScopeSection =>
+      section.id === scopeId ? { ...section, operationalStatus: 'blocked' } : section,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.escalateSiteIssue') {
+    const issueId = String(request.payload.issueId ?? '')
+    nextData.siteIssues = nextData.siteIssues.map((issue): SiteIssue =>
+      issue.id === issueId ? { ...issue, severity: 'high', status: 'review' } : issue,
+    )
+    nextData.studioReviews.unshift({
+      id: generateId('review'),
+      projectId: String(request.payload.projectId ?? ''),
+      type: 'site-review',
+      title: 'Site issue escalated — needs review',
+      linkedRecordId: issueId,
+      status: 'pending',
+      dueAt: now.slice(0, 10),
+    })
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.requestSiteReview') {
+    const siteWatchId = String(request.payload.siteWatchId ?? '')
+    nextData.siteWatchUpdates = nextData.siteWatchUpdates.map((update): SiteWatchUpdate =>
+      update.id === siteWatchId ? { ...update, status: 'review' } : update,
+    )
+    nextData.studioReviews.unshift({
+      id: generateId('review'),
+      projectId: String(request.payload.projectId ?? ''),
+      type: 'site-review',
+      title: 'Site watch item queued for review',
+      linkedRecordId: siteWatchId,
+      status: 'pending',
+      dueAt: now.slice(0, 10),
+    })
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.approveDocumentPackage') {
+    const documentId = String(request.payload.documentId ?? '')
+    nextData.documents = nextData.documents.map((document): DocumentRecord =>
+      document.id === documentId ? { ...document, approvalState: 'approved', updatedAt: now.slice(0, 10) } : document,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.archiveDocumentPackage') {
+    const documentId = String(request.payload.documentId ?? '')
+    nextData.documents = nextData.documents.map((document): DocumentRecord =>
+      document.id === documentId ? { ...document, approvalState: 'draft', issueDate: undefined, updatedAt: now.slice(0, 10) } : document,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.approveReview') {
+    const reviewId = String(request.payload.reviewId ?? '')
+    nextData.studioReviews = nextData.studioReviews.map((review): StudioReview =>
+      review.id === reviewId ? { ...review, status: 'approved' } : review,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.rejectReview') {
+    const reviewId = String(request.payload.reviewId ?? '')
+    nextData.studioReviews = nextData.studioReviews.map((review): StudioReview =>
+      review.id === reviewId ? { ...review, status: 'resolved' } : review,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.requestReviewChanges') {
+    const reviewId = String(request.payload.reviewId ?? '')
+    nextData.studioReviews = nextData.studioReviews.map((review): StudioReview =>
+      review.id === reviewId ? { ...review, type: 'revision', status: 'pending' } : review,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.markMilestoneComplete') {
+    const milestoneId = String(request.payload.milestoneId ?? '')
+    nextData.timeline = nextData.timeline.map((item): TimelineItem =>
+      item.id === milestoneId ? { ...item, state: 'completed' } : item,
+    )
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.movePhaseToReview') {
+    const phaseId = String(request.payload.phaseId ?? '')
+    nextData.studioTimelinePhases = nextData.studioTimelinePhases.map((phase): StudioTimelinePhase =>
+      phase.id === phaseId
+        ? {
+            ...phase,
+            status: phase.status === 'complete' ? 'complete' : 'reviewed',
+            notes: `${phase.notes} Phase moved to review through project detail.`,
           }
         : phase,
     )

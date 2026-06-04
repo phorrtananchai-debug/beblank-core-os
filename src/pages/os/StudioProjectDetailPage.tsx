@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { type ReactNode } from 'react'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { useOs } from '../../core/os/OsContext'
 import type {
@@ -31,9 +32,31 @@ const phaseTone: Record<StudioTimelinePhase['phase'], string> = {
   opening: 'bg-[#f1a86a] text-[#2f1606]',
 }
 
+const StudioActionButton = ({
+  children,
+  disabled,
+  onClick,
+  title,
+}: {
+  children: ReactNode
+  disabled?: boolean
+  onClick: () => void
+  title?: string
+}) => (
+  <button
+    className="rounded-full border border-black/[0.08] bg-white/80 px-3 py-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[#555555] transition hover:bg-black/[0.05] disabled:cursor-not-allowed disabled:opacity-30"
+    disabled={disabled}
+    title={title}
+    type="button"
+    onClick={onClick}
+  >
+    {children}
+  </button>
+)
+
 export const StudioProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>()
-  const { data } = useOs()
+  const { data, createActionRequest } = useOs()
 
   const project = data.projects.find((p) => p.id === projectId)
 
@@ -61,6 +84,66 @@ export const StudioProjectDetailPage = () => {
   const artworkRecords = data.artworkRecords.filter((a) => a.projectId === projectId)
   const creativeBriefs = data.creativeBriefs.filter((b) => b.projectId === projectId)
   const aiContexts = data.aiContexts.filter((ctx) => ctx.module === 'studio')
+
+  const queueAction = (actionType: string, description: string, payload: Record<string, unknown>) => {
+    createActionRequest({ module: 'studio', actionType: actionType, description, payload })
+  }
+
+  const queueScopeApproval = (scope: WorkScopeSection) => {
+    queueAction('studio.approveWorkScopeRevision', `Approve ${scope.code} WorkScope revision`, { scopeId: scope.id })
+  }
+
+  const queueScopeComplete = (scope: WorkScopeSection) => {
+    queueAction('studio.markWorkScopeComplete', `Mark ${scope.code} WorkScope complete`, { scopeId: scope.id })
+  }
+
+  const queueScopeBlocked = (scope: WorkScopeSection) => {
+    queueAction('studio.flagWorkScopeBlocked', `Flag ${scope.code} WorkScope blocked`, { scopeId: scope.id })
+  }
+
+  const queueSiteResolution = (siteUpdate: SiteWatchUpdate) => {
+    queueAction('studio.resolveSiteWatch', `Resolve site watch: ${siteUpdate.title}`, { siteWatchId: siteUpdate.id, projectId: projectId })
+  }
+
+  const queueSiteReview = (siteUpdate: SiteWatchUpdate) => {
+    queueAction('studio.requestSiteReview', `Request review for: ${siteUpdate.title}`, { siteWatchId: siteUpdate.id, projectId: projectId })
+  }
+
+  const queueIssueEscalation = (issue: SiteIssue) => {
+    queueAction('studio.escalateSiteIssue', `Escalate site issue: ${issue.issue}`, { issueId: issue.id, projectId: projectId })
+  }
+
+  const queueDocumentIssue = (document: DocumentRecord) => {
+    queueAction('studio.issueDocumentPackage', `Issue document package: ${document.title}`, { documentId: document.id })
+  }
+
+  const queueDocumentApprove = (document: DocumentRecord) => {
+    queueAction('studio.approveDocumentPackage', `Approve document package: ${document.title}`, { documentId: document.id })
+  }
+
+  const queueDocumentArchive = (document: DocumentRecord) => {
+    queueAction('studio.archiveDocumentPackage', `Archive document package: ${document.title}`, { documentId: document.id })
+  }
+
+  const queueReviewApprove = (review: StudioReview) => {
+    queueAction('studio.approveReview', `Approve review: ${review.title}`, { reviewId: review.id })
+  }
+
+  const queueReviewReject = (review: StudioReview) => {
+    queueAction('studio.rejectReview', `Reject review: ${review.title}`, { reviewId: review.id })
+  }
+
+  const queueReviewChanges = (review: StudioReview) => {
+    queueAction('studio.requestReviewChanges', `Request changes for: ${review.title}`, { reviewId: review.id })
+  }
+
+  const queueMilestoneComplete = (milestone: TimelineItem) => {
+    queueAction('studio.markMilestoneComplete', `Mark milestone complete: ${milestone.label}`, { milestoneId: milestone.id })
+  }
+
+  const queuePhaseReview = (phase: StudioTimelinePhase) => {
+    queueAction('studio.movePhaseToReview', `Move ${phase.phase} phase to review`, { phaseId: phase.id })
+  }
 
   return (
     <section className="studio-project-detail space-y-7">
@@ -103,15 +186,41 @@ export const StudioProjectDetailPage = () => {
         workScopeSections={workScopeSections}
       />
 
-      <WorkScopeSection workScopeSections={workScopeSections} />
+      <WorkScopeSection
+        onApprove={queueScopeApproval}
+        onBlocked={queueScopeBlocked}
+        onComplete={queueScopeComplete}
+        workScopeSections={workScopeSections}
+      />
 
-      <TimelineSection phases={timelinePhases} timelineItems={timelineItems} />
+      <TimelineSection
+        onMilestoneComplete={queueMilestoneComplete}
+        onPhaseReview={queuePhaseReview}
+        phases={timelinePhases}
+        timelineItems={timelineItems}
+      />
 
-      <SiteWatchSection siteIssues={siteIssues} siteWatchUpdates={siteWatchUpdates} />
+      <SiteWatchSection
+        onEscalate={queueIssueEscalation}
+        onRequestReview={queueSiteReview}
+        onResolve={queueSiteResolution}
+        siteIssues={siteIssues}
+        siteWatchUpdates={siteWatchUpdates}
+      />
 
-      <DocumentsSection documents={documents} />
+      <DocumentsSection
+        onApprove={queueDocumentApprove}
+        onArchive={queueDocumentArchive}
+        onIssue={queueDocumentIssue}
+        documents={documents}
+      />
 
-      <ReviewsSection reviews={reviews} />
+      <ReviewsSection
+        onApprove={queueReviewApprove}
+        onReject={queueReviewReject}
+        onRequestChanges={queueReviewChanges}
+        reviews={reviews}
+      />
 
       <section>
         <div className="panel-header">
@@ -196,7 +305,17 @@ const OverviewSection = ({
   </section>
 )
 
-const WorkScopeSection = ({ workScopeSections }: { workScopeSections: WorkScopeSection[] }) => (
+const WorkScopeSection = ({
+  onApprove,
+  onBlocked,
+  onComplete,
+  workScopeSections,
+}: {
+  onApprove: (scope: WorkScopeSection) => void
+  onBlocked: (scope: WorkScopeSection) => void
+  onComplete: (scope: WorkScopeSection) => void
+  workScopeSections: WorkScopeSection[]
+}) => (
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
@@ -217,10 +336,21 @@ const WorkScopeSection = ({ workScopeSections }: { workScopeSections: WorkScopeS
                 <p className="mt-1 text-sm font-semibold">{scope.title}</p>
                 <p className="mt-1 text-xs text-[#777777]">Phase: {scope.phase}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(scope.operationalStatus)}`}>{scope.operationalStatus}</span>
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(scope.reviewStatus)}`}>{scope.reviewStatus}</span>
               </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <StudioActionButton disabled={scope.reviewStatus === 'approved'} onClick={() => onApprove(scope)}>
+                อนุมัติ
+              </StudioActionButton>
+              <StudioActionButton disabled={scope.operationalStatus === 'complete'} onClick={() => onComplete(scope)}>
+                เสร็จสมบูรณ์
+              </StudioActionButton>
+              <StudioActionButton disabled={scope.operationalStatus === 'blocked'} onClick={() => onBlocked(scope)}>
+                ติดปัญหา
+              </StudioActionButton>
             </div>
           </div>
         ))}
@@ -230,9 +360,13 @@ const WorkScopeSection = ({ workScopeSections }: { workScopeSections: WorkScopeS
 )
 
 const TimelineSection = ({
+  onMilestoneComplete,
+  onPhaseReview,
   phases,
   timelineItems,
 }: {
+  onMilestoneComplete: (item: TimelineItem) => void
+  onPhaseReview: (phase: StudioTimelinePhase) => void
   phases: StudioTimelinePhase[]
   timelineItems: TimelineItem[]
 }) => (
@@ -265,6 +399,11 @@ const TimelineSection = ({
                       <p className={`font-mono text-[10px] font-semibold uppercase ${statusClass(phase.risk)}`}>{phase.risk} risk</p>
                     </div>
                   </div>
+                  <div className="mt-3">
+                    <StudioActionButton disabled={phase.status === 'complete' || phase.status === 'reviewed'} onClick={() => onPhaseReview(phase)}>
+                      ส่งตรวจสอบ
+                    </StudioActionButton>
+                  </div>
                 </div>
               ))}
             </div>
@@ -283,6 +422,11 @@ const TimelineSection = ({
                     </div>
                     <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(item.state)}`}>{item.state}</span>
                   </div>
+                  <div className="mt-3">
+                    <StudioActionButton disabled={item.state === 'completed'} onClick={() => onMilestoneComplete(item)}>
+                      เสร็จสมบูรณ์
+                    </StudioActionButton>
+                  </div>
                 </div>
               ))}
             </div>
@@ -294,9 +438,15 @@ const TimelineSection = ({
 )
 
 const SiteWatchSection = ({
+  onEscalate,
+  onRequestReview,
+  onResolve,
   siteIssues,
   siteWatchUpdates,
 }: {
+  onEscalate: (issue: SiteIssue) => void
+  onRequestReview: (update: SiteWatchUpdate) => void
+  onResolve: (update: SiteWatchUpdate) => void
   siteIssues: SiteIssue[]
   siteWatchUpdates: SiteWatchUpdate[]
 }) => (
@@ -325,6 +475,14 @@ const SiteWatchSection = ({
                   </div>
                   <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(update.severity)}`}>{update.severity} / {update.status}</span>
                 </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <StudioActionButton disabled={update.status === 'resolved'} onClick={() => onResolve(update)}>
+                    แก้ไขแล้ว
+                  </StudioActionButton>
+                  <StudioActionButton disabled={update.status !== 'open'} onClick={() => onRequestReview(update)}>
+                    ขอตรวจสอบ
+                  </StudioActionButton>
+                </div>
               </div>
             ))}
           </div>
@@ -335,8 +493,16 @@ const SiteWatchSection = ({
             {siteIssues.map((issue) => (
               <div key={issue.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <p className="text-sm font-semibold">{issue.issue}</p>
-                  <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(issue.severity)}`}>{issue.severity}{issue.status ? ` / ${issue.status}` : ''}</span>
+                  <div>
+                    <p className="text-sm font-semibold">{issue.issue}</p>
+                    <p className="mt-1 text-xs text-[#777777]">Severity: {issue.severity}{issue.status ? ` / ${issue.status}` : ''}</p>
+                  </div>
+                  <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(issue.severity)}`}>{issue.severity}</span>
+                </div>
+                <div className="mt-3">
+                  <StudioActionButton disabled={issue.severity === 'high' && issue.status === 'review'} onClick={() => onEscalate(issue)}>
+                    แจ้งปัญหา
+                  </StudioActionButton>
                 </div>
               </div>
             ))}
@@ -347,7 +513,17 @@ const SiteWatchSection = ({
   </section>
 )
 
-const DocumentsSection = ({ documents }: { documents: DocumentRecord[] }) => (
+const DocumentsSection = ({
+  onApprove,
+  onArchive,
+  onIssue,
+  documents,
+}: {
+  onApprove: (document: DocumentRecord) => void
+  onArchive: (document: DocumentRecord) => void
+  onIssue: (document: DocumentRecord) => void
+  documents: DocumentRecord[]
+}) => (
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
@@ -370,6 +546,17 @@ const DocumentsSection = ({ documents }: { documents: DocumentRecord[] }) => (
               </div>
               <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(document.approvalState ?? 'draft')}`}>{document.approvalState}</span>
             </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <StudioActionButton disabled={document.approvalState !== 'draft'} onClick={() => onIssue(document)}>
+                ออกเอกสาร
+              </StudioActionButton>
+              <StudioActionButton disabled={document.approvalState === 'approved' || document.approvalState === 'draft'} onClick={() => onApprove(document)}>
+                อนุมัติ
+              </StudioActionButton>
+              <StudioActionButton disabled={document.approvalState === 'draft'} onClick={() => onArchive(document)}>
+                เก็บเข้าแฟ้ม
+              </StudioActionButton>
+            </div>
           </div>
         ))}
       </div>
@@ -377,7 +564,17 @@ const DocumentsSection = ({ documents }: { documents: DocumentRecord[] }) => (
   </section>
 )
 
-const ReviewsSection = ({ reviews }: { reviews: StudioReview[] }) => (
+const ReviewsSection = ({
+  onApprove,
+  onReject,
+  onRequestChanges,
+  reviews,
+}: {
+  onApprove: (review: StudioReview) => void
+  onReject: (review: StudioReview) => void
+  onRequestChanges: (review: StudioReview) => void
+  reviews: StudioReview[]
+}) => (
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
@@ -399,6 +596,17 @@ const ReviewsSection = ({ reviews }: { reviews: StudioReview[] }) => (
                 <p className="mt-1 text-xs text-[#777777]">Due: {review.dueAt}</p>
               </div>
               <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(review.status)}`}>{review.status}</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <StudioActionButton disabled={review.status !== 'pending'} onClick={() => onApprove(review)}>
+                อนุมัติ
+              </StudioActionButton>
+              <StudioActionButton disabled={review.status !== 'pending'} onClick={() => onReject(review)}>
+                ปฏิเสธ
+              </StudioActionButton>
+              <StudioActionButton disabled={review.status !== 'pending'} onClick={() => onRequestChanges(review)}>
+                ขอแก้ไข
+              </StudioActionButton>
             </div>
           </div>
         ))}
