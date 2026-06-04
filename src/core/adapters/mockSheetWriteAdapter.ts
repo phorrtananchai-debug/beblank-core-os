@@ -420,6 +420,161 @@ export const mockSheetWriteAdapter = (
     statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false, syncState: 'idle', authority: 'manual' }
   }
 
+  if (request.actionType === 'finance.queueManualTransaction') {
+    const tx: TransactionRecord = {
+      id: generateId('tx'),
+      description: String(request.payload.description ?? 'Manual transaction'),
+      amountTHB: Number(request.payload.amountTHB ?? 0),
+      type: String(request.payload.type ?? 'expense') as 'buy' | 'sell' | 'income' | 'expense',
+      occurredAt: String(request.payload.occurredAt ?? now.slice(0, 10)),
+      notes: String(request.payload.notes ?? ''),
+    }
+    nextData.transactions.unshift(tx)
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.editTransactionNote') {
+    const txId = String(request.payload.transactionId ?? '')
+    nextData.transactions = nextData.transactions.map((tx) =>
+      tx.id === txId ? { ...tx, notes: String(request.payload.notes ?? tx.notes), lastUpdated: now.slice(0, 10) } : tx,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.archiveTransaction') {
+    const txId = String(request.payload.transactionId ?? '')
+    nextData.transactions = nextData.transactions.filter((tx) => tx.id !== txId)
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.markDcaSkipped') {
+    const dcaId = String(request.payload.dcaId ?? '')
+    nextData.dcaRecords = nextData.dcaRecords.map((record) =>
+      record.id === dcaId ? { ...record, status: 'paused', lastUpdated: now.slice(0, 10), notes: `${record.notes} Skipped manually.` } : record,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.adjustDcaTarget') {
+    const dcaId = String(request.payload.dcaId ?? '')
+    const newAmount = Number(request.payload.newAmountTHB ?? 0)
+    nextData.dcaRecords = nextData.dcaRecords.map((record) =>
+      record.id === dcaId ? { ...record, plannedAmountTHB: newAmount || record.plannedAmountTHB, lastUpdated: now.slice(0, 10), notes: `${record.notes} Target adjusted.` } : record,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.markRebalanceReviewed') {
+    const holdingId = String(request.payload.holdingId ?? '')
+    nextData.holdings = nextData.holdings.map((holding) =>
+      holding.id === holdingId ? { ...holding, dcaStatus: 'active', notes: `${holding.notes ?? ''} Rebalance reviewed manually.` } : holding,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.updateTargetAllocationNote') {
+    const holdingId = String(request.payload.holdingId ?? '')
+    const newTargetPct = Number(request.payload.targetAllocationPercent ?? 0)
+    nextData.holdings = nextData.holdings.map((holding) =>
+      holding.id === holdingId ? { ...holding, targetAllocationPercent: newTargetPct || holding.targetAllocationPercent, notes: `${holding.notes ?? ''} Target allocation updated.` } : holding,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.markDividendReceived') {
+    const dividendId = String(request.payload.dividendId ?? '')
+    const amountTHB = Number(request.payload.amountTHB ?? 0)
+    nextData.dividendRecords = nextData.dividendRecords.map((record) =>
+      record.id === dividendId ? { ...record, status: 'received', lastUpdated: now.slice(0, 10) } : record,
+    )
+    if (amountTHB > 0) {
+      nextData.transactions.unshift({
+        id: generateId('tx'),
+        description: `Dividend received: ${dividendId}`,
+        amountTHB,
+        type: 'income',
+        occurredAt: now.slice(0, 10),
+        notes: 'Dividend received through approval flow.',
+      })
+    }
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.reviewDividendEstimate') {
+    const dividendId = String(request.payload.dividendId ?? '')
+    nextData.dividendRecords = nextData.dividendRecords.map((record) =>
+      record.id === dividendId ? { ...record, status: 'review', lastUpdated: now.slice(0, 10) } : record,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.archiveDividendRow') {
+    const dividendId = String(request.payload.dividendId ?? '')
+    nextData.dividendRecords = nextData.dividendRecords.filter((record) => record.id !== dividendId)
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.approveWatchlistResearch') {
+    const watchlistId = String(request.payload.watchlistId ?? '')
+    nextData.tradingWatchlist = nextData.tradingWatchlist.map((item) =>
+      item.id === watchlistId ? { ...item, status: 'paper-active', lastUpdated: now.slice(0, 10) } : item,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.archiveWatchlistItem') {
+    const watchlistId = String(request.payload.watchlistId ?? '')
+    nextData.tradingWatchlist = nextData.tradingWatchlist.filter((item) => item.id !== watchlistId)
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.flagWatchlistRisk') {
+    const watchlistId = String(request.payload.watchlistId ?? '')
+    const newRisk = String(request.payload.risk ?? 'medium') as 'low' | 'medium' | 'high'
+    nextData.tradingWatchlist = nextData.tradingWatchlist.map((item) =>
+      item.id === watchlistId ? { ...item, risk: newRisk, lastUpdated: now.slice(0, 10), notes: `${item.notes} Risk flagged.` } : item,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.addResearchNote') {
+    nextData.tradingStrategyNotes.unshift({
+      id: generateId('strategy'),
+      title: String(request.payload.title ?? 'Research note'),
+      note: String(request.payload.note ?? ''),
+      riskLevel: String(request.payload.riskLevel ?? 'medium') as 'low' | 'medium' | 'high',
+      status: 'active',
+      tags: ['research-note', 'manual'],
+      sourceStatus: statusMap.investments,
+      lastUpdated: now.slice(0, 10),
+    })
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.queueInvestmentAiReview') {
+    nextData.aiReviews.unshift({
+      id: generateId('airev'),
+      module: 'Finance',
+      sourceIds: ['manual-investment-review'],
+      createdAt: now,
+      sourceStatus: statusMap.investments,
+      title: String(request.payload.title ?? 'Investment AI review'),
+      reviewStatus: 'pending',
+      confidence: Number(request.payload.confidence ?? 70),
+      notes: String(request.payload.notes ?? 'Manual investment AI review request.'),
+      tags: ['investment-ai-review', 'manual'],
+    })
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.archiveInvestmentObservation') {
+    const observationId = String(request.payload.observationId ?? '')
+    nextData.aiObservations = nextData.aiObservations.map((item) =>
+      item.id === observationId ? { ...item, reviewStatus: 'archived' } : item,
+    )
+    statusMap.investments = { ...statusMap.investments, lastSyncedAt: now, isStale: false }
+  }
+
   if (request.actionType === 'finance.approveReserveTransfer') {
     const reserveId = String(request.payload.reserveId ?? '')
     const amountTHB = Number(request.payload.amountTHB ?? 0)
