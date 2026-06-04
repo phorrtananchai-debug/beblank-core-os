@@ -3,6 +3,7 @@ import type {
   ActionRequest,
   AISuggestion,
   ChangeLogRecord,
+  FinanceLedgerRow,
   OsData,
   SnapshotRecord,
   SourceStatus,
@@ -346,6 +347,61 @@ export const mockSheetWriteAdapter = (
       tags: ['manual-ledger', 'mvp-action'],
     })
     statusMap.familyOffice = { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false, syncState: 'idle' }
+  }
+
+  if (request.actionType === 'finance.addLedgerRow') {
+    const row: FinanceLedgerRow = {
+      id: generateId('ledger'),
+      accountId: String(request.payload.accountId ?? 'acct-family-core'),
+      category: String(request.payload.category ?? 'expense') as FinanceLedgerRow['category'],
+      label: String(request.payload.label ?? 'Ledger row'),
+      amountTHB: Number(request.payload.amountTHB ?? 0),
+      direction: String(request.payload.direction ?? 'outflow') as 'inflow' | 'outflow',
+      occurredAt: String(request.payload.occurredAt ?? now.slice(0, 10)),
+      status: 'cleared',
+      sourceStatus: { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false },
+      lastUpdated: now.slice(0, 10),
+      notes: String(request.payload.notes ?? ''),
+      risk: String(request.payload.risk ?? 'low') as 'low' | 'medium' | 'high',
+      tags: typeof request.payload.tags === 'string'
+        ? String(request.payload.tags).split(',').map((t: string) => t.trim()).filter(Boolean)
+        : Array.isArray(request.payload.tags)
+          ? request.payload.tags.map(String)
+          : [],
+    }
+    nextData.financeLedgerRows.unshift(row)
+    statusMap.familyOffice = { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.editLedgerRow') {
+    const id = String(request.payload.id ?? '')
+    nextData.financeLedgerRows = nextData.financeLedgerRows.map((row) =>
+      row.id === id
+        ? {
+            ...row,
+            label: String(request.payload.label ?? row.label),
+            amountTHB: Number(request.payload.amountTHB ?? row.amountTHB),
+            direction: String(request.payload.direction ?? row.direction) as 'inflow' | 'outflow',
+            category: String(request.payload.category ?? row.category) as FinanceLedgerRow['category'],
+            occurredAt: String(request.payload.occurredAt ?? row.occurredAt),
+            notes: String(request.payload.notes ?? row.notes),
+            risk: String(request.payload.risk ?? row.risk) as 'low' | 'medium' | 'high',
+            tags: typeof request.payload.tags === 'string'
+              ? String(request.payload.tags).split(',').map((t: string) => t.trim()).filter(Boolean)
+              : Array.isArray(request.payload.tags)
+                ? request.payload.tags.map(String)
+                : row.tags,
+            lastUpdated: now.slice(0, 10),
+          }
+        : row,
+    )
+    statusMap.familyOffice = { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'finance.deleteLedgerRow') {
+    const id = String(request.payload.id ?? '')
+    nextData.financeLedgerRows = nextData.financeLedgerRows.filter((row) => row.id !== id)
+    statusMap.familyOffice = { ...statusMap.familyOffice, lastSyncedAt: now, isStale: false }
   }
 
   if (request.actionType === 'trading.addSignal') {

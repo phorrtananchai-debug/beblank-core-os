@@ -1,4 +1,11 @@
 import { useState } from 'react'
+import { CapitalAnalyticsCards } from '../../components/capital/CapitalAnalyticsCards'
+import { CapitalCategoryBreakdown } from '../../components/capital/CapitalCategoryBreakdown'
+import { DeleteLedgerDialog } from '../../components/capital/DeleteLedgerDialog'
+import { LedgerForm } from '../../components/capital/LedgerForm'
+import type { LedgerFormData } from '../../components/capital/LedgerForm'
+import { LedgerTable } from '../../components/capital/LedgerTable'
+import type { LedgerTableCallbacks } from '../../components/capital/LedgerTable'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
@@ -7,6 +14,7 @@ import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPan
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
 import { useOs } from '../../core/os/OsContext'
+import type { FinanceLedgerRow } from '../../types/models'
 import { FamilyPage } from './FamilyPage'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
@@ -145,6 +153,10 @@ const OverviewTab = () => {
         </div>
       </div>
 
+      <CapitalAnalyticsCards />
+
+      <CapitalCategoryBreakdown />
+
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="panel panel-float">
           <div className="panel-header"><h3>Obligations / ภาระผูกพัน</h3><span className="pill">debt {thb(debtTotal)}</span></div>
@@ -216,29 +228,85 @@ const RunwayGauge = ({ months }: { months: number }) => {
 }
 
 const StudioOfficeTab = () => {
-  const { data } = useOs()
+  const { data, createActionRequest } = useOs()
+  const [showAdd, setShowAdd] = useState(false)
+  const [editingRow, setEditingRow] = useState<FinanceLedgerRow | null>(null)
+  const [deletingRow, setDeletingRow] = useState<FinanceLedgerRow | null>(null)
+
   const studioRows = data.financeLedgerRows.filter((r) => r.category.startsWith('studio-'))
 
-  if (studioRows.length === 0) {
-    return (
-      <div className="panel">
-        <div className="panel-header"><h3>Studio Office Ledger / บัญชีสตูดิโอ</h3></div>
-        <p className="text-sm text-[#666666]">ไม่มีรายการเดินบัญชีสตูดิโอ  รายการจะปรากฏที่นี่เมื่อมีการเพิ่ม</p>
-      </div>
-    )
+  const callbacks: LedgerTableCallbacks = {
+    onAdd: () => setShowAdd(true),
+    onEdit: (row) => setEditingRow(row),
+    onDelete: (row) => setDeletingRow(row),
+  }
+
+  const handleAdd = (form: LedgerFormData) => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.addLedgerRow',
+      description: `Add studio ledger row: ${form.label}`,
+      payload: { ...form, accountId: 'acct-studio-core' },
+    })
+    setShowAdd(false)
+  }
+
+  const handleEdit = (form: LedgerFormData) => {
+    if (!editingRow) return
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.editLedgerRow',
+      description: `Edit studio ledger row: ${form.label}`,
+      payload: { id: editingRow.id, ...form, accountId: 'acct-studio-core' },
+    })
+    setEditingRow(null)
+  }
+
+  const handleDelete = () => {
+    if (!deletingRow) return
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.deleteLedgerRow',
+      description: `Delete studio ledger row: ${deletingRow.label}`,
+      payload: { id: deletingRow.id },
+    })
+    setDeletingRow(null)
   }
 
   return (
-    <div className="panel">
-      <div className="panel-header"><h3>Studio Office Ledger / บัญชีสตูดิโอ</h3></div>
-      <div className="grid gap-3 lg:grid-cols-2">
-        {studioRows.map((row) => (
-          <div key={row.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
-            <p className="text-sm font-semibold">{row.label}</p>
-            <p className="mt-1 text-xs text-[#777777]">{row.category} / {row.direction} / {thb(row.amountTHB)} / {row.occurredAt}</p>
-          </div>
-        ))}
-      </div>
+    <div className="space-y-5">
+      <LedgerTable rows={studioRows} callbacks={callbacks} />
+
+      {showAdd ? (
+        <LedgerForm
+          title="Add Studio Ledger Row / เพิ่มรายการสตูดิโอ"
+          onSubmit={handleAdd}
+          onCancel={() => setShowAdd(false)}
+          initial={{ category: 'expense', direction: 'outflow' }}
+        />
+      ) : null}
+
+      {editingRow ? (
+        <LedgerForm
+          title="Edit Studio Ledger Row / แก้ไขรายการสตูดิโอ"
+          onSubmit={handleEdit}
+          onCancel={() => setEditingRow(null)}
+          initial={{
+            label: editingRow.label,
+            amountTHB: editingRow.amountTHB,
+            direction: editingRow.direction,
+            category: editingRow.category,
+            occurredAt: editingRow.occurredAt,
+            notes: editingRow.notes,
+            risk: editingRow.risk,
+            tags: editingRow.tags.join(', '),
+          }}
+        />
+      ) : null}
+
+      {deletingRow ? (
+        <DeleteLedgerDialog row={deletingRow} onConfirm={handleDelete} onCancel={() => setDeletingRow(null)} />
+      ) : null}
     </div>
   )
 }

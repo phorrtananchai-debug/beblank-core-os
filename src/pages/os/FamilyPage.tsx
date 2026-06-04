@@ -1,9 +1,19 @@
+import { useState } from 'react'
+import { DeleteLedgerDialog } from '../../components/capital/DeleteLedgerDialog'
+import { LedgerForm } from '../../components/capital/LedgerForm'
+import type { LedgerFormData } from '../../components/capital/LedgerForm'
+import { LedgerTable } from '../../components/capital/LedgerTable'
+import type { LedgerTableCallbacks } from '../../components/capital/LedgerTable'
 import { useOs } from '../../core/os/OsContext'
+import type { FinanceLedgerRow } from '../../types/models'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
 
 export const FamilyPage = () => {
   const { data, createActionRequest } = useOs()
+  const [showAdd, setShowAdd] = useState(false)
+  const [editingRow, setEditingRow] = useState<FinanceLedgerRow | null>(null)
+  const [deletingRow, setDeletingRow] = useState<FinanceLedgerRow | null>(null)
 
   const queueReserveTransfer = () => {
     const reserve = data.reserveRows.find((row) => row.status !== 'healthy') ?? data.reserveRows[0]
@@ -16,24 +26,45 @@ export const FamilyPage = () => {
     })
   }
 
-  const queueLedgerRecord = () => {
-    createActionRequest({
-      module: 'finance',
-      actionType: 'finance.addFamilyLedgerRecord',
-      description: 'Add manual family office ledger row',
-      payload: {
-        label: 'Manual bill review',
-        amountTHB: 12800,
-        category: 'expense',
-        direction: 'outflow',
-        occurredAt: '2026-06-03',
-        notes: 'MVP manual bill/ledger input. Review before Sheet write-back exists.',
-        risk: 'medium',
-      },
-    })
+  const debtTotal = data.familyFinanceRecords.filter((record) => record.bucket === 'debt').reduce((sum, record) => sum + record.amountTHB, 0)
+
+  const ledgerCallbacks: LedgerTableCallbacks = {
+    onAdd: () => setShowAdd(true),
+    onEdit: (row) => setEditingRow(row),
+    onDelete: (row) => setDeletingRow(row),
   }
 
-  const debtTotal = data.familyFinanceRecords.filter((record) => record.bucket === 'debt').reduce((sum, record) => sum + record.amountTHB, 0)
+  const handleAddLedger = (form: LedgerFormData) => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.addLedgerRow',
+      description: `Add ledger row: ${form.label}`,
+      payload: { ...form, accountId: 'acct-family-core' },
+    })
+    setShowAdd(false)
+  }
+
+  const handleEditLedger = (form: LedgerFormData) => {
+    if (!editingRow) return
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.editLedgerRow',
+      description: `Edit ledger row: ${form.label}`,
+      payload: { id: editingRow.id, ...form, accountId: 'acct-family-core' },
+    })
+    setEditingRow(null)
+  }
+
+  const handleDeleteLedger = () => {
+    if (!deletingRow) return
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.deleteLedgerRow',
+      description: `Delete ledger row: ${deletingRow.label}`,
+      payload: { id: deletingRow.id },
+    })
+    setDeletingRow(null)
+  }
 
   return (
     <div className="space-y-5">
@@ -72,22 +103,53 @@ export const FamilyPage = () => {
           <div className="space-y-3">
             {data.familyFinanceRecords.length === 0 ? (
               <p className="text-sm text-[#666666]">ไม่มีภาระผูกพัน</p>
-            ) : data.familyFinanceRecords.map((record) => <FinanceRow key={record.id} title={record.label} meta={`${record.bucket} / ${thb(record.amountTHB)}${record.dueDate ? ` / due ${record.dueDate}` : ''}`} status={record.risk ?? 'low'} />)}
+            ) : data.familyFinanceRecords.map((record) => (
+              <div key={record.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold">{record.label}</p>
+                    <p className="mt-1 text-xs text-[#777777]">{record.bucket} / {thb(record.amountTHB)}{record.dueDate ? ` / due ${record.dueDate}` : ''}</p>
+                  </div>
+                  <span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{record.risk ?? 'low'}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="panel">
-        <div className="panel-header">
-          <h3>Manual ledger / บัญชีรายการ</h3>
-          <button className="btn-primary" type="button" onClick={queueLedgerRecord}>Queue Ledger Row</button>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-2">
-          {data.financeLedgerRows.length === 0 ? (
-            <p className="text-sm text-[#666666]">ไม่มีรายการเดินบัญชี  เพิ่มรายการแรก</p>
-          ) : data.financeLedgerRows.map((row) => <FinanceRow key={row.id} title={row.label} meta={`${row.category} / ${row.direction} / ${thb(row.amountTHB)} / ${row.occurredAt}`} status={row.status} />)}
-        </div>
-      </div>
+      <LedgerTable rows={data.financeLedgerRows} callbacks={ledgerCallbacks} />
+
+      {showAdd ? (
+        <LedgerForm
+          title="Add Ledger Row / เพิ่มรายการบัญชี"
+          onSubmit={handleAddLedger}
+          onCancel={() => setShowAdd(false)}
+          initial={{ category: 'expense', direction: 'outflow' }}
+        />
+      ) : null}
+
+      {editingRow ? (
+        <LedgerForm
+          title="Edit Ledger Row / แก้ไขรายการบัญชี"
+          onSubmit={handleEditLedger}
+          onCancel={() => setEditingRow(null)}
+          initial={{
+            label: editingRow.label,
+            amountTHB: editingRow.amountTHB,
+            direction: editingRow.direction,
+            category: editingRow.category,
+            occurredAt: editingRow.occurredAt,
+            notes: editingRow.notes,
+            risk: editingRow.risk,
+            tags: editingRow.tags.join(', '),
+          }}
+        />
+      ) : null}
+
+      {deletingRow ? (
+        <DeleteLedgerDialog row={deletingRow} onConfirm={handleDeleteLedger} onCancel={() => setDeletingRow(null)} />
+      ) : null}
 
       <div className="panel">
         <div className="panel-header"><h3>Snapshot summaries / สรุปสถานะ</h3><span className="pill">manual posture</span></div>
@@ -108,15 +170,3 @@ export const FamilyPage = () => {
     </div>
   )
 }
-
-const FinanceRow = ({ meta, status, title }: { meta: string; status: string; title: string }) => (
-  <div className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="mt-1 text-xs text-[#777777]">{meta}</p>
-      </div>
-      <span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{status}</span>
-    </div>
-  </div>
-)
