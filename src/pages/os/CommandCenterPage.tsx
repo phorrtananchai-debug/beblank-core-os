@@ -117,7 +117,7 @@ export const CommandCenterPage = () => {
     suggestion.module.toLowerCase().includes('command'),
   )
   const primarySuggestion = commandSuggestions[0] ?? data.aiSuggestions[0]
-  const unreviewedSuggestions = data.aiSuggestions.filter((s) => s.status !== 'reviewed')
+  const unreviewedSuggestions = data.aiSuggestions.filter((s) => s.status === 'imported')
 
   const activity = [
     ...data.timeline.slice(0, 4).map((item) => ({
