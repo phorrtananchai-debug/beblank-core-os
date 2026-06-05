@@ -6,7 +6,6 @@ import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
-import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
 import { useOs } from '../../core/os/OsContext'
 import type {
   ArtworkRecord,
@@ -54,8 +53,6 @@ const projectName = (projects: Project[], projectId: string) =>
 export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorkspaceView }) => {
   const {
     data,
-    sourceStatuses,
-    providerStatuses,
     pendingApprovals,
     changeLogs,
     snapshots,
@@ -71,6 +68,9 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
   const reviewDocument = data.documents.find((document) => document.approvalState === 'review') ?? data.documents[0]
   const reviewScope = data.workScopeSections.find((scope) => scope.reviewStatus === 'needs-review') ?? data.workScopeSections[0]
   const reviewSite = data.siteWatchUpdates.find((update) => update.status !== 'resolved') ?? data.siteWatchUpdates[0]
+  const upcomingOpenings = data.studioTimelinePhases.filter((p) => p.phase === 'handover' || p.phase === 'opening')
+  const atRiskProjectIds = new Set(data.timeline.filter((t) => t.state === 'at-risk').map((t) => t.projectId))
+  const atRiskProjects = data.projects.filter((p) => atRiskProjectIds.has(p.id) || p.timelineStatus === 'at-risk' || p.timelineStatus === 'blocked')
 
   const queueScopeApproval = (scope: WorkScopeSection) => {
     createActionRequest({
@@ -117,51 +117,70 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
     })
   }
 
-  const queueStudioTask = () => {
-    createActionRequest({
-      module: 'studio',
-      actionType: 'studio.addTask',
-      description: 'Add MVP studio work queue task',
-      payload: { title: 'Review MVP studio queue and assign next owner' },
-    })
-  }
-
-  const queueStudioMilestone = () => {
-    createActionRequest({
-      module: 'studio',
-      actionType: 'studio.addTimeline',
-      description: 'Add MVP studio milestone',
-      payload: { label: 'MVP usability review checkpoint', dueDate: '2026-06-10' },
-    })
-  }
-
   return (
     <section className="studio-workspace-space space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <div className="grid gap-6 xl:grid-cols-[1fr_0.4fr]">
+        <div className="flex items-start justify-between gap-6">
           <div>
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">
-              Studio Workspace / Sheet-first operations
+              Studio OS / Control Room
             </p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">
-              Studio work, held as an operating environment.
+            <h2 className="mt-1 text-2xl font-extrabold tracking-tight">
+              Studio Control Room
             </h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">
-              Projects, WorkScope, timeline, site awareness, documents, artwork, briefs, and reviews remain manual-first and approval-first.
+            <p className="mt-1 text-sm leading-6 text-[#666666]">
+              Active projects, timeline, openings, and resource capacity
             </p>
           </div>
-          <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">
-              Studio AI note
-            </p>
-            <p className="mt-4 text-xl font-semibold leading-snug">Quiet operational reading</p>
-            <p className="mt-3 text-sm leading-6 text-[#666666]">
-              Prioritize Karun Phuket scope review, then issue document packages only after manual approval.
-            </p>
+          <span className="shrink-0 rounded-full border border-black/[0.08] bg-white/80 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#777777]">
+            {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="os-hero-metric os-hero-metric-neutral">
+            <div className="flex items-center gap-3">
+              <span className="os-icon-badge os-icon-badge-neutral">◇</span>
+              <div className="min-w-0 flex-1">
+                <p className="os-hero-value">{data.projects.length}</p>
+                <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Active Projects</p>
+              </div>
+            </div>
+            <p className="os-hero-sub">{data.projects.map((p) => p.name).slice(0, 3).join(', ')}{data.projects.length > 3 ? ` +${data.projects.length - 3}` : ''}</p>
+          </div>
+          <div className="os-hero-metric os-hero-metric-purple">
+            <div className="flex items-center gap-3">
+              <span className="os-icon-badge os-icon-badge-purple">▶</span>
+              <div className="min-w-0 flex-1">
+                <p className="os-hero-value">{upcomingOpenings.length}</p>
+                <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Upcoming Openings</p>
+              </div>
+            </div>
+            <p className="os-hero-sub">handover / opening phases</p>
+          </div>
+          <div className="os-hero-metric os-hero-metric-amber">
+            <div className="flex items-center gap-3">
+              <span className="os-icon-badge os-icon-badge-amber">!</span>
+              <div className="min-w-0 flex-1">
+                <p className="os-hero-value">{atRiskProjects.length}</p>
+                <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">At-Risk</p>
+              </div>
+            </div>
+            <p className="os-hero-sub">{atRiskProjects.map((p) => p.name).join(', ') || 'none'}</p>
+          </div>
+          <div className="os-hero-metric os-hero-metric-green">
+            <div className="flex items-center gap-3">
+              <span className="os-icon-badge os-icon-badge-green">≡</span>
+              <div className="min-w-0 flex-1">
+                <p className="os-hero-value">{activeScope.length + openSiteWatch.length + pendingStudioReviews.length}</p>
+                <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Resource Load</p>
+              </div>
+            </div>
+            <p className="os-hero-sub">{activeScope.length} scope / {openSiteWatch.length} site / {pendingStudioReviews.length} reviews</p>
           </div>
         </div>
 
-        <nav className="mt-8 flex flex-wrap gap-2">
+        <nav className="mt-6 flex flex-wrap gap-2">
           {studioTabs.map((tab) => (
             <NavLink
               key={tab.to}
@@ -177,13 +196,6 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
             </NavLink>
           ))}
         </nav>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
-          <SourceStatusBadge status={sourceStatuses.studio} />
-          <Metric label="Projects" value={data.projects.length} />
-          <Metric label="Pending reviews" value={pendingStudioReviews.length} />
-          <Metric label="Karun bridge" value={providerStatuses.karunBridge?.fallbackUsed ? 'fallback' : providerStatuses.karunBridge?.mode ?? 'mock'} />
-        </div>
       </header>
 
       {data.projects.length === 0 ? (
@@ -196,16 +208,22 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           openSiteWatch={openSiteWatch}
           pendingStudioReviews={pendingStudioReviews}
           projects={data.projects}
+          phases={data.studioTimelinePhases}
+          timeline={data.timeline}
+          tasks={data.tasks}
+          siteWatch={data.siteWatchUpdates}
+          documents={data.documents}
+          artwork={data.artworkRecords}
+          briefs={data.creativeBriefs}
+          workScope={data.workScopeSections}
+          upcomingOpenings={upcomingOpenings}
+          atRiskProjects={atRiskProjects}
           reviewDocument={reviewDocument}
           reviewScope={reviewScope}
           reviewSite={reviewSite}
-          tasks={data.tasks}
-          timeline={data.timeline}
           onDocumentIssue={queueDocumentIssue}
-          onMilestoneAdd={queueStudioMilestone}
           onScopeApproval={queueScopeApproval}
           onSiteResolution={queueSiteResolution}
-          onTaskAdd={queueStudioTask}
         />
       ) : null}
 
@@ -272,128 +290,282 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
   )
 }
 
-const Metric = ({ label, value }: { label: string; value: number | string }) => (
-  <div className="rounded-2xl border border-black/[0.04] bg-white/70 px-4 py-3">
-    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
-    <p className="mt-2 text-xl font-bold">{value}</p>
-  </div>
-)
-
 const Overview = ({
   activeScope,
   openSiteWatch,
   pendingStudioReviews,
   projects,
+  phases,
+  timeline,
+  tasks,
+  siteWatch,
+  documents,
+  artwork,
+  briefs,
+  workScope,
+  upcomingOpenings,
+  atRiskProjects,
   reviewDocument,
   reviewScope,
   reviewSite,
-  tasks,
-  timeline,
   onDocumentIssue,
-  onMilestoneAdd,
   onScopeApproval,
   onSiteResolution,
-  onTaskAdd,
 }: {
   activeScope: WorkScopeSection[]
   openSiteWatch: SiteWatchUpdate[]
   pendingStudioReviews: StudioReview[]
   projects: Project[]
+  phases: StudioTimelinePhase[]
+  timeline: TimelineItem[]
+  tasks: Task[]
+  siteWatch: SiteWatchUpdate[]
+  documents: DocumentRecord[]
+  artwork: ArtworkRecord[]
+  briefs: CreativeBrief[]
+  workScope: WorkScopeSection[]
+  upcomingOpenings: StudioTimelinePhase[]
+  atRiskProjects: Project[]
   reviewDocument?: DocumentRecord
   reviewScope?: WorkScopeSection
   reviewSite?: SiteWatchUpdate
-  tasks: Task[]
-  timeline: TimelineItem[]
   onDocumentIssue: (document: DocumentRecord) => void
-  onMilestoneAdd: () => void
   onScopeApproval: (scope: WorkScopeSection) => void
   onSiteResolution: (siteUpdate: SiteWatchUpdate) => void
-  onTaskAdd: () => void
-}) => (
-  <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
-    <main className="space-y-7">
-      <section className="panel panel-float">
-        <div className="panel-header">
-          <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">MVP quick operations</p>
-            <h3>Task + milestone queue</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button className="btn-primary" type="button" onClick={onTaskAdd}>Queue Task</button>
-            <button className="btn-secondary" type="button" onClick={onMilestoneAdd}>Queue Milestone</button>
-          </div>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-2">
-          <div className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
-            <p className="font-semibold">Work queue</p>
-            <div className="mt-3 space-y-2">{tasks.slice(0, 4).map((task) => <CompactRow key={task.id} title={task.title} meta={projectName(projects, task.projectId)} status={task.status} />)}</div>
-          </div>
-          <div className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
-            <p className="font-semibold">Milestone queue</p>
-            <div className="mt-3 space-y-2">{timeline.slice(0, 4).map((item) => <CompactRow key={item.id} title={item.label} meta={`${projectName(projects, item.projectId)} / due ${item.dueDate}`} status={item.state} />)}</div>
-          </div>
-        </div>
-      </section>
+}) => {
+  const sortedEvents = [...timeline, ...siteWatch.map((sw) => ({ id: sw.id, projectId: sw.projectId, label: sw.title, dueDate: sw.observedAt.slice(0, 10), state: sw.status }))]
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 8)
 
-      <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="panel panel-float">
+  const openingsSorted = [...upcomingOpenings].sort((a, b) => a.endDate.localeCompare(b.endDate))
+
+  const projectLinkCount = (projectId: string, source: { projectId: string }[]) =>
+    source.filter((item) => item.projectId === projectId).length
+
+  const taskCount = tasks.length
+
+  return (
+    <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <main className="space-y-7">
+        {/* L1: Active Projects */}
+        <section className="panel panel-float">
           <div className="panel-header">
             <div>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Project system</p>
-              <h3>Active studio pulse</h3>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Studio Portfolio</p>
+              <h3>Active Projects</h3>
             </div>
             <span className="pill">{projects.length} projects</span>
           </div>
-          <div className="space-y-3">
-            {projects.slice(0, 4).map((project) => (
-              <ProjectRow key={project.id} project={project} />
-            ))}
+          <div className="grid gap-4 md:grid-cols-2">
+            {projects.map((project) => {
+              const isAtRisk = atRiskProjects.some((p) => p.id === project.id)
+              const wsCount = projectLinkCount(project.id, workScope)
+              const docCount = projectLinkCount(project.id, documents)
+              const artCount = projectLinkCount(project.id, artwork)
+              const briefPreview = briefs.find((b) => b.projectId === project.id)?.direction
+              return (
+                <Link
+                  key={project.id}
+                  to={`/os/studio/projects/${project.id}`}
+                  className={`block rounded-2xl border p-4 transition hover:-translate-y-0.5 ${isAtRisk ? 'border-[#ead7c3] bg-[#fffaf4]' : 'border-black/[0.05] bg-[#faf9f8]'}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-base font-bold break-words">{project.name}</p>
+                      <p className="mt-1 text-xs text-[#777777]">{project.client ?? 'Studio client'} / {project.location}</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {isAtRisk ? <span className="font-mono text-[9px] font-semibold uppercase text-[#c2410c]">at risk</span> : null}
+                      <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(project.timelineStatus ?? 'steady')}`}>
+                        {project.timelineStatus ?? 'steady'}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs font-semibold text-[#555555]">{project.phase}</p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-[#777777]">
+                    <span>{wsCount} scope</span>
+                    <span>{docCount} docs</span>
+                    <span>{artCount} artwork</span>
+                    <span>{projectLinkCount(project.id, siteWatch)} site</span>
+                  </div>
+                  {briefPreview ? (
+                    <p className="mt-2 text-xs leading-5 text-[#666666] line-clamp-2">{briefPreview}</p>
+                  ) : null}
+                </Link>
+              )
+            })}
           </div>
-        </div>
+        </section>
 
-        <div className="panel panel-float">
-          <div className="panel-header">
-            <div>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Review-first flow</p>
-              <h3>Operational actions</h3>
+        {/* L2: Studio Master Timeline + Upcoming Openings */}
+        <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="panel panel-float">
+            <div className="panel-header">
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Timeline</p>
+                <h3>Studio Master Timeline</h3>
+              </div>
+              <span className="pill">{sortedEvents.length}</span>
+            </div>
+            <div className="space-y-2">
+              {sortedEvents.map((event) => (
+                <div key={event.id} className="grid gap-2 border-b border-black/[0.04] pb-2 last:border-b-0 md:grid-cols-[90px_1fr_auto] md:items-center">
+                  <p className="font-mono text-[10px] font-semibold uppercase text-[#777777]">{event.dueDate}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{event.label}</p>
+                    <p className="text-xs text-[#777777]">{projectName(projects, event.projectId)}</p>
+                  </div>
+                  <span className={`font-mono text-[9px] font-semibold uppercase ${statusClass(event.state)}`}>{event.state}</span>
+                </div>
+              ))}
+              {sortedEvents.length === 0 && (
+                <p className="text-sm text-[#777777]">ไม่มีเหตุการณ์ในไทม์ไลน์</p>
+              )}
             </div>
           </div>
-          <div className="space-y-3">
-            {reviewScope ? <ActionCard label="Approve WorkScope revision" detail={`${reviewScope.code} / ${reviewScope.title}`} onClick={() => onScopeApproval(reviewScope)} /> : null}
-            {reviewDocument ? <ActionCard label="Issue document package" detail={`${reviewDocument.title} / ${reviewDocument.version}`} onClick={() => onDocumentIssue(reviewDocument)} /> : null}
-            {reviewSite ? <ActionCard label="Resolve site watch item" detail={reviewSite.title} onClick={() => onSiteResolution(reviewSite)} /> : null}
-          </div>
-        </div>
-      </section>
 
-      <section className="studio-fragment-board">
-        <div className="panel-header">
-          <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Workspace backbone</p>
-            <h3>Scope, site, review</h3>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <FoundationTile label="WorkScope" value={activeScope.length} body="WS-coded scope sections with review states and linked approvals." />
-          <FoundationTile label="Site Watch" value={openSiteWatch.length} body="Operational awareness feed for field observations and risk markers." />
-          <FoundationTile label="Review Queue" value={pendingStudioReviews.length} body="Manual approvals for drawings, site review, AI notes, and briefs." />
-        </div>
-      </section>
-    </main>
+          <div className="space-y-5">
+            <div className="panel panel-float">
+              <div className="panel-header">
+                <div>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Openings</p>
+                  <h3>Upcoming Openings</h3>
+                </div>
+                <span className="pill">{openingsSorted.length}</span>
+              </div>
+              <div className="space-y-3">
+                {openingsSorted.length === 0 ? (
+                  <p className="text-sm text-[#777777]">ไม่มีกำหนดการเปิดในขณะนี้</p>
+                ) : (
+                  openingsSorted.map((phase) => (
+                    <div key={phase.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">{projectName(projects, phase.projectId)}</p>
+                          <p className="mt-0.5 text-xs text-[#777777]">{phase.phase} / {phase.endDate}</p>
+                        </div>
+                        <span className={`font-mono text-[9px] font-semibold uppercase ${phase.status === 'blocked' || phase.risk === 'high' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>
+                          {phase.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
 
-    <aside className="intelligence-rail space-y-5">
-      <div className="rounded-[30px] border border-black/[0.05] bg-[#111111] p-5 text-white">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">Studio operations flow</p>
-        <p className="mt-4 text-sm leading-6 text-white/75">
-          Nothing writes directly to state. Queue an action, approve it, then the mock Sheet adapter logs the change and creates a snapshot.
-        </p>
-      </div>
-      {pendingStudioReviews.map((review) => (
-        <ReviewCard key={review.id} review={review} projectName={projectName(projects, review.projectId)} />
-      ))}
-    </aside>
-  </div>
-)
+            <div className="panel panel-float">
+              <div className="panel-header">
+                <div>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Capacity</p>
+                  <h3>Resource Capacity</h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                  <p className="text-2xl font-bold">{activeScope.length}</p>
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[#777777]">WorkScope</p>
+                </div>
+                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                  <p className="text-2xl font-bold">{openSiteWatch.length}</p>
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[#777777]">Site Watch</p>
+                </div>
+                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                  <p className="text-2xl font-bold">{pendingStudioReviews.length}</p>
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[#777777]">Reviews</p>
+                </div>
+                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                  <p className="text-2xl font-bold">{taskCount}</p>
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[#777777]">Tasks</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* L3: At-Risk Projects + Operational Actions */}
+        <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="panel panel-float">
+            <div className="panel-header">
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Risk</p>
+                <h3>At-Risk Projects</h3>
+              </div>
+              <span className="pill">{atRiskProjects.length}</span>
+            </div>
+            <div className="space-y-3">
+              {atRiskProjects.length === 0 ? (
+                <p className="text-sm text-[#777777]">ไม่มีโปรเจคที่มีความเสี่ยง</p>
+              ) : (
+                atRiskProjects.map((project) => {
+                  const projectRisks = timeline.filter((t) => t.projectId === project.id && t.state === 'at-risk')
+                  const blockedPhases = phases.filter((p) => p.projectId === project.id && (p.status === 'blocked' || p.risk === 'high'))
+                  return (
+                    <div key={project.id} className="rounded-2xl border border-[#ead7c3] bg-[#fffaf4] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">{project.name}</p>
+                          <p className="mt-0.5 text-xs text-[#777777]">{project.client} / {project.location}</p>
+                        </div>
+                        <span className="font-mono text-[9px] font-semibold uppercase text-[#c2410c]">{project.timelineStatus}</span>
+                      </div>
+                      {projectRisks.length > 0 && (
+                        <div className="mt-3 space-y-1">
+                          {projectRisks.map((risk) => (
+                            <p key={risk.id} className="text-xs text-[#c2410c]">• {risk.label}</p>
+                          ))}
+                        </div>
+                      )}
+                      {blockedPhases.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {blockedPhases.map((p) => (
+                            <span key={p.id} className="rounded-full bg-[#fdeae7] px-2 py-0.5 font-mono text-[9px] font-semibold uppercase text-[#c2410c]">
+                              {p.phase}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="panel panel-float">
+            <div className="panel-header">
+              <div>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Actions</p>
+                <h3>Pending Approvals</h3>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {reviewScope ? <ActionCard label="Approve WorkScope revision" detail={`${reviewScope.code} / ${reviewScope.title}`} onClick={() => onScopeApproval(reviewScope)} /> : null}
+              {reviewDocument ? <ActionCard label="Issue document package" detail={`${reviewDocument.title} / ${reviewDocument.version}`} onClick={() => onDocumentIssue(reviewDocument)} /> : null}
+              {reviewSite ? <ActionCard label="Resolve site watch item" detail={reviewSite.title} onClick={() => onSiteResolution(reviewSite)} /> : null}
+              {!reviewScope && !reviewDocument && !reviewSite ? (
+                <p className="text-sm text-[#777777]">ไม่มีรายการรออนุมัติ</p>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside className="intelligence-rail space-y-4">
+        <div className="rounded-[30px] border border-black/[0.05] bg-white/85 p-5">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Reviews</p>
+          <p className="mt-1 text-xs text-[#777777]">{pendingStudioReviews.length} pending</p>
+        </div>
+        {pendingStudioReviews.map((review) => (
+          <ReviewCard key={review.id} review={review} projectName={projectName(projects, review.projectId)} />
+        ))}
+        {pendingStudioReviews.length === 0 && (
+          <p className="text-sm text-[#777777]">ไม่มีรีวิวที่รอการตรวจสอบ</p>
+        )}
+      </aside>
+    </div>
+  )
+}
 
 const ProjectsView = ({
   artwork,
@@ -1010,20 +1182,6 @@ const ReviewsView = ({
   </section>
 )
 
-const ProjectRow = ({ project }: { project: Project }) => (
-  <div className="surface-hover rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <p className="text-base font-semibold">{project.name}</p>
-        <p className="mt-1 text-xs text-[#777777]">{project.client} / {project.location}</p>
-      </div>
-      <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(project.timelineStatus ?? 'steady')}`}>
-        {project.timelineStatus}
-      </span>
-    </div>
-  </div>
-)
-
 const ActionCard = ({ detail, label, onClick }: { detail: string; label: string; onClick: () => void }) => (
   <div className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
     <p className="text-sm font-semibold">{label}</p>
@@ -1031,14 +1189,6 @@ const ActionCard = ({ detail, label, onClick }: { detail: string; label: string;
     <button className="btn-primary mt-4" type="button" onClick={onClick}>
       Queue Action
     </button>
-  </div>
-)
-
-const FoundationTile = ({ body, label, value }: { body: string; label: string; value: number }) => (
-  <div className="rounded-[28px] border border-black/[0.05] bg-white/80 p-5">
-    <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
-    <p className="mt-4 text-3xl font-bold">{value}</p>
-    <p className="mt-3 text-sm leading-6 text-[#666666]">{body}</p>
   </div>
 )
 
@@ -1057,14 +1207,4 @@ const ReviewCard = ({ projectName, review }: { projectName: string; review: Stud
   </div>
 )
 
-const CompactRow = ({ meta, status, title }: { meta: string; status: string; title: string }) => (
-  <div className="rounded-2xl border border-black/[0.05] bg-white/75 p-3">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="mt-1 text-xs text-[#777777]">{meta}</p>
-      </div>
-      <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(status)}`}>{status}</span>
-    </div>
-  </div>
-)
+
