@@ -70,7 +70,7 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
   const reviewSite = data.siteWatchUpdates.find((update) => update.status !== 'resolved') ?? data.siteWatchUpdates[0]
   const upcomingOpenings = data.studioTimelinePhases.filter((p) => p.phase === 'handover' || p.phase === 'opening')
   const atRiskProjectIds = new Set(data.timeline.filter((t) => t.state === 'at-risk').map((t) => t.projectId))
-  const atRiskProjects = data.projects.filter((p) => atRiskProjectIds.has(p.id) || p.timelineStatus === 'at-risk' || p.timelineStatus === 'blocked')
+  const atRiskProjects = data.projects.filter((p) => atRiskProjectIds.has(p.id) || p.timelineStatus === 'at-risk' || p.timelineStatus === 'watch' || data.studioTimelinePhases.some((ph) => ph.projectId === p.id && (ph.status === 'blocked' || ph.risk === 'high')))
 
   const queueScopeApproval = (scope: WorkScopeSection) => {
     createActionRequest({

@@ -79,7 +79,6 @@ export const CommandCenterPage = () => {
 
   const activeProjects = data.projects.filter((project) => project.status !== 'paused')
   const todayFocus = data.tasks.filter((task) => task.status !== 'done').slice(0, 4)
-  const studioQueue = data.tasks.slice(0, 5)
   const atRiskTimeline = data.timeline.filter((item) => item.state === 'at-risk')
 
   const alerts = [
@@ -198,7 +197,7 @@ export const CommandCenterPage = () => {
       {/* LEVEL 2 (Operations) + LEVEL 3 (Reference) */}
       <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
         <main className="space-y-6">
-          {/* — Focus Queue + Project Pulse — */}
+          {/* — Focus Queue + Project Pulse (Primary Heroes) — */}
           <div className="flex flex-col gap-5 lg:flex-row">
             <div className="os-section-card reveal-soft flex-1">
               <div className="panel-header">
@@ -231,31 +230,40 @@ export const CommandCenterPage = () => {
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">งานสตูดิโอ</p>
                   <h3>ชีพจรโปรเจกต์</h3>
                 </div>
-                <span className="pill">{activeProjects.length} กำลังดำเนินการ</span>
+                <span className="pill">{activeProjects.length} โปรเจค</span>
               </div>
-              <div className="grid gap-5 md:grid-cols-[0.85fr_1fr]">
-                <div className="space-y-3">
-                  {activeProjects.map((project) => (
-                    <div key={project.id} className="surface-hover rounded-2xl border border-[var(--bb-border)] bg-white p-4">
-                      <p className="text-base font-semibold">{project.name}</p>
-                      <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{project.owner} / {project.status}</p>
+              <div className="space-y-3">
+                {activeProjects.map((project) => {
+                  const projectRisk = data.timeline.filter((t) => t.projectId === project.id && t.state === 'at-risk').length > 0
+                  const projectIssues = data.siteIssues.filter((i) => i.projectId === project.id && i.severity !== 'low').length
+                  return (
+                    <div key={project.id} className={`rounded-2xl border p-4 ${projectRisk ? 'border-[var(--bb-red-border)] bg-[var(--bb-red-soft)]' : 'border-[var(--bb-border)] bg-white'}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold">{project.name}</p>
+                        {projectRisk ? <span className="font-mono text-[9px] font-semibold uppercase text-[#c2410c]">มีความเสี่ยง</span> : null}
+                      </div>
+                      <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{project.owner} / {project.timelineStatus ?? project.status}{projectIssues > 0 ? ` / ${projectIssues} ปัญหา` : ''}</p>
                     </div>
-                  ))}
-                </div>
-                <div className="space-y-3">
-                  {studioQueue.map((task) => (
-                    <div key={task.id} className="flex items-start justify-between gap-3 border-b border-black/[0.06] pb-3 last:border-b-0">
-                      <p className="text-sm font-medium">{task.title}</p>
-                      <span className={`font-mono text-[10px] font-semibold uppercase ${getTone(task.status)}`}>{task.status}</span>
-                    </div>
-                  ))}
-                </div>
+                  )
+                })}
+                {activeProjects.length === 0 && (
+                  <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีโปรเจคที่กำลังดำเนินการ</p>
+                )}
               </div>
             </div>
           </div>
 
+          {/* — Pending Approvals (hero section) — */}
+          <div className="reveal-soft reveal-delay-2">
+            <PendingApprovalPanel
+              items={pendingApprovals}
+              onApprove={approveActionRequest}
+              onReject={rejectActionRequest}
+            />
+          </div>
+
           {/* — Financial Posture — */}
-          <div className="os-section-card reveal-soft reveal-delay-2">
+          <div className="os-section-card reveal-soft reveal-delay-3">
             <div className="panel-header">
               <div>
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">การเงิน</p>
@@ -283,15 +291,6 @@ export const CommandCenterPage = () => {
             </div>
           </div>
 
-          {/* — Pending Approvals — */}
-          <div className="reveal-soft reveal-delay-3">
-            <PendingApprovalPanel
-              items={pendingApprovals}
-              onApprove={approveActionRequest}
-              onReject={rejectActionRequest}
-            />
-          </div>
-
           {/* — Activity Timeline — */}
           <div className="os-section-card reveal-soft reveal-delay-4">
             <div className="panel-header">
@@ -311,29 +310,6 @@ export const CommandCenterPage = () => {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* — AI Suggestions (subdued) — */}
-          <div className="os-section-card reveal-soft reveal-delay-5">
-            <div className="panel-header">
-              <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">AI</p>
-                <h3>ข้อเสนอแนะ</h3>
-              </div>
-              <span className="pill">{data.aiSuggestions.length}</span>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              {data.aiSuggestions.slice(0, 3).map((suggestion) => (
-                <div key={suggestion.id} className="rounded-2xl border border-[var(--bb-border)] bg-[var(--bb-bg)] p-3">
-                  <p className="text-xs font-semibold">{suggestion.title}</p>
-                  <p className="mt-1 text-xs leading-5 text-[var(--bb-text-muted)]">{suggestion.recommendation}</p>
-                  <p className="mt-2 font-mono text-[9px] uppercase tracking-wide text-[var(--bb-text-muted)]">{suggestion.status}</p>
-                </div>
-              ))}
-              {data.aiSuggestions.length === 0 && (
-                <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีข้อเสนอแนะ AI</p>
-              )}
             </div>
           </div>
         </main>
@@ -370,12 +346,36 @@ export const CommandCenterPage = () => {
             </div>
           </section>
 
-          <AIContextExportPanel contexts={data.aiContexts} />
-          <AISuggestionImportPanel onImport={queueSuggestionImport} />
-          <SnapshotLog items={snapshots} />
-          <ChangeLogList items={changeLogs} />
+          {/* AI Suggestions (demoted to reference) */}
+          <section className="os-reference-card">
+            <div className="panel-header">
+              <h3>ข้อเสนอแนะ AI</h3>
+              <span className="pill">{data.aiSuggestions.length}</span>
+            </div>
+            <div className="space-y-2">
+              {data.aiSuggestions.slice(0, 2).map((suggestion) => (
+                <div key={suggestion.id} className="rounded-xl border border-[var(--bb-border)] bg-white p-2">
+                  <p className="text-xs font-semibold">{suggestion.title}</p>
+                  <p className="mt-1 font-mono text-[9px] uppercase tracking-wide text-[var(--bb-text-muted)]">{suggestion.status}</p>
+                </div>
+              ))}
+              {data.aiSuggestions.length === 0 && (
+                <p className="text-xs text-[var(--bb-text-muted)]">ไม่มีข้อเสนอแนะ</p>
+              )}
+            </div>
+          </section>
         </aside>
       </div>
+
+      {/* REFERENCE BOTTOM ROW */}
+      <div className="grid gap-5 xl:grid-cols-2">
+        <AIContextExportPanel contexts={data.aiContexts} />
+        <AISuggestionImportPanel onImport={queueSuggestionImport} />
+      </div>
+      <section className="grid gap-5 xl:grid-cols-2">
+        <SnapshotLog items={snapshots} />
+        <ChangeLogList items={changeLogs} />
+      </section>
     </section>
   )
 }

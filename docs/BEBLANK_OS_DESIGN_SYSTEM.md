@@ -133,6 +133,19 @@ Rounded pill tab button. Active: accent bg. Hover: accent soft.
 ### Investments
 - **Hero**: Breadcrumb + title, 5 metric cards with progress bars: portfolio value, cash reserve, DCA target, dividends, drift count
 - **Tabs**: Overview, Portfolio, Holdings, Allocation, Transactions, DCA, Dividends, Watchlist, Research, AI
+- **Holdings tab (Aequitas bucket table)**: Decision strip at top, then bucket-grouped table:
+  - Core Wealth: Long-term core holdings, market anchor
+  - Growth Engine: Compounders, tech, innovation exposure
+  - Income Layer: Dividends, premium income, cashflow
+  - Thai Tax Wrapper: RMF / Thai fund tax-advantaged sleeve
+  - Cash Reserve: Dry powder, operating liquidity
+  - Sandbox: High-risk experiments, satellite positions
+  - Watchlist / Research: Under observation, not yet held
+  - Unclassified: Fallback for unmatched assets
+- **Bucket section**: Header row (name, purpose, value, %, target, drift, status) + asset rows (symbol, name, value, qty, alloc%, target%, drift, DCA, risk, drift action)
+- **Desktop**: Full-width table, no horizontal scroll
+- **Mobile**: Bucket sections stack as cards, asset rows stack vertically
+- **THB-first display throughout**
 
 ### Studio Project Detail
 - **Hero**: Back link, breadcrumb, title, 5 metric cards: status, phase, timeline, inspection items, work scope

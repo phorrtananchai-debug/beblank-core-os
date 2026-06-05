@@ -168,10 +168,6 @@ const OverviewTab = () => {
         </div>
       </div>
 
-      <CapitalAnalyticsCards />
-
-      <CapitalCategoryBreakdown />
-
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="os-level-2">
           <div className="panel-header"><h3 className="os-level-2-title">Obligations / ภาระผูกพัน</h3><span className="pill">หนี้ {thb(debtTotal)}</span></div>
@@ -195,6 +191,10 @@ const OverviewTab = () => {
           </div>
         </div>
       </div>
+
+      <CapitalAnalyticsCards />
+
+      <CapitalCategoryBreakdown />
     </div>
   )
 }

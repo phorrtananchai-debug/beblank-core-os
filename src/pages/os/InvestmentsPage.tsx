@@ -1,6 +1,8 @@
 ﻿import { type ReactNode, useMemo, useState } from 'react'
 import { InvestmentActionButton } from '../../components/investments/InvestmentActionButton'
 import { InvestmentInputDialog, type DialogMode } from '../../components/investments/InvestmentInputDialog'
+import { PortfolioBucketView } from '../../components/investments/PortfolioBucketView'
+import { PortfolioDecisionStrip } from '../../components/investments/PortfolioDecisionStrip'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
@@ -9,7 +11,7 @@ import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPan
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { getSupportedFinnhubSymbols } from '../../core/connectors'
 import { useOs } from '../../core/os/OsContext'
-import type { ActionRequest, Holding } from '../../types/models'
+import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, ThaiNavAsset } from '../../types/models'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
 const usdToThb = 36.5
@@ -442,11 +444,15 @@ export const InvestmentsPage = () => {
           financeAssets={data.financeAssets}
           holdings={data.holdings}
           navDrafts={navDrafts}
+          dcaRecords={data.dcaRecords}
+          dividendRecords={data.dividendRecords}
+          createActionRequest={createActionRequest}
           queueDriftReview={queueDriftReview}
           queueThaiNavReview={queueThaiNavReview}
           setNavDrafts={setNavDrafts}
           thaiNavAssets={data.thaiNavAssets}
           totalValue={totalValue}
+          assetName={assetName}
         />
       ) : null}
 
@@ -758,90 +764,73 @@ const HoldingsTab = ({
   financeAssets,
   holdings,
   navDrafts,
+  dcaRecords,
+  dividendRecords,
+  createActionRequest,
   queueDriftReview,
   queueThaiNavReview,
   setNavDrafts,
   thaiNavAssets,
   totalValue,
+  assetName,
 }: {
-  financeAssets: Array<{ id: string; symbol?: string; name: string; category?: string; sourceOfTruth?: string }>
-  holdings: Array<Holding & { currentPosture?: string; dcaStatus?: string; notes?: string }>
+  financeAssets: FinanceAsset[]
+  holdings: Holding[]
   navDrafts: Record<string, string>
+  dcaRecords: DcaRecord[]
+  dividendRecords: DividendRecord[]
+  createActionRequest: (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
   queueDriftReview: (holding: Holding) => void
   queueThaiNavReview: (navAssetId: string, fallbackNav: number) => void
   setNavDrafts: (updater: (prev: Record<string, string>) => Record<string, string>) => void
-  thaiNavAssets: Array<{ id: string; symbol: string; displayName?: string; nav: number; units?: number; valueTHB?: number; helperSource?: string; stale?: boolean; notes?: string; updatedAt: string }>
+  thaiNavAssets: ThaiNavAsset[]
   totalValue: number
+  assetName: (id: string) => string
 }) => (
   <div className="space-y-5">
-    <SectionPanel label="กองทุนทั้งหมด" title="สัดส่วนการถือครอง" endSlot={<button className="btn-primary" type="button">เพิ่มรายการ</button>}>
-      <div className="grid gap-3 lg:grid-cols-2">
-        {holdings.map((holding) => {
-          const asset = financeAssets.find((item) => item.id === holding.assetId)
-          const drift = (holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)
-          const costBasis = (holding.units ?? holding.quantity) * holding.averageCost
-          const gainLoss = (holding.marketValueTHB ?? 0) - costBasis
-          return (
-            <article key={holding.id} className="surface-hover rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-base font-bold break-words">{asset?.symbol ?? asset?.name}</p>
-                  <p className="mt-1 text-xs text-[#777777] break-words">{asset?.name} / {asset?.category} / {holding.currentPosture}</p>
-                </div>
-                <span className={`shrink-0 font-mono text-[10px] font-semibold uppercase ${holding.risk === 'high' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{holding.risk}</span>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                <Mini label="มูลค่า" value={thb(holding.marketValueTHB)} />
-                <Mini label="กำไร/ขาดทุน" value={
-                  <span className={gainLoss < 0 ? 'text-[#c2410c]' : 'text-[#59634a]'}>{thb(gainLoss)}</span>
-                } />
-                <Mini label="สัดส่วน" value={`${holding.allocationPercent ?? 0}% / ${holding.targetAllocationPercent ?? 0}%`} />
-                <Mini label="DCA" value={holding.dcaStatus ?? 'review'} />
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <span className="pill">{asset?.sourceOfTruth ?? 'manual'}{holding.sourceStatus?.isStale ? ' / stale' : ''}</span>
-                <span className="text-[#777777]">updated {holding.lastUpdated ?? 'manual'}</span>
-              </div>
-              <p className="mt-3 text-xs leading-5 text-[#666666] break-words">{holding.notes}</p>
-              {Math.abs(drift) >= 2 ? <button className="btn-secondary mt-4" type="button" onClick={() => queueDriftReview(holding)}>Queue Drift Review</button> : null}
-            </article>
-          )
-        })}
-      </div>
-    </SectionPanel>
+    <PortfolioDecisionStrip
+      holdings={holdings}
+      dcaRecords={dcaRecords}
+      dividendRecords={dividendRecords}
+      totalValue={totalValue}
+      assetName={assetName}
+    />
+    <PortfolioBucketView
+      holdings={holdings}
+      financeAssets={financeAssets}
+      thaiNavAssets={thaiNavAssets}
+      dcaRecords={dcaRecords}
+      dividendRecords={dividendRecords}
+      totalValue={totalValue}
+      queueDriftReview={queueDriftReview}
+      createActionRequest={createActionRequest}
+    />
 
-    <SectionPanel label="Thai NAV Foundation" title="NAV ป้อนด้วยมือ / สะพาน NAV ในอนาคต" endSlot={<span className="pill">ไม่มี Finnhub</span>}>
-      <div className="grid gap-3 lg:grid-cols-3">
-        {thaiNavAssets.map((asset) => {
-          const valueTHB = asset.valueTHB ?? (asset.units ?? 0) * asset.nav
-          const allocation = totalValue > 0 ? (valueTHB / (totalValue + valueTHB)) * 100 : 0
-          return (
-            <article key={asset.id} className="surface-hover rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
-              <div className="flex items-start justify-between gap-3">
+    {/* Thai NAV operations (subdued) */}
+    {thaiNavAssets.length > 0 ? (
+      <section className="rounded-[28px] border border-black/[0.05] bg-white/60">
+        <div className="border-b border-black/[0.05] px-5 py-3">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Thai NAV Helper Operations</p>
+          <p className="mt-0.5 text-xs text-[#777777]">NAV values merged into bucket view above. Edit NAV manually below.</p>
+        </div>
+        <div className="divide-y divide-black/[0.03]">
+          {thaiNavAssets.map((asset) => {
+            const valueTHB = asset.valueTHB ?? (asset.units ?? 0) * asset.nav
+            return (
+              <div key={asset.id} className="grid gap-3 px-5 py-3 md:grid-cols-[1fr_120px_120px_auto] md:items-center">
                 <div>
-                  <p className="text-base font-bold">{asset.symbol}</p>
-                  <p className="mt-1 text-xs text-[#777777]">{asset.displayName ?? 'Thai NAV asset'} / {asset.helperSource}</p>
+                  <p className="text-sm font-semibold">{asset.symbol}</p>
+                  <p className="text-xs text-[#777777]">{asset.displayName ?? ''} / {thb(valueTHB)}</p>
                 </div>
-                <span className={`font-mono text-[10px] font-semibold uppercase ${asset.stale ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{asset.stale ? 'stale' : 'manual'}</span>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                <Mini label="NAV" value={thb(asset.nav)} />
-                <Mini label="หน่วย" value={(asset.units ?? 0).toLocaleString()} />
-                <Mini label="มูลค่า" value={thb(valueTHB)} />
-                <Mini label="ผลกระทบ" value={`${allocation.toFixed(1)}%`} />
-              </div>
-              <div className="mt-4 grid gap-2">
                 <input className="input" inputMode="decimal" value={navDrafts[asset.id] ?? String(asset.nav)} onChange={(event) => setNavDrafts((prev) => ({ ...prev, [asset.id]: event.target.value }))} />
-                <button className="btn-secondary" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Queue NAV Review</button>
+                <p className="text-xs text-[#777777] md:text-right">NAV updated {asset.updatedAt}</p>
+                <button className="btn-secondary text-xs" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Queue NAV Review</button>
               </div>
-              <p className="mt-3 text-xs leading-5 text-[#666666]">{asset.notes}</p>
-              <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[#8a8176]">NAV updated {asset.updatedAt} / source {asset.helperSource === 'fallback' ? 'sheet-ready' : 'manual'} / {asset.stale ? 'stale' : 'reviewed'}</p>
-            </article>
-          )
-        })}
-      </div>
-      <p className="mt-4 rounded-2xl border border-black/[0.04] bg-white/75 p-3 text-xs leading-5 text-[#666666]">กองทุนไทย RMF และ NAV ในประเทศใช้การป้อน NAV ด้วยตนเอง และในอนาคตจะใช้สะพาน Google Sheet NAV พวกนี้ไม่ใช้ Finnhub และไม่สร้างสินทรัพย์อัตโนมัติ</p>
-    </SectionPanel>
+            )
+          })}
+        </div>
+      </section>
+    ) : null}
   </div>
 )
 
