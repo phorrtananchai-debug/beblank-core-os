@@ -75,9 +75,9 @@ export const TradingLabPage = () => {
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Trading Lab / sandbox only</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">Trading Lab / sandbox only</p>
             <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Controlled experiments. No execution.</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Watchlist, paper positions, signal notes, risk rules, and strategy journal for learning without broker connection or auto trading.</p>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--bb-text-soft)]">Watchlist, paper positions, signal notes, risk rules, and strategy journal for learning without broker connection or auto trading.</p>
           </div>
           <div className="rounded-[30px] border border-black/[0.06] bg-[#111111] p-5 text-white">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white/50">Risk rule</p>
@@ -113,7 +113,30 @@ export const TradingLabPage = () => {
           <div className="panel">
             <div className="panel-header"><h3>Signal log</h3><span className="pill">manual notes</span></div>
             <div className="grid gap-3 lg:grid-cols-2">
-              {data.tradingSignals.map((signal) => <TradeRow key={signal.id} title={signal.symbol} meta={`${signal.signal} / ${signal.confidence}% / ${signal.note}`} status={signal.risk ?? 'medium'} />)}
+              {data.tradingSignals.map((signal) => {
+                const confidenceColor = signal.confidence >= 75 ? 'green' : signal.confidence >= 50 ? 'amber' : 'red'
+                const riskDot = signal.risk === 'high' ? 'red' : signal.risk === 'medium' ? 'amber' : 'green'
+                return (
+                  <div key={signal.id} className="os-list-row">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold">{signal.symbol}</p>
+                          <span className={`os-severity-dot os-severity-dot-${riskDot}`} />
+                        </div>
+                        <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{signal.signal} / {signal.note}</p>
+                        <div className="os-confidence mt-1.5">
+                          <span className="font-mono text-[9px] font-semibold text-[var(--bb-text-muted)]">{signal.confidence}%</span>
+                          <div className="os-confidence-rail">
+                            <div className={`os-confidence-fill os-confidence-fill-${confidenceColor}`} style={{ width: `${signal.confidence}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                      <span className="font-mono text-[10px] font-semibold uppercase text-[var(--bb-amber)]">{signal.risk ?? 'medium'}</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
@@ -136,7 +159,7 @@ export const TradingLabPage = () => {
         <aside className="intelligence-rail space-y-5">
           <PendingApprovalPanel items={pendingApprovals} onApprove={approveActionRequest} onReject={rejectActionRequest} />
           <ModuleAISummaryPanel moduleName="Trading" suggestions={data.aiSuggestions} />
-          <div className="rounded-[30px] border border-black/[0.05] bg-white/85 p-5"><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">AI signal observation</p><p className="mt-3 text-sm leading-6 text-[#666666]">DDOG, PLTR, MRVL, and RBRK remain sandbox experiments. The lab should produce notes, not trades.</p></div>
+          <div className="rounded-[30px] border border-black/[0.05] bg-white/85 p-5"><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">AI signal observation</p><p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">DDOG, PLTR, MRVL, and RBRK remain sandbox experiments. The lab should produce notes, not trades.</p></div>
         </aside>
       </section>
 
@@ -147,9 +170,9 @@ export const TradingLabPage = () => {
 }
 
 const Metric = ({ label, value }: { label: string; value: number | string }) => (
-  <div className="rounded-2xl border border-black/[0.04] bg-white/75 px-4 py-3"><p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p><p className="mt-2 text-lg font-bold">{value}</p></div>
+  <div className="rounded-2xl border border-black/[0.04] bg-white/75 px-4 py-3"><p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p><p className="mt-2 text-lg font-bold">{value}</p></div>
 )
 
 const TradeRow = ({ meta, status, title }: { meta: string; status: string; title: string }) => (
-  <div className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4"><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-[#777777]">{meta}</p></div><span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{status}</span></div></div>
+  <div className="os-list-row"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold">{title}</p><p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{meta}</p></div><span className="font-mono text-[10px] font-semibold uppercase text-[var(--bb-amber)]">{status}</span></div></div>
 )

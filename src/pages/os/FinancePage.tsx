@@ -24,9 +24,9 @@ export const FinancePage = () => {
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">Finance OS / human-controlled wealth operations</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">Finance OS / human-controlled wealth operations</p>
         <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Calm money systems, Sheet-first.</h2>
-        <p className="mt-5 max-w-2xl text-sm leading-7 text-[#666666]">Investments, family-office finance, and a paper-only trading lab. No realtime terminal, no broker execution, no auto trading.</p>
+        <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--bb-text-soft)]">Investments, family-office finance, and a paper-only trading lab. No realtime terminal, no broker execution, no auto trading.</p>
         <div className="mt-6 grid gap-3 md:grid-cols-3"><SourceStatusBadge status={sourceStatuses.investments} /><SourceStatusBadge status={sourceStatuses.familyOffice} /><SourceStatusBadge status={sourceStatuses.tradingLab} /></div>
       </header>
 
@@ -37,9 +37,9 @@ export const FinancePage = () => {
       <div className="grid gap-5 md:grid-cols-3">
         {cards.map((card) => (
           <Link key={card.to} to={card.to} className="panel panel-float block transition duration-300 hover:-translate-y-1">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{card.note}</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{card.note}</p>
             <h3 className="mt-4 text-2xl font-bold tracking-tight">{card.title}</h3>
-            <p className="mt-3 text-sm leading-6 text-[#666666]">{card.detail}</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">{card.detail}</p>
             <p className="mt-6 text-3xl font-extrabold tracking-tight">{card.metric}</p>
           </Link>
         ))}
@@ -54,5 +54,5 @@ export const FinancePage = () => {
 }
 
 const Mini = ({ label, value }: { label: string; value: number | string }) => (
-  <div className="rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-4"><p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p><p className="mt-2 text-xl font-bold">{value}</p></div>
+  <div className="rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-4"><p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p><p className="mt-2 text-xl font-bold">{value}</p></div>
 )

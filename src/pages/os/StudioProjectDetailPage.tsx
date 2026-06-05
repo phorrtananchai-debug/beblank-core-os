@@ -16,9 +16,9 @@ import type {
 } from '../../types/models'
 
 const statusClass = (status: string) => {
-  if (['blocked', 'high', 'at-risk', 'open'].includes(status)) return 'text-[#c2410c]'
-  if (['review', 'needs-review', 'medium', 'active', 'pending'].includes(status)) return 'text-[#9a6a1f]'
-  return 'text-[#59634a]'
+  if (['blocked', 'high', 'at-risk', 'open'].includes(status)) return 'text-[var(--bb-red)]'
+  if (['review', 'needs-review', 'medium', 'active', 'pending'].includes(status)) return 'text-[var(--bb-amber)]'
+  return 'text-[var(--bb-green)]'
 }
 
 const phaseTone: Record<StudioTimelinePhase['phase'], string> = {
@@ -44,7 +44,7 @@ const StudioActionButton = ({
   title?: string
 }) => (
   <button
-    className="rounded-full border border-black/[0.08] bg-white/80 px-3 py-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[#555555] transition hover:bg-black/[0.05] disabled:cursor-not-allowed disabled:opacity-30"
+    className="rounded-full border border-black/[0.08] bg-white/80 px-3 py-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)] transition hover:bg-black/[0.05] disabled:cursor-not-allowed disabled:opacity-30"
     disabled={disabled}
     title={title}
     type="button"
@@ -64,7 +64,7 @@ export const StudioProjectDetailPage = () => {
     return (
       <section className="studio-project-detail">
         <Link
-          className="mb-6 inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#777777] transition hover:bg-black/[0.05] hover:text-[#111111]"
+          className="mb-6 inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)] transition hover:bg-black/[0.05] hover:text-[var(--bb-text)]"
           to="/os/studio/projects"
         >
           &larr; กลับไปหน้ารวมโปรเจค
@@ -153,13 +153,13 @@ export const StudioProjectDetailPage = () => {
     <section className="studio-project-detail space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <Link
-          className="inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#777777] transition hover:bg-black/[0.05] hover:text-[#111111]"
+          className="inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)] transition hover:bg-black/[0.05] hover:text-[var(--bb-text)]"
           to="/os/studio/projects"
         >
           &larr; กลับไปหน้ารวมโปรเจค
         </Link>
         <div className="mt-5">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">
             {project.client} / {project.location}
           </p>
           <h2 className="mt-4 max-w-4xl text-2xl font-extrabold leading-[0.92] tracking-tight">
@@ -192,7 +192,7 @@ export const StudioProjectDetailPage = () => {
             icon="!"
             label="สิ่งที่ต้องตรวจสอบ"
             value={`${inspectionTotal} รายการ`}
-            color={inspectionTotal > 0 ? 'text-[#c2410c]' : 'text-[#59634a]'}
+            color={inspectionTotal > 0 ? 'text-[var(--bb-amber)]' : 'text-[var(--bb-green)]'}
             helper="รีวิว + ปัญหา"
           />
           <MetricCard
@@ -257,19 +257,19 @@ export const StudioProjectDetailPage = () => {
       <section>
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">บริบท AI สตูดิโอ</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">บริบท AI สตูดิโอ</p>
             <h3>ข้อมูลสนับสนุนการทำงาน</h3>
           </div>
           <span className="pill">{aiContexts.length} รายการ</span>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {aiContexts.length === 0 ? (
-            <p className="text-sm text-[#777777]">ไม่มีบริบท AI สำหรับโมดูลสตูดิโอ</p>
+            <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีบริบท AI สำหรับโมดูลสตูดิโอ</p>
           ) : (
             aiContexts.map((ctx) => (
               <div key={ctx.id} className="panel panel-float">
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{ctx.title}</p>
-                <p className="mt-3 text-sm leading-6 text-[#666666]">{ctx.body}</p>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{ctx.title}</p>
+                <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">{ctx.body}</p>
               </div>
             ))
           )}
@@ -294,9 +294,9 @@ const MetricCard = ({
 }) => {
   const toneClass = color?.replace('text-[', '').replace(']', '') ?? ''
   const glowColor =
-    toneClass === '#c2410c' ? 'red' :
-    toneClass === '#9a6a1f' ? 'amber' :
-    toneClass === '#59634a' ? 'green' : 'neutral'
+    toneClass === 'var(--bb-red)' ? 'red' :
+    toneClass === 'var(--bb-amber)' ? 'amber' :
+    toneClass === 'var(--bb-green)' ? 'green' : 'neutral'
   return (
     <div className={`os-hero-metric os-hero-metric-${glowColor}`}>
       {icon && <span className={`os-icon-badge os-icon-badge-${glowColor}`}>{icon}</span>}
@@ -333,7 +333,7 @@ const OverviewSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ภาพรวมโปรเจค</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ภาพรวมโปรเจค</p>
         <h3>สรุปข้อมูลที่เชื่อมโยง</h3>
       </div>
       <span className="pill">{project.name}</span>
@@ -365,22 +365,22 @@ const WorkScopeSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">โครงสร้างสตูดิโอ</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">โครงสร้างสตูดิโอ</p>
         <h3>หมวดงาน</h3>
       </div>
       <span className="pill">{workScopeSections.length} หมวด</span>
     </div>
     {workScopeSections.length === 0 ? (
-      <p className="text-sm text-[#777777]">ไม่มีหมวดงานที่เชื่อมโยงกับโปรเจคนี้</p>
+      <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีหมวดงานที่เชื่อมโยงกับโปรเจคนี้</p>
     ) : (
       <div className="space-y-3">
         {workScopeSections.map((scope) => (
           <div key={scope.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{scope.code} / {scope.group}</p>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{scope.code} / {scope.group}</p>
                 <p className="mt-1 text-sm font-semibold">{scope.title}</p>
-                <p className="mt-1 text-xs text-[#777777]">เฟส: {scope.phase}</p>
+                <p className="mt-1 text-xs text-[var(--bb-text-muted)]">เฟส: {scope.phase}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(scope.operationalStatus)}`}>{scope.operationalStatus}</span>
@@ -419,26 +419,26 @@ const TimelineSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ไทม์ไลน์โปรเจค</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ไทม์ไลน์โปรเจค</p>
         <h3>เฟสและเหตุการณ์สำคัญ</h3>
       </div>
       <span className="pill">{phases.length} เฟส / {timelineItems.length} เหตุการณ์</span>
     </div>
     {phases.length === 0 && timelineItems.length === 0 ? (
-      <p className="text-sm text-[#777777]">ไม่มีข้อมูลไทม์ไลน์สำหรับโปรเจคนี้</p>
+      <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีข้อมูลไทม์ไลน์สำหรับโปรเจคนี้</p>
     ) : (
       <div className="grid gap-6 lg:grid-cols-2">
         {phases.length > 0 && (
           <div>
-            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">เฟส</p>
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">เฟส</p>
             <div className="space-y-3">
               {phases.map((phase) => (
                 <div key={phase.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <span className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold ${phaseTone[phase.phase]}`}>{phase.phase}</span>
-                      <p className="mt-2 text-xs text-[#777777]">{phase.startDate} &rarr; {phase.endDate}</p>
-                      <p className="mt-1 text-xs text-[#777777]">{phase.notes}</p>
+                      <p className="mt-2 text-xs text-[var(--bb-text-muted)]">{phase.startDate} &rarr; {phase.endDate}</p>
+                      <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{phase.notes}</p>
                     </div>
                     <div className="text-right">
                       <p className={`font-mono text-[10px] font-semibold uppercase ${statusClass(phase.status)}`}>{phase.status}</p>
@@ -457,14 +457,14 @@ const TimelineSection = ({
         )}
         {timelineItems.length > 0 && (
           <div>
-            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">เหตุการณ์สำคัญ</p>
+            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">เหตุการณ์สำคัญ</p>
             <div className="space-y-3">
               {timelineItems.map((item) => (
                 <div key={item.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold">{item.label}</p>
-                      <p className="mt-1 text-xs text-[#777777]">Due: {item.dueDate}</p>
+                      <p className="mt-1 text-xs text-[var(--bb-text-muted)]">Due: {item.dueDate}</p>
                     </div>
                     <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(item.state)}`}>{item.state}</span>
                   </div>
@@ -499,25 +499,25 @@ const SiteWatchSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ข้อมูลหน้างาน</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ข้อมูลหน้างาน</p>
         <h3>ไซต์และการแจ้งปัญหา</h3>
       </div>
       <span className="pill">{siteWatchUpdates.length} อัพเดต / {siteIssues.length} ปัญหา</span>
     </div>
     {siteWatchUpdates.length === 0 && siteIssues.length === 0 ? (
-      <p className="text-sm text-[#777777]">ไม่มีข้อมูลหน้างานสำหรับโปรเจคนี้</p>
+      <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีข้อมูลหน้างานสำหรับโปรเจคนี้</p>
     ) : (
       <div className="grid gap-5 lg:grid-cols-2">
         {siteWatchUpdates.length > 0 && (
           <div className="space-y-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">อัพเดตหน้างาน</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">อัพเดตหน้างาน</p>
             {siteWatchUpdates.map((update) => (
               <div key={update.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">{update.title}</p>
-                    <p className="mt-1 text-xs leading-5 text-[#666666]">{update.note}</p>
-                    <p className="mt-1 text-xs text-[#777777]">{update.observedAt} / {update.imagePlaceholder}</p>
+                    <p className="mt-1 text-xs leading-5 text-[var(--bb-text-soft)]">{update.note}</p>
+                    <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{update.observedAt} / {update.imagePlaceholder}</p>
                   </div>
                   <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(update.severity)}`}>{update.severity} / {update.status}</span>
                 </div>
@@ -535,13 +535,13 @@ const SiteWatchSection = ({
         )}
         {siteIssues.length > 0 && (
           <div className="space-y-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ปัญหาหน้างาน</p>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ปัญหาหน้างาน</p>
             {siteIssues.map((issue) => (
               <div key={issue.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">{issue.issue}</p>
-                    <p className="mt-1 text-xs text-[#777777]">Severity: {issue.severity}{issue.status ? ` / ${issue.status}` : ''}</p>
+                    <p className="mt-1 text-xs text-[var(--bb-text-muted)]">Severity: {issue.severity}{issue.status ? ` / ${issue.status}` : ''}</p>
                   </div>
                   <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(issue.severity)}`}>{issue.severity}</span>
                 </div>
@@ -573,22 +573,22 @@ const DocumentsSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">จัดการเอกสาร</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">จัดการเอกสาร</p>
         <h3>ชุดเอกสารที่เชื่อมโยง</h3>
       </div>
       <span className="pill">{documents.length} ชุด</span>
     </div>
     {documents.length === 0 ? (
-      <p className="text-sm text-[#777777]">ไม่มีเอกสารที่เชื่อมโยงกับโปรเจคนี้</p>
+      <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีเอกสารที่เชื่อมโยงกับโปรเจคนี้</p>
     ) : (
       <div className="space-y-3">
         {documents.map((document) => (
           <div key={document.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{document.packageType}</p>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{document.packageType}</p>
                 <p className="mt-1 text-sm font-semibold">{document.title}</p>
-                <p className="mt-1 text-xs text-[#777777]">{document.version} / Issued {document.issueDate} / {document.approvalState}</p>
+                <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{document.version} / Issued {document.issueDate} / {document.approvalState}</p>
               </div>
               <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(document.approvalState ?? 'draft')}`}>{document.approvalState}</span>
             </div>
@@ -624,22 +624,22 @@ const ReviewsSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">คิวรีวิว</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">คิวรีวิว</p>
         <h3>รีวิวของโปรเจคนี้</h3>
       </div>
       <span className="pill">{reviews.length} รายการ</span>
     </div>
     {reviews.length === 0 ? (
-      <p className="text-sm text-[#777777]">ไม่มีรีวิวที่เชื่อมโยงกับโปรเจคนี้</p>
+      <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีรีวิวที่เชื่อมโยงกับโปรเจคนี้</p>
     ) : (
       <div className="space-y-3">
         {reviews.map((review) => (
           <div key={review.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{review.type}</p>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{review.type}</p>
                 <p className="mt-1 text-sm font-semibold">{review.title}</p>
-                <p className="mt-1 text-xs text-[#777777]">Due: {review.dueAt}</p>
+                <p className="mt-1 text-xs text-[var(--bb-text-muted)]">Due: {review.dueAt}</p>
               </div>
               <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(review.status)}`}>{review.status}</span>
             </div>

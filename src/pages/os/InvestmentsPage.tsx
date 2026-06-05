@@ -16,9 +16,9 @@ import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, T
 const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
 const usdToThb = 36.5
 const statusClass = (status: string) => {
-  if (['blocked', 'high', 'at-risk', 'open', 'review', 'pending', 'failed'].includes(status)) return 'text-[#c2410c]'
-  if (['review', 'medium', 'active', 'watching'].includes(status)) return 'text-[#9a6a1f]'
-  return 'text-[#59634a]'
+  if (['blocked', 'high', 'at-risk', 'open', 'failed'].includes(status)) return 'text-[var(--bb-red)]'
+  if (['review', 'pending', 'medium', 'active', 'watching'].includes(status)) return 'text-[var(--bb-amber)]'
+  return 'text-[var(--bb-green)]'
 }
 
 type InvestmentsTab = 'overview' | 'portfolio' | 'holdings' | 'allocation' | 'transactions' | 'dca' | 'dividends' | 'watchlist' | 'research' | 'ai'
@@ -333,10 +333,10 @@ export const InvestmentsPage = () => {
                     type="button"
                     onClick={() => applySuggestion(suggestion)}
                   >
-                    <span className="block text-sm font-bold">{suggestion.symbol} <span className="font-normal text-[#777777]">/ {suggestion.name}</span></span>
-                    <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.12em] text-[#777777]">{suggestion.market} / {suggestion.currency} / {suggestion.sourceLabel}</span>
+                    <span className="block text-sm font-bold">{suggestion.symbol} <span className="font-normal text-[var(--bb-text-muted)]">/ {suggestion.name}</span></span>
+                    <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">{suggestion.market} / {suggestion.currency} / {suggestion.sourceLabel}</span>
                   </button>
-                )) : <p className="px-3 py-2 text-xs text-[#777777]">No suggestion. Manual symbol entry is allowed.</p>}
+                )) : <p className="px-3 py-2 text-xs text-[var(--bb-text-muted)]">No suggestion. Manual symbol entry is allowed.</p>}
               </div>
             ) : null}
           </div>
@@ -364,7 +364,7 @@ export const InvestmentsPage = () => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-lg font-bold">ตรวจสอบก่อนอนุมัติ</p>
-          <p className="mt-2 text-sm leading-6 text-[#666666]">แบบร่างเท่านั้น สินทรัพย์จะถูกสร้างเมื่ออนุมัติผ่าน ActionRequest และ mock Sheet adapter</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--bb-text-soft)]">แบบร่างเท่านั้น สินทรัพย์จะถูกสร้างเมื่ออนุมัติผ่าน ActionRequest และ mock Sheet adapter</p>
         </div>
         <span className="pill">source: manual</span>
       </div>
@@ -377,7 +377,7 @@ export const InvestmentsPage = () => {
         <Mini label="สถานะแหล่ง" value={isThaiAsset ? 'Thai NAV / ช่วยป้อน' : 'Finnhub สำหรับ US เท่านั้น'} />
       </div>
       {manualPreview.missingDataWarning ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-[#fffaf4] p-3 text-xs leading-5 text-[#9a4f18]">{manualPreview.missingDataWarning}</p> : null}
-      <p className="mt-4 text-xs leading-5 text-[#666666]">Finnhub เป็นแหล่งเสริมสำหรับสินทรัพย์ US เท่านั้น ไม่สามารถเขียนทับหน่วย ต้นทุนถัวเฉลี่ย สัดส่วน หรือบันทึกของ Por ได้</p>
+      <p className="mt-4 text-xs leading-5 text-[var(--bb-text-soft)]">Finnhub เป็นแหล่งเสริมสำหรับสินทรัพย์ US เท่านั้น ไม่สามารถเขียนทับหน่วย ต้นทุนถัวเฉลี่ย สัดส่วน หรือบันทึกของ Por ได้</p>
       {withSubmit ? <button className="btn-primary mt-5 w-full" type="button" onClick={queueManualAssetAdd}>Queue for Approval</button> : null}
     </article>
   )
@@ -385,7 +385,7 @@ export const InvestmentsPage = () => {
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">การลงทุน / แกนหลัก Aequitas</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
         <h2 className="mt-4 text-2xl font-extrabold leading-[0.92] tracking-tight">การลงทุน / หุ้น</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <OsHeroMetric icon="◆" value={thb(totalValue)} label="มูลค่าพอร์ต" helper="รวมทุกประเภท" color="neutral" progress={100} />
@@ -513,7 +513,7 @@ export const InvestmentsPage = () => {
             <section className="panel panel-float">
               <div className="panel-header">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">แหล่งข้อมูลหลัก</p>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">แหล่งข้อมูลหลัก</p>
                   <h3>เพิ่มสินทรัพย์ในสมุด Aequitas</h3>
                 </div>
                 <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal</button>
@@ -536,7 +536,7 @@ export const InvestmentsPage = () => {
           <div className="modal-panel">
             <div className="panel-header">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">เพิ่มสินทรัพย์</p>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">เพิ่มสินทรัพย์</p>
                 <h3>ตรวจสอบก่อนอนุมัติ</h3>
               </div>
               <button className="btn-secondary" type="button" onClick={() => setShowAssetModal(false)}>ปิด</button>
@@ -602,21 +602,21 @@ const OsHeroMetric = ({
 
 const Metric = ({ label, value }: { label: string; value: number | string }) => (
   <div className="rounded-2xl border border-black/[0.04] bg-white/75 px-4 py-3">
-    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
+    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p>
     <p className="mt-2 text-lg font-bold">{value}</p>
   </div>
 )
 
 const Mini = ({ label, value }: { label: string; value: string | ReactNode }) => (
   <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3">
-    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-[#777777]">{label}</p>
+    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">{label}</p>
     <p className="mt-1 font-semibold">{value}</p>
   </div>
 )
 
 const Field = ({ children, label }: { children: ReactNode; label: string }) => (
   <label className="mt-3 block">
-    <span className="mb-2 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</span>
+    <span className="mb-2 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</span>
     {children}
   </label>
 )
@@ -625,7 +625,7 @@ const SectionPanel = ({ children, label, title, endSlot }: { children: ReactNode
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{label}</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p>
         <h3>{title}</h3>
       </div>
       {endSlot ?? null}
@@ -663,18 +663,46 @@ const OverviewTab = ({
         <Metric label="รายการดริฟท์" value={driftHoldings.length} />
         <Metric label="กลุ่มจัดสรร" value={Object.keys(holdingsByCategory).length} />
       </div>
-      <p className="mt-4 text-sm leading-6 text-[#666666]">พอร์ตทั้งหมดป้อนด้วยมือ ราคาช่วยประมาณมูลค่าแต่ไม่เขียนทับหน่วย ต้นทุนถัวเฉลี่ย การจัดสรร หรือบันทึกของ Por</p>
+      <p className="mt-4 text-sm leading-6 text-[var(--bb-text-soft)]">พอร์ตทั้งหมดป้อนด้วยมือ ราคาช่วยประมาณมูลค่าแต่ไม่เขียนทับหน่วย ต้นทุนถัวเฉลี่ย การจัดสรร หรือบันทึกของ Por</p>
     </SectionPanel>
     <SectionPanel label="สัดส่วนพอร์ต" title="Core / Growth / Income / Reserve / Thai">
       <div className="grid gap-3 md:grid-cols-5">
         {Object.entries(holdingsByCategory).map(([category, value]) => <Metric key={category} label={category} value={thb(value)} />)}
+      </div>
+      <div className="mt-4">
+        <div className="os-stacked-bar h-2.5 rounded-full">
+          {(() => {
+            const entries = Object.entries(holdingsByCategory).sort((a, b) => b[1] - a[1])
+            const total = totalValue || 1
+            return entries.map(([category, value], i) => (
+              <div
+                key={category}
+                className="os-stacked-bar-segment first:rounded-l-full last:rounded-r-full"
+                style={{
+                  width: `${(value / total) * 100}%`,
+                  background: i === 0 ? 'var(--bb-green)' : i === 1 ? 'var(--bb-blue)' : i === 2 ? 'var(--bb-amber)' : i === 3 ? 'var(--bb-purple)' : 'var(--bb-text-muted)',
+                }}
+              />
+            ))
+          })()}
+        </div>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+          {Object.entries(holdingsByCategory).sort((a, b) => b[1] - a[1]).map(([category, value], i) => (
+            <span key={category} className="flex items-center gap-1 font-mono text-[9px] font-semibold uppercase text-[var(--bb-text-muted)]">
+              <span className="block h-1.5 w-1.5 rounded-full" style={{
+                background: i === 0 ? 'var(--bb-green)' : i === 1 ? 'var(--bb-blue)' : i === 2 ? 'var(--bb-amber)' : i === 3 ? 'var(--bb-purple)' : 'var(--bb-text-muted)',
+              }} />
+              {category} {(value / (totalValue || 1) * 100).toFixed(1)}%
+            </span>
+          ))}
+        </div>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <Mini label="เงินสดสำรอง" value={thb(cashPosture)} />
         <Mini label="ความเสี่ยงสูง" value={String(riskPosture)} />
         <Mini label="ผลกระทบ DCA" value={`${dcaImpactPreview}% ของพอร์ต`} />
       </div>
-      <p className="mt-4 text-sm leading-6 text-[#666666]">จัดกลุ่มตามประเภทสินทรัพย์ เป้าหมายและการดริฟท์ตรวจสอบได้ในแท็บจัดสรร</p>
+      <p className="mt-4 text-sm leading-6 text-[var(--bb-text-soft)]">จัดกลุ่มตามประเภทสินทรัพย์ เป้าหมายและการดริฟท์ตรวจสอบได้ในแท็บจัดสรร</p>
     </SectionPanel>
   </div>
 )
@@ -718,7 +746,7 @@ const PortfolioTab = ({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-lg font-bold">สถานะ Connector</p>
-                <p className="mt-2 text-sm leading-6 text-[#666666]">รีเฟรชที่อนุมัติด้วยตนเองเท่านั้น ถ้าไม่มีคีย์หรือคำขอล้มเหลว ราคา mock/fallback จะยังแสดงอยู่</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--bb-text-soft)]">รีเฟรชที่อนุมัติด้วยตนเองเท่านั้น ถ้าไม่มีคีย์หรือคำขอล้มเหลว ราคา mock/fallback จะยังแสดงอยู่</p>
               </div>
               <span className="pill">{finnhubProvider?.mode ?? 'fallback'}</span>
             </div>
@@ -728,12 +756,12 @@ const PortfolioTab = ({
               <Mini label="ใช้ Fallback" value={finnhubProvider?.fallbackUsed ? 'ใช่' : 'ไม่'} />
               <Mini label="การทำงาน" value="ไม่มี / อ่านอย่างเดียว" />
             </div>
-            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-[#777777]">Supported: {supportedMarketSymbols.join(' / ')}</p>
+            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Supported: {supportedMarketSymbols.join(' / ')}</p>
             {finnhubProvider?.error ? <p className="mt-4 rounded-2xl border border-[#ead7c3] bg-white/80 p-3 text-xs leading-5 text-[#9a4f18]">{finnhubProvider.error}</p> : null}
           </article>
           <article className="rounded-[28px] border border-black/[0.05] bg-white/75 p-5">
             <div className="flex items-center justify-between gap-4">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">แถวแคชชีท</p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">แถวแคชชีท</p>
               <span className="pill">{marketSymbols.length} symbols</span>
             </div>
             <div className="mt-4 grid gap-2 md:grid-cols-2">
@@ -742,9 +770,9 @@ const PortfolioTab = ({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-bold">{symbol.symbol}</p>
-                      <p className="mt-1 text-xs text-[#777777]">{symbol.notes}</p>
+                      <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{symbol.notes}</p>
                     </div>
-                    <span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{thb(symbol.delayedPriceTHB)}</span>
+                    <span className="font-mono text-[10px] font-semibold uppercase text-[var(--bb-amber)]">{thb(symbol.delayedPriceTHB)}</span>
                   </div>
                   <p className="mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-[#8a8176]">last {new Date(symbol.lastUpdated).toLocaleDateString()} / stale after {symbol.staleAfterHours}h</p>
                 </div>
@@ -810,8 +838,8 @@ const HoldingsTab = ({
     {thaiNavAssets.length > 0 ? (
       <section className="rounded-[28px] border border-black/[0.05] bg-white/60">
         <div className="border-b border-black/[0.05] px-5 py-3">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Thai NAV Helper Operations</p>
-          <p className="mt-0.5 text-xs text-[#777777]">NAV values merged into bucket view above. Edit NAV manually below.</p>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Thai NAV Helper Operations</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">NAV values merged into bucket view above. Edit NAV manually below.</p>
         </div>
         <div className="divide-y divide-black/[0.03]">
           {thaiNavAssets.map((asset) => {
@@ -820,10 +848,10 @@ const HoldingsTab = ({
               <div key={asset.id} className="grid gap-3 px-5 py-3 md:grid-cols-[1fr_120px_120px_auto] md:items-center">
                 <div>
                   <p className="text-sm font-semibold">{asset.symbol}</p>
-                  <p className="text-xs text-[#777777]">{asset.displayName ?? ''} / {thb(valueTHB)}</p>
+                  <p className="text-xs text-[var(--bb-text-muted)]">{asset.displayName ?? ''} / {thb(valueTHB)}</p>
                 </div>
                 <input className="input" inputMode="decimal" value={navDrafts[asset.id] ?? String(asset.nav)} onChange={(event) => setNavDrafts((prev) => ({ ...prev, [asset.id]: event.target.value }))} />
-                <p className="text-xs text-[#777777] md:text-right">NAV updated {asset.updatedAt}</p>
+                <p className="text-xs text-[var(--bb-text-muted)] md:text-right">NAV updated {asset.updatedAt}</p>
                 <button className="btn-secondary text-xs" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Queue NAV Review</button>
               </div>
             )
@@ -855,7 +883,7 @@ const AllocationTab = ({
         <div className="grid gap-3 md:grid-cols-4">
           {Object.entries(holdingsByCategory).map(([category, value]) => <Metric key={category} label={category} value={thb(value)} />)}
         </div>
-        <p className="mt-4 text-sm leading-6 text-[#666666]">สัดส่วนปัจจุบันตามหมวดหมู่ ตรวจสอบดริฟท์ด้านล่าง ไม่มีการปรับสมดุลอัตโนมัติ — ทุกการเปลี่ยนแปลงต้องผ่านการตรวจสอบและอนุมัติ</p>
+        <p className="mt-4 text-sm leading-6 text-[var(--bb-text-soft)]">สัดส่วนปัจจุบันตามหมวดหมู่ ตรวจสอบดริฟท์ด้านล่าง ไม่มีการปรับสมดุลอัตโนมัติ — ทุกการเปลี่ยนแปลงต้องผ่านการตรวจสอบและอนุมัติ</p>
       </SectionPanel>
 
       <SectionPanel label="ตรวจจับดริฟท์" title="ความคลาดเคลื่อนของสัดส่วน" endSlot={<span className="pill">{driftHoldings.length} รายการเกินเกณฑ์</span>}>
@@ -871,13 +899,13 @@ const AllocationTab = ({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold break-words">{asset?.symbol ?? holding.assetId}</p>
-                    <p className="mt-0.5 text-xs text-[#777777]">{thb(holding.marketValueTHB)}</p>
+                    <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{thb(holding.marketValueTHB)}</p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <span className={`font-mono text-xs font-bold ${drift > 0 ? 'text-[#c2410c]' : drift < 0 ? 'text-[#59634a]' : ''}`}>
+                    <span className={`font-mono text-xs font-bold ${drift > 0 ? 'text-[var(--bb-amber)]' : drift < 0 ? 'text-[var(--bb-green)]' : ''}`}>
                       {drift > 0 ? `+${drift.toFixed(1)}%` : `${drift.toFixed(1)}%`}
                     </span>
-                    <p className="font-mono text-[10px] text-[#777777]">{currentPct}% → {targetPct}%</p>
+                    <p className="font-mono text-[10px] text-[var(--bb-text-muted)]">{currentPct}% → {targetPct}%</p>
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -903,28 +931,28 @@ const AllocationTab = ({
             )
           })}
         </div>
-        <p className="mt-4 text-sm leading-6 text-[#666666]">รายการที่ไฮไลต์ถ้าดริฟท์เกิน ±2% การเปลี่ยนแปลงสัดส่วนต้องผ่านการตรวจสอบและอนุมัติ ไม่มีการปรับสมดุลอัตโนมัติ</p>
+        <p className="mt-4 text-sm leading-6 text-[var(--bb-text-soft)]">รายการที่ไฮไลต์ถ้าดริฟท์เกิน ±2% การเปลี่ยนแปลงสัดส่วนต้องผ่านการตรวจสอบและอนุมัติ ไม่มีการปรับสมดุลอัตโนมัติ</p>
       </SectionPanel>
 
       <SectionPanel label="จัดสรรเงินสด" title="สถานะเงินสำรอง">
         {holdings.filter((h) => financeAssets.find((a) => a.id === h.assetId)?.category === 'cash').map((holding) => {
           const asset = financeAssets.find((a) => a.id === holding.assetId)
           return (
-            <div key={holding.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+            <div key={holding.id} className="os-list-row">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold">{asset?.name}</p>
-                  <p className="mt-1 text-xs text-[#777777]">{holding.notes}</p>
+                  <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{holding.notes}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-bold">{thb(holding.marketValueTHB)}</p>
-                  <p className="font-mono text-[10px] text-[#777777]">{holding.allocationPercent}%</p>
+                  <p className="font-mono text-[10px] text-[var(--bb-text-muted)]">{holding.allocationPercent}%</p>
                 </div>
               </div>
             </div>
           )
         })}
-        <p className="mt-3 text-sm leading-6 text-[#666666]">Cash / dry powder = {thb(totalValue > 0 ? (holdings.filter((h) => financeAssets.find((a) => a.id === h.assetId)?.category === 'cash').reduce((s, h) => s + (h.marketValueTHB ?? 0), 0)) : 0)}.</p>
+        <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">Cash / dry powder = {thb(totalValue > 0 ? (holdings.filter((h) => financeAssets.find((a) => a.id === h.assetId)?.category === 'cash').reduce((s, h) => s + (h.marketValueTHB ?? 0), 0)) : 0)}.</p>
       </SectionPanel>
     </div>
   )
@@ -955,24 +983,24 @@ const TransactionsTab = ({
       </div>
     }>
       {transactions.length === 0 ? (
-        <p className="text-sm text-[#777777]">ยังไม่มีรายการเดินบัญชี</p>
+        <p className="text-sm text-[var(--bb-text-muted)]">ยังไม่มีรายการเดินบัญชี</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {transactions.map((tx) => {
             const asset = financeAssets.find((a) => a.id === tx.assetId)
             return (
-              <div key={tx.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+              <div key={tx.id} className="os-list-row">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold break-words">{tx.description}{asset ? <span className="text-xs font-normal text-[#777777]"> / {asset.symbol}</span> : null}</p>
-                    <p className="mt-0.5 text-xs text-[#777777]">{tx.occurredAt}</p>
+                    <p className="text-sm font-semibold break-words">{tx.description}{asset ? <span className="text-xs font-normal text-[var(--bb-text-muted)]"> / {asset.symbol}</span> : null}</p>
+                    <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{tx.occurredAt}</p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <span className={`font-semibold ${tx.amountTHB < 0 || tx.type === 'sell' || tx.type === 'expense' ? 'text-[#c2410c]' : 'text-[#59634a]'}`}>{thb(tx.amountTHB)}</span>
-                    <p className="text-xs text-[#777777]"><span className="pill">{tx.type}</span></p>
+                    <span className={`font-semibold ${tx.amountTHB < 0 || tx.type === 'sell' || tx.type === 'expense' ? 'text-[var(--bb-red)]' : 'text-[var(--bb-green)]'}`}>{thb(tx.amountTHB)}</span>
+                    <p className="text-xs text-[var(--bb-text-muted)]"><span className="pill">{tx.type}</span></p>
                   </div>
                 </div>
-                <p className="mt-3 text-xs leading-5 text-[#666666] break-words">{tx.notes ?? ''}</p>
+                <p className="mt-3 text-xs leading-5 text-[var(--bb-text-soft)] break-words">{tx.notes ?? ''}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     className="btn-secondary"
@@ -1017,21 +1045,21 @@ const DcaTab = ({
   return (
     <div className="space-y-5">
       <SectionPanel label="DCA" title="แผนลงทุนประจำ" endSlot={<div className="flex flex-wrap gap-2"><span className="pill">{thb(monthlyDcaTarget)} ต่อเดือน</span><button className="btn-primary" type="button" onClick={queueDca}>ดำเนินการ DCA</button></div>}>
-        <p className="mb-3 rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3 text-xs leading-5 text-[#666666]">
+        <p className="mb-3 rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3 text-xs leading-5 text-[var(--bb-text-soft)]">
           ผลกระทบเบื้องต้น: DCA ครั้งถัดไปจะเพิ่มประมาณ {dcaImpactPreview}% ของพอร์ตหลังอนุมัติ การอนุมัติจะสร้างธุรกรรม รายการเปลี่ยนแปลง และ Snapshot
         </p>
         {dcaQueue.length === 0 && dcaRecords.length === 0 ? (
-          <p className="text-sm text-[#777777]">ยังไม่มีแผน DCA</p>
+          <p className="text-sm text-[var(--bb-text-muted)]">ยังไม่มีแผน DCA</p>
         ) : (
           <div className="space-y-3">
             {dcaRecords.map((record) => (
-              <div key={record.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+              <div key={record.id} className="os-list-row">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold">{assetName(record.assetId)}</p>
-                    <p className="mt-1 text-xs text-[#777777]">{record.cadence} / {thb(record.plannedAmountTHB)} / {record.nextRunDate}</p>
+                    <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{record.cadence} / {thb(record.plannedAmountTHB)} / {record.nextRunDate}</p>
                   </div>
-                  <span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{record.status}</span>
+                  <span className="font-mono text-[10px] font-semibold uppercase text-[var(--bb-amber)]">{record.status}</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <InvestmentActionButton
@@ -1059,13 +1087,13 @@ const DcaTab = ({
             return (
               <div key={record.id} className="rounded-2xl border border-black/[0.04] bg-white/80 p-4">
                 <p className="text-sm font-semibold">{assetName(record.assetId)}</p>
-                <p className="mt-1 text-xs text-[#777777]">{thb(record.plannedAmountTHB)} / {pct}% of monthly target</p>
+                <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{thb(record.plannedAmountTHB)} / {pct}% of monthly target</p>
               </div>
             )
           })}
         </div>
         {dcaRecords.filter((r) => r.status === 'review').length > 0 ? (
-          <p className="mt-3 text-xs leading-5 text-[#9a6a1f]">{dcaRecords.filter((r) => r.status === 'review').length} item(s) pending review before next cycle.</p>
+          <p className="mt-3 text-xs leading-5 text-[var(--bb-amber)]">{dcaRecords.filter((r) => r.status === 'review').length} item(s) pending review before next cycle.</p>
         ) : null}
       </SectionPanel>
     </div>
@@ -1086,17 +1114,17 @@ const DividendsTab = ({
   <div className="space-y-5">
     <SectionPanel label="ปันผล" title="สรุปชั้นรายได้" endSlot={<span className="pill">{thb(expectedDividends)} ประมาณการ</span>}>
       {dividendRecords.length === 0 ? (
-        <p className="text-sm text-[#777777]">ยังไม่มีข้อมูลปันผล</p>
+        <p className="text-sm text-[var(--bb-text-muted)]">ยังไม่มีข้อมูลปันผล</p>
       ) : (
         <div className="space-y-3">
           {dividendRecords.map((record) => (
-            <div key={record.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+            <div key={record.id} className="os-list-row">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold">{assetName(record.assetId)}</p>
-                  <p className="mt-1 text-xs text-[#777777]">{thb(record.expectedAmountTHB)} / pay {record.payDate}</p>
+                  <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{thb(record.expectedAmountTHB)} / pay {record.payDate}</p>
                 </div>
-                <span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{record.status}</span>
+                <span className="font-mono text-[10px] font-semibold uppercase text-[var(--bb-amber)]">{record.status}</span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <InvestmentActionButton
@@ -1131,7 +1159,7 @@ const DividendsTab = ({
         <Mini label="ประมาณการต่อเดือน" value={thb(Math.round(expectedDividends / 12))} />
         <Mini label="ประมาณการต่อปี" value={thb(expectedDividends)} />
       </div>
-      <p className="mt-3 text-sm leading-6 text-[#666666]">ประมาณจากรายการปันผลที่คาดไว้ วันที่และจำนวนเงินจริงขึ้นอยู่กับการตรวจสอบใบแจ้งยอด</p>
+      <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">ประมาณจากรายการปันผลที่คาดไว้ วันที่และจำนวนเงินจริงขึ้นอยู่กับการตรวจสอบใบแจ้งยอด</p>
     </SectionPanel>
   </div>
 )
@@ -1148,21 +1176,21 @@ const WatchlistTab = ({
   <div className="space-y-5">
     <SectionPanel label="รายการติดตาม" title="สินทรัพย์ที่เฝ้าดู" endSlot={<span className="pill">{tradingWatchlist.length} รายการ</span>}>
       {tradingWatchlist.length === 0 ? (
-        <p className="text-sm text-[#777777]">ยังไม่มีสินทรัพย์ในรายการติดตาม</p>
+        <p className="text-sm text-[var(--bb-text-muted)]">ยังไม่มีสินทรัพย์ในรายการติดตาม</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {tradingWatchlist.map((item) => (
-            <div key={item.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+            <div key={item.id} className="os-list-row">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-base font-bold">{item.symbol}</p>
-                  <p className="mt-1 text-xs text-[#777777]">{item.thesis}</p>
+                  <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{item.thesis}</p>
                 </div>
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(item.risk)}`}>{item.risk}</span>
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(item.status)}`}>{item.status}</span>
-                <span className="text-xs text-[#777777]">/ {item.notes}</span>
+                <span className="text-xs text-[var(--bb-text-muted)]">/ {item.notes}</span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <InvestmentActionButton
@@ -1196,11 +1224,11 @@ const WatchlistTab = ({
       <SectionPanel label="สัญญาณ" title="การสังเกตใน Sandbox" endSlot={<span className="pill">{tradingSignals.length} สัญญาณ</span>}>
         <div className="grid gap-3 md:grid-cols-2">
           {tradingSignals.map((signal) => (
-            <div key={signal.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+            <div key={signal.id} className="os-list-row">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold">{signal.symbol}</p>
-                  <p className="mt-1 text-xs text-[#777777]">{signal.note}</p>
+                  <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{signal.note}</p>
                 </div>
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(signal.risk ?? '')}`}>{signal.signal} / {signal.confidence}%</span>
               </div>
@@ -1233,21 +1261,21 @@ const ResearchTab = ({
       </div>
     }>
       {tradingStrategyNotes.length === 0 ? (
-        <p className="text-sm text-[#777777]">ยังไม่มีบันทึกการวิจัย</p>
+        <p className="text-sm text-[var(--bb-text-muted)]">ยังไม่มีบันทึกการวิจัย</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {tradingStrategyNotes.map((note) => (
-            <div key={note.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+            <div key={note.id} className="os-list-row">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-base font-bold">{note.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#666666]">{note.note}</p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--bb-text-soft)]">{note.note}</p>
                 </div>
                 <span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(note.riskLevel)}`}>{note.riskLevel}</span>
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <span className="pill">{note.status}</span>
-                  <span className="text-xs text-[#777777]">{(note.tags ?? []).join(', ')}</span>
+                  <span className="text-xs text-[var(--bb-text-muted)]">{(note.tags ?? []).join(', ')}</span>
               </div>
             </div>
           ))}
@@ -1258,11 +1286,11 @@ const ResearchTab = ({
       <SectionPanel label="บันทึกจาก AI" title="ข้อเสนอแนะจาก AI" endSlot={<span className="pill">{aiImports.filter((imp) => imp.module === 'Finance' || imp.module === 'Trading Lab').length} รายการ</span>}>
         <div className="space-y-3">
           {aiImports.filter((imp) => imp.module === 'Finance' || imp.module === 'Trading Lab').map((importItem) => (
-            <div key={importItem.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+            <div key={importItem.id} className="os-list-row">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold">{importItem.title}</p>
-                  <p className="mt-1 text-xs leading-5 text-[#666666]">{importItem.diffPreview}</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--bb-text-soft)]">{importItem.diffPreview}</p>
                 </div>
                 <span className="pill">{importItem.reviewStatus}</span>
               </div>
@@ -1292,13 +1320,13 @@ const AiTab = ({
     <div className="space-y-5">
       <SectionPanel label="บริบท AI" title="ข้อมูลการเงินและการลงทุนสำหรับ AI">
         {financeContexts.length === 0 ? (
-          <p className="text-sm text-[#777777]">ไม่มีบริบท AI สำหรับโมดูลการลงทุน</p>
+          <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีบริบท AI สำหรับโมดูลการลงทุน</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {financeContexts.map((ctx) => (
-              <div key={ctx.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">{ctx.title}</p>
-                <p className="mt-3 text-sm leading-6 text-[#666666]">{ctx.body}</p>
+              <div key={ctx.id} className="os-list-row">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{ctx.title}</p>
+                <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">{ctx.body}</p>
               </div>
             ))}
           </div>
@@ -1308,10 +1336,10 @@ const AiTab = ({
         <SectionPanel label="สรุป AI" title="สรุปสถานะการเงิน" endSlot={<span className="pill">{financeDigests.length} รายการ</span>}>
           <div className="space-y-3">
             {financeDigests.map((digest) => (
-              <div key={digest.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+              <div key={digest.id} className="os-list-row">
                 <p className="text-sm font-semibold">{digest.title}</p>
-                <p className="mt-1 text-xs leading-5 text-[#666666]">{digest.summary}</p>
-                <p className="mt-2 text-xs text-[#777777]">{digest.notes}</p>
+                <p className="mt-1 text-xs leading-5 text-[var(--bb-text-soft)]">{digest.summary}</p>
+                <p className="mt-2 text-xs text-[var(--bb-text-muted)]">{digest.notes}</p>
               </div>
             ))}
           </div>
@@ -1333,11 +1361,11 @@ const AiTab = ({
         }>
           <div className="space-y-3">
             {financeObservations.map((obs) => (
-              <div key={obs.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+              <div key={obs.id} className="os-list-row">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">{obs.title}</p>
-                    <p className="mt-1 text-xs leading-5 text-[#666666]">{obs.observation}</p>
+                    <p className="mt-1 text-xs leading-5 text-[var(--bb-text-soft)]">{obs.observation}</p>
                   </div>
                   <span className="pill">{obs.reviewStatus}</span>
                 </div>
@@ -1355,7 +1383,7 @@ const AiTab = ({
           </div>
         </SectionPanel>
       ) : null}
-      <p className="text-sm leading-6 text-[#666666]">แผง AI ด้านล่างใช้ร่วมกันทุกโมดูลของ OS</p>
+      <p className="text-sm leading-6 text-[var(--bb-text-soft)]">แผง AI ด้านล่างใช้ร่วมกันทุกโมดูลของ OS</p>
     </div>
   )
 }

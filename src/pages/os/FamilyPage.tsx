@@ -76,22 +76,22 @@ export const FamilyPage = () => {
           </div>
           <div className="space-y-3">
             {data.reserveRows.length === 0 ? (
-              <p className="text-sm text-[#666666]">ไม่มีกองทุนสำรอง  สร้างกองทุนแรก</p>
+              <p className="text-sm text-[var(--bb-text-soft)]">ไม่มีกองทุนสำรอง  สร้างกองทุนแรก</p>
             ) : data.reserveRows.map((reserve) => {
               const pct = Math.min(100, Math.round((reserve.currentAmountTHB / reserve.targetAmountTHB) * 100))
               return (
                 <article key={reserve.id} className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
                   <div className="flex items-start justify-between gap-4">
-                    <div><p className="font-semibold">{reserve.label}</p><p className="mt-1 text-xs text-[#777777]">{reserve.notes}</p></div>
+                    <div><p className="font-semibold">{reserve.label}</p><p className="mt-1 text-xs text-[var(--bb-text-muted)]">{reserve.notes}</p></div>
                     <span className="pill">{reserve.status}</span>
                   </div>
                   <div className="mt-4 h-2 rounded-full bg-black/[0.06]">
                     <div
-                      className={`h-full rounded-full ${pct >= 80 ? 'bg-[#111111]' : pct >= 60 ? 'bg-[#d4a143]' : 'bg-[#c2410c]'}`}
+                      className={`h-full rounded-full ${pct >= 80 ? 'bg-[var(--bb-text)]' : pct >= 60 ? 'bg-[var(--bb-amber)]' : 'bg-[var(--bb-red)]'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <p className="mt-2 text-xs text-[#777777]">{thb(reserve.currentAmountTHB)} / target {thb(reserve.targetAmountTHB)}</p>
+                  <p className="mt-2 text-xs text-[var(--bb-text-muted)]">{thb(reserve.currentAmountTHB)} / target {thb(reserve.targetAmountTHB)}</p>
                 </article>
               )
             })}
@@ -102,15 +102,15 @@ export const FamilyPage = () => {
           <div className="panel-header"><h3 className="os-level-2-title">Obligations / ภาระผูกพัน</h3><span className="pill">หนี้ {thb(debtTotal)}</span></div>
           <div className="space-y-3">
             {data.familyFinanceRecords.length === 0 ? (
-              <p className="text-sm text-[#666666]">ไม่มีภาระผูกพัน</p>
+              <p className="text-sm text-[var(--bb-text-soft)]">ไม่มีภาระผูกพัน</p>
             ) : data.familyFinanceRecords.map((record) => (
               <div key={record.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold">{record.label}</p>
-                    <p className="mt-1 text-xs text-[#777777]">{record.bucket} / {thb(record.amountTHB)}{record.dueDate ? ` / due ${record.dueDate}` : ''}</p>
+                    <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{record.bucket} / {thb(record.amountTHB)}{record.dueDate ? ` / due ${record.dueDate}` : ''}</p>
                   </div>
-                  <span className="font-mono text-[10px] font-semibold uppercase text-[#9a6a1f]">{record.risk ?? 'low'}</span>
+                  <span className="font-mono text-[10px] font-semibold uppercase text-[var(--bb-amber)]">{record.risk ?? 'low'}</span>
                 </div>
               </div>
             ))}
@@ -154,14 +154,14 @@ export const FamilyPage = () => {
       <div className="panel">
         <div className="panel-header"><h3>Snapshot summaries / สรุปสถานะ</h3><span className="pill">สถานะปัจจุบัน</span></div>
         {data.financeSnapshots.filter((snapshot) => snapshot.module === 'family-office').length === 0 ? (
-          <p className="text-sm text-[#666666]">ไม่มี snapshot</p>
+          <p className="text-sm text-[var(--bb-text-soft)]">ไม่มี snapshot</p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {data.financeSnapshots.filter((snapshot) => snapshot.module === 'family-office').map((snapshot) => (
               <article key={snapshot.id} className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
                 <p className="font-semibold">{snapshot.title}</p>
-                <p className="mt-2 text-sm text-[#666666]">{snapshot.posture}</p>
-                <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-[#777777]">{thb(snapshot.valueTHB)} / {snapshot.risk}</p>
+                <p className="mt-2 text-sm text-[var(--bb-text-soft)]">{snapshot.posture}</p>
+                <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">{thb(snapshot.valueTHB)} / {snapshot.risk}</p>
               </article>
             ))}
           </div>

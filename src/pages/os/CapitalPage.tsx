@@ -48,14 +48,14 @@ export const CapitalPage = () => {
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#777777]">เงินทุน / วินัยการเงิน</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">เงินทุน / วินัยการเงิน</p>
         <h2 className="mt-2 text-2xl font-extrabold tracking-tight">เงินทุน / วินัยการเงิน</h2>
 
         <div className="mt-6 grid gap-4 md:grid-cols-4">
           <div className="os-hero-metric os-hero-metric-green">
             <div className="os-icon-badge os-icon-badge-green">↓</div>
             <p className="os-level-1-value">{thb(inflow)}</p>
-            <p className="text-xs text-[#777777]">รายรับ / เดือน</p>
+            <p className="text-xs text-[var(--bb-text-muted)]">รายรับ / เดือน</p>
             <div className="os-progress-rail">
               <div className="os-progress-fill-green" style={{ width: `${(inflow / maxFlow) * 100}%` }} />
             </div>
@@ -63,7 +63,7 @@ export const CapitalPage = () => {
           <div className="os-hero-metric os-hero-metric-red">
             <div className="os-icon-badge os-icon-badge-red">↑</div>
             <p className="os-level-1-value">{thb(outflow)}</p>
-            <p className="text-xs text-[#777777]">รายจ่าย / เดือน</p>
+            <p className="text-xs text-[var(--bb-text-muted)]">รายจ่าย / เดือน</p>
             <div className="os-progress-rail">
               <div className="os-progress-fill-red" style={{ width: `${(outflow / maxFlow) * 100}%` }} />
             </div>
@@ -71,13 +71,13 @@ export const CapitalPage = () => {
           <div className="os-hero-metric os-hero-metric-blue">
             <div className="os-icon-badge os-icon-badge-blue">○</div>
             <p className="os-level-1-value">{thb(reserveTotal)}</p>
-            <p className="text-xs text-[#777777]">เงินสำรอง</p>
-            <p className="text-[10px] text-[#999999]">กองทุนสำรอง</p>
+            <p className="text-xs text-[var(--bb-text-muted)]">เงินสำรอง</p>
+            <p className="text-[10px] text-[var(--bb-text-faint)]">กองทุนสำรอง</p>
           </div>
           <div className="os-hero-metric os-hero-metric-amber">
             <div className="os-icon-badge os-icon-badge-amber">◈</div>
             <p className="os-level-1-value">{runwayMonths} เดือน</p>
-            <p className="text-xs text-[#777777]">สภาพคล่อง</p>
+            <p className="text-xs text-[var(--bb-text-muted)]">สภาพคล่อง</p>
             <div className="os-progress-rail">
               <div className="os-progress-fill-amber" style={{ width: `${(runwayMonths / 24) * 100}%` }} />
             </div>
@@ -94,7 +94,7 @@ export const CapitalPage = () => {
             className={`rounded-2xl px-5 py-2 text-sm font-semibold transition ${
               activeTab === tab.key
                 ? 'bg-accent text-white shadow-[0_8px_20px_-12px_var(--bb-accent)]'
-                : 'text-[#55504a] hover:bg-black/[0.04]'
+                : 'text-[var(--bb-text-soft)] hover:bg-black/[0.04]'
             }`}
           >
             {tab.label}
@@ -141,17 +141,20 @@ const OverviewTab = () => {
       <div className="grid gap-5 lg:grid-cols-3">
         <CashFlowBar inflow={inflow} outflow={outflow} maxFlow={maxFlow} />
         <RunwayGauge months={runwayMonths} />
-        <div className="os-level-1 os-grad-accent-green">
+        <div className="os-card-primary">
           <div className="panel-header"><h3 className="text-base font-bold">Reserve Health / สถานะสำรอง</h3></div>
           <div className="space-y-3">
             {data.reserveRows.length === 0 ? (
-              <p className="text-sm text-[#666666]">ไม่มีกองทุนสำรอง  เพิ่มกองทุนแรก</p>
+              <p className="text-sm text-[var(--bb-text-soft)]">ไม่มีกองทุนสำรอง  เพิ่มกองทุนแรก</p>
             ) : data.reserveRows.map((reserve) => {
               const pct = Math.min(100, Math.round((reserve.currentAmountTHB / reserve.targetAmountTHB) * 100))
               return (
                 <div key={reserve.id}>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold">{reserve.label}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`os-severity-dot os-severity-dot-${pct >= 80 ? 'green' : pct >= 60 ? 'amber' : 'red'}`} />
+                      <span className="font-semibold">{reserve.label}</span>
+                    </div>
                     <span>{pct}%</span>
                   </div>
                   <div className="os-progress-rail">
@@ -160,7 +163,7 @@ const OverviewTab = () => {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <p className="mt-0.5 text-xs text-[#777777]">{thb(reserve.currentAmountTHB)} / {thb(reserve.targetAmountTHB)}</p>
+                  <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{thb(reserve.currentAmountTHB)} / {thb(reserve.targetAmountTHB)}</p>
                 </div>
               )
             })}
@@ -169,22 +172,22 @@ const OverviewTab = () => {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <div className="os-level-2">
-          <div className="panel-header"><h3 className="os-level-2-title">Obligations / ภาระผูกพัน</h3><span className="pill">หนี้ {thb(debtTotal)}</span></div>
-          <div className="space-y-3">
+        <div className="os-section-card">
+          <div className="panel-header"><h3 className="text-base font-bold">Obligations / ภาระผูกพัน</h3><span className="pill">หนี้ {thb(debtTotal)}</span></div>
+          <div className="space-y-2">
             {data.familyFinanceRecords.length === 0 ? (
-              <p className="text-sm text-[#666666]">ไม่มีภาระผูกพัน</p>
+              <p className="text-sm text-[var(--bb-text-soft)]">ไม่มีภาระผูกพัน</p>
             ) : data.familyFinanceRecords.map((record) => (
-              <div key={record.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-3">
+              <div key={record.id} className="os-list-row">
                 <p className="text-sm font-semibold">{record.label}</p>
-                <p className="mt-1 text-xs text-[#777777]">{record.bucket} / {thb(record.amountTHB)}{record.dueDate ? ` / due ${record.dueDate}` : ''}</p>
+                <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{record.bucket} / {thb(record.amountTHB)}{record.dueDate ? ` / due ${record.dueDate}` : ''}</p>
               </div>
             ))}
           </div>
         </div>
-        <div className="panel panel-float">
+        <div className="os-reference-card">
           <div className="panel-header"><h3>Pending Items / รายการรอดำเนินการ</h3></div>
-          <div className="space-y-2 text-sm text-[#666666]">
+          <div className="space-y-1.5 text-sm text-[var(--bb-text-soft)]">
             <p>{data.financeLedgerRows.length} รายการเดินบัญชี</p>
             <p>{data.reserveRows.length} กองทุนสำรอง</p>
             <p>{data.familyFinanceRecords.length} ภาระผูกพัน</p>
@@ -199,44 +202,71 @@ const OverviewTab = () => {
   )
 }
 
-const CashFlowBar = ({ inflow, outflow, maxFlow }: { inflow: number; outflow: number; maxFlow: number }) => (
-  <div className="os-level-1">
+const CashFlowBar = ({ inflow, outflow, maxFlow }: { inflow: number; outflow: number; maxFlow: number }) => {
+  const inflowPct = (inflow / maxFlow) * 100
+  const outflowPct = (outflow / maxFlow) * 100
+  const net = inflow - outflow
+  return (
+  <div className="os-section-card">
     <div className="panel-header"><h3 className="text-base font-bold">Cash Flow / กระแสเงินสด</h3></div>
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
         <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-[#59634a]">Inflow / รายรับ</span>
+          <span className="font-semibold text-green">Inflow / รายรับ</span>
           <span>{thb(inflow)}</span>
         </div>
-        <div className="os-progress-rail">
-          <div className="os-progress-fill-green" style={{ width: `${(inflow / maxFlow) * 100}%` }} />
+        <div className="mt-1 os-progress-rail">
+          <div className="os-progress-fill-green" style={{ width: `${inflowPct}%` }} />
         </div>
       </div>
       <div>
         <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-[#c2410c]">Outflow / รายจ่าย</span>
+          <span className="font-semibold text-red">Outflow / รายจ่าย</span>
           <span>{thb(outflow)}</span>
         </div>
-        <div className="os-progress-rail">
-          <div className="os-progress-fill-red" style={{ width: `${(outflow / maxFlow) * 100}%` }} />
+        <div className="mt-1 os-progress-rail">
+          <div className="os-progress-fill-red" style={{ width: `${outflowPct}%` }} />
         </div>
+      </div>
+      <div className="flex items-center gap-2 border-t border-black/[0.04] pt-2">
+        <div className="os-stacked-bar flex-1">
+          <div className="os-stacked-bar-segment" style={{ width: `${inflowPct}%`, background: 'var(--bb-green)' }} />
+          <div className="os-stacked-bar-segment" style={{ width: `${outflowPct}%`, background: 'var(--bb-red)' }} />
+        </div>
+        <span className={net >= 0 ? 'os-trend os-trend-up' : 'os-trend os-trend-down'}>
+          {net >= 0 ? '+' : ''}{Math.round(net).toLocaleString()}
+        </span>
       </div>
     </div>
   </div>
-)
+  )
+}
 
 const RunwayGauge = ({ months }: { months: number }) => {
   const pct = Math.min(100, Math.max(0, Math.round((months / 24) * 100)))
   const color = months >= 12 ? 'green' : months >= 6 ? 'amber' : 'red'
   return (
-    <div className="os-level-1">
+    <div className="os-card-primary">
       <div className="panel-header"><h3 className="text-base font-bold">Runway / สภาพคล่องคงเหลือ</h3></div>
-      <div className="text-center">
-        <p className="text-4xl font-extrabold tracking-tight">{months}</p>
-        <p className="text-sm text-[#777777]">months / เดือน</p>
-      </div>
-      <div className="os-progress-rail mt-4">
-        <div className={`os-progress-fill-${color}`} style={{ width: `${pct}%` }} />
+      <div className="flex items-center gap-5">
+        <div className={`os-gauge-ring os-gauge-ring-${color}`}>
+          <div
+            className="os-gauge-ring-fill"
+            style={{
+              background: `conic-gradient(var(--bb-${color}) ${pct}%, transparent ${pct}%)`,
+            }}
+          />
+          <div className="os-gauge-ring-inner">
+            <span className="os-gauge-value">{months}</span>
+            <span className="os-gauge-label">mo</span>
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="os-progress-rail">
+            <div className={`os-progress-fill-${color}`} style={{ width: `${pct}%` }} />
+          </div>
+          <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{months >= 12 ? 'Stable' : months >= 6 ? 'Adequate' : 'Low'} runway</p>
+        </div>
       </div>
     </div>
   )
