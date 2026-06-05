@@ -1,5 +1,6 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../core/auth/AuthContext'
+import { useProfile } from '../hooks/useProfile'
 
 const groups = [
   {
@@ -34,6 +35,8 @@ const groups = [
 
 export const OSLayout = () => {
   const { logout } = useAuth()
+  const navigate = useNavigate()
+  const { profile } = useProfile()
 
   return (
     <div className="os-shell min-h-screen overflow-hidden bg-[var(--bb-shell)] px-3 py-3 text-[var(--bb-text)] md:px-6 md:py-5">
@@ -77,14 +80,14 @@ export const OSLayout = () => {
             </nav>
           </div>
           <div className="mt-4 space-y-2">
-            <div className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--bb-border)]/60 bg-white px-3 py-2.5 shadow-sm transition-all duration-200 hover:border-[var(--bb-accent-border)] hover:shadow-[var(--bb-shadow-sm)]">
+            <div className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--bb-border)]/60 bg-white px-3 py-2.5 shadow-sm transition-all duration-200 hover:border-[var(--bb-accent-border)] hover:shadow-[var(--bb-shadow-sm)]" onClick={() => navigate('/os/settings')} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate('/os/settings') }}>
               <div className="relative shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bb-accent)] text-sm font-bold text-white">P</div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bb-accent)] text-sm font-bold text-white">{profile.avatarInitial}</div>
                 <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[var(--bb-green)]" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold leading-tight">Por</p>
-                <p className="text-[10px] leading-tight text-[var(--bb-text-muted)] group-hover:text-[var(--bb-accent-strong)]">Director</p>
+                <p className="text-sm font-semibold leading-tight">{profile.displayName}</p>
+                <p className="text-[10px] leading-tight text-[var(--bb-text-muted)] group-hover:text-[var(--bb-accent-strong)]">{profile.role}</p>
               </div>
               <span className="text-xs text-[var(--bb-text-faint)] transition-colors duration-200 group-hover:text-[var(--bb-accent)]">▼</span>
             </div>
