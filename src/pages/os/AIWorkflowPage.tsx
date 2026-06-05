@@ -70,41 +70,41 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
             <div className="flex items-center gap-3">
               <span className="os-icon-badge os-icon-badge-amber">✦</span>
               <div className="min-w-0 flex-1">
-                <p className="os-hero-value">{pendingImports.length}</p>
+                <p className="os-hero-value">{aiIsEmpty ? '—' : pendingImports.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Pending Imports</p>
               </div>
             </div>
-            <p className="os-hero-sub">{data.aiImports.length} total suggestions</p>
+            <p className="os-hero-sub">{aiIsEmpty ? 'ยังไม่มีข้อมูล' : `${data.aiImports.length} total suggestions`}</p>
           </div>
           <div className="os-hero-metric os-hero-metric-blue">
             <div className="flex items-center gap-3">
               <span className="os-icon-badge os-icon-badge-blue">◎</span>
               <div className="min-w-0 flex-1">
-                <p className="os-hero-value">{data.aiExports.length}</p>
+                <p className="os-hero-value">{aiIsEmpty ? '—' : data.aiExports.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Context Exports</p>
               </div>
             </div>
-            <p className="os-hero-sub">manual Jarvis B handoff</p>
+            <p className="os-hero-sub">{aiIsEmpty ? 'ไม่มีข้อมูล' : 'manual Jarvis B handoff'}</p>
           </div>
           <div className="os-hero-metric os-hero-metric-purple">
             <div className="flex items-center gap-3">
               <span className="os-icon-badge os-icon-badge-purple">◇</span>
               <div className="min-w-0 flex-1">
-                <p className="os-hero-value">{activeMemories.length}</p>
+                <p className="os-hero-value">{aiIsEmpty ? '—' : activeMemories.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Memory Items</p>
               </div>
             </div>
-            <p className="os-hero-sub">{data.aiMemories.length} total records</p>
+            <p className="os-hero-sub">{aiIsEmpty ? 'ไม่มีข้อมูล' : `${data.aiMemories.length} total records`}</p>
           </div>
           <div className="os-hero-metric os-hero-metric-green">
             <div className="flex items-center gap-3">
               <span className="os-icon-badge os-icon-badge-green">!</span>
               <div className="min-w-0 flex-1">
-                <p className="os-hero-value">{openObservations.length}</p>
+                <p className="os-hero-value">{aiIsEmpty ? '—' : openObservations.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Observations</p>
               </div>
             </div>
-            <p className="os-hero-sub">{data.aiObservations.length} total</p>
+            <p className="os-hero-sub">{aiIsEmpty ? 'ไม่มีข้อมูล' : `${data.aiObservations.length} total`}</p>
           </div>
         </div>
 
@@ -117,7 +117,13 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
       </header>
 
       {aiIsEmpty ? (
-        <EmptyState title="AI provider has no rows" body="AI workflow routes can render safely without mock or live AI rows. Future Apps Script/Sheet imports can hydrate this provider without changing page ownership." />
+        <EmptyState
+          title="ยังไม่มีบริบท AI"
+          body="ส่งออก context หรือ import ข้อเสนอจาก AI เพื่อเริ่มใช้งาน"
+          action={
+            <button className="btn-primary" type="button" onClick={queueContextExport}>สร้าง context แรก</button>
+          }
+        />
       ) : null}
 
       {view === 'overview' ? <Overview digests={data.aiDigests} observations={data.aiObservations} exports={data.aiExports} imports={data.aiImports} onApproveDigest={queueApproveDigest} onArchiveObservation={queueArchiveObservation} /> : null}

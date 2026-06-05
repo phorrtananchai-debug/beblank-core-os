@@ -123,40 +123,7 @@ const DirectiveRow = ({
   </div>
 )
 
-const ProjectNavRow = ({
-  name,
-  owner,
-  status,
-  issueCount,
-  risk,
-  onClick,
-}: {
-  name: string
-  owner: string
-  status: string
-  issueCount: number
-  risk: boolean
-  onClick: () => void
-}) => (
-  <div
-    className={`os-list-row flex cursor-pointer items-center justify-between gap-3 transition-all duration-200 hover:border-[var(--bb-border)] ${risk ? 'border-[var(--bb-red-border)] bg-[var(--bb-red-soft)]' : ''}`}
-    onClick={onClick}
-    role="button"
-    tabIndex={0}
-    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick() }}
-  >
-    <div className="min-w-0 flex-1">
-      <div className="flex items-center gap-2">
-        <p className="text-sm font-semibold">{name}</p>
-        {risk ? <span className="font-mono text-[9px] font-semibold uppercase text-[var(--bb-red)]">at risk</span> : null}
-      </div>
-      <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">
-        {owner} / {status}{issueCount > 0 ? ` / ${issueCount} issues` : ''}
-      </p>
-    </div>
-    <span className="text-xs text-[var(--bb-text-faint)]">→</span>
-  </div>
-)
+
 
 export const CommandCenterPage = () => {
   const navigate = useNavigate()
@@ -238,6 +205,8 @@ export const CommandCenterPage = () => {
   const alertProgress = attentionItems > 0 ? Math.round((highSeverityCount / attentionItems) * 100) : 0
   const financeProgress = totalAssets > 0 ? Math.round((portfolioValue / totalAssets) * 100) : 0
 
+  const isEmpty = data.projects.length === 0 && data.tasks.length === 0
+
   const queueTodayFocusReview = () => {
     createActionRequest({
       module: 'studio',
@@ -255,7 +224,9 @@ export const CommandCenterPage = () => {
           <div>
             <h2 className="text-xl font-extrabold md:text-2xl">{greetingText()}, Por.</h2>
             <p className="mt-1 text-sm leading-6 text-[var(--bb-text-soft)]">
-              วันนี้มี {attentionItems} รายการที่ต้องตรวจสอบ และ {pendingApprovals.length} งานที่ควรตัดสินใจ
+              {isEmpty
+                ? 'ยังไม่มีข้อมูลในระบบ พร้อมเริ่มต้นการทำงาน'
+                : `วันนี้มี ${attentionItems} รายการที่ต้องตรวจสอบ และ ${pendingApprovals.length} งานที่ควรตัดสินใจ`}
             </p>
           </div>
           <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">Command Center</span>
@@ -269,15 +240,30 @@ export const CommandCenterPage = () => {
             <span className="rounded-md border border-[var(--bb-border)] bg-[var(--bb-surface-3)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--bb-text-faint)]">⌘K</span>
           </div>
         </div>
+      </header>
 
+        {isEmpty ? (
+          <div className="rounded-[28px] border border-dashed border-black/[0.12] bg-white/60 p-6 text-center">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Empty workspace</p>
+            <h3 className="mt-3 text-2xl font-bold tracking-tight">ยังไม่มีข้อมูลในระบบ</h3>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#666666]">
+              เริ่มต้นด้วยการเพิ่มโปรเจกต์แรกที่ Studio หรือเชื่อมต่อข้อมูลการเงินที่ Capital
+            </p>
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <button className="btn-primary" type="button" onClick={() => navigate('/os/studio')}>ไปที่ Studio</button>
+              <button className="btn-secondary" type="button" onClick={() => navigate('/os/capital')}>ไปที่ Capital</button>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* KPI NAV CARDS */}
-        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <KpiNavCard
             label="Pending Reviews"
             icon="!"
             iconColor={attentionItems > 0 ? 'red' : 'green'}
-            value={attentionItems > 0 ? `${attentionItems}` : '0'}
-            sub={topAttention || 'No pending reviews'}
+            value={attentionItems > 0 ? `${attentionItems}` : '—'}
+            sub={topAttention || 'ไม่มีรายการที่ต้องตรวจสอบ'}
             progress={attentionItems > 0 ? { value: alertProgress, color: 'red' } : undefined}
             indicator={attentionItems > 0 ? (
               <div className="mt-2 flex items-center gap-2">
@@ -291,8 +277,8 @@ export const CommandCenterPage = () => {
             label="Approvals"
             icon="✓"
             iconColor={pendingApprovals.length > 0 ? 'amber' : 'green'}
-            value={pendingApprovals.length > 0 ? `${pendingApprovals.length}` : '0'}
-            sub={pendingApprovals[0]?.description?.slice(0, 28) || 'No pending approvals'}
+            value={pendingApprovals.length > 0 ? `${pendingApprovals.length}` : '—'}
+            sub={pendingApprovals[0]?.description?.slice(0, 28) || 'ไม่มี pending approvals'}
             indicator={pendingApprovals.length > 0 ? (
               <div className="os-gauge-ring-sm mt-2">
                 <div
@@ -310,34 +296,20 @@ export const CommandCenterPage = () => {
             label="Financial Posture"
             icon="◎"
             iconColor="neutral"
-            value={formatTHB(totalAssets)}
-            sub={`Portfolio ${formatTHB(portfolioValue)}`}
-            progress={{ value: financeProgress, color: 'neutral' }}
-            indicator={portfolioValue > reserveValue ? (
-              <div className="os-trend os-trend-up mt-1">◈ portfolio</div>
-            ) : (
-              <div className="os-trend os-trend-flat mt-1">◈ reserve</div>
-            )}
+            value={totalAssets > 0 ? formatTHB(totalAssets) : '—'}
+            sub={totalAssets > 0 ? `Portfolio ${formatTHB(portfolioValue)}` : 'ไม่มีข้อมูลทางการเงิน'}
+            progress={totalAssets > 0 ? { value: financeProgress, color: 'neutral' } : undefined}
             href="/os/finance"
           />
           <KpiNavCard
             label="AI Suggestions"
             icon="✦"
             iconColor={unreviewedSuggestions.length > 0 ? 'blue' : 'neutral'}
-            value={unreviewedSuggestions.length > 0 ? `${unreviewedSuggestions.length}` : '0'}
-            sub={primarySuggestion?.title?.slice(0, 28) || 'No new suggestions'}
-            indicator={unreviewedSuggestions.length > 0 ? (
-              <div className="os-confidence mt-2">
-                <span className="font-mono text-[9px] font-semibold text-[var(--bb-blue)]">{unreviewedSuggestions.length} pending</span>
-                <div className="os-confidence-rail">
-                  <div className="os-confidence-fill os-confidence-fill-blue" style={{ width: `${Math.min(100, (unreviewedSuggestions.length / data.aiSuggestions.length) * 100)}%` }} />
-                </div>
-              </div>
-            ) : undefined}
+            value={unreviewedSuggestions.length > 0 ? `${unreviewedSuggestions.length}` : '—'}
+            sub={primarySuggestion?.title?.slice(0, 28) || 'ไม่มีคำแนะนำ AI'}
             href="/os/ai"
           />
         </div>
-      </header>
 
       {/* MAIN + RAIL LAYOUT */}
       <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
@@ -365,7 +337,10 @@ export const CommandCenterPage = () => {
                   />
                 ))}
                 {todayFocus.length === 0 && (
-                  <p className="text-sm text-[var(--bb-text-muted)]">No pending directives</p>
+                  <div className="rounded-[20px] border border-dashed border-black/[0.08] bg-white/50 p-4 text-center">
+                    <p className="text-sm font-semibold text-[var(--bb-text-muted)]">ยังไม่มีงานในวันนี้</p>
+                    <p className="mt-1 text-xs text-[var(--bb-text-faint)]">กด Add Review เพื่อเพิ่ม Focus item แรก</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -380,23 +355,11 @@ export const CommandCenterPage = () => {
                 <span className="pill">{activeProjects.length} projects</span>
               </div>
               <div className="space-y-2">
-                {activeProjects.map((project) => {
-                  const projectRisk = data.timeline.filter((t) => t.projectId === project.id && t.state === 'at-risk').length > 0
-                  const projectIssues = data.siteIssues.filter((i) => i.projectId === project.id && i.severity !== 'low').length
-                  return (
-                    <ProjectNavRow
-                      key={project.id}
-                      name={project.name}
-                      owner={project.owner}
-                      status={project.timelineStatus ?? project.status}
-                      issueCount={projectIssues}
-                      risk={projectRisk}
-                      onClick={() => navigate('/os/studio')}
-                    />
-                  )
-                })}
                 {activeProjects.length === 0 && (
-                  <p className="text-sm text-[var(--bb-text-muted)]">No active projects</p>
+                  <div className="rounded-[20px] border border-dashed border-black/[0.08] bg-white/50 p-4 text-center">
+                    <p className="text-sm font-semibold text-[var(--bb-text-muted)]">ยังไม่มีโปรเจกต์</p>
+                    <p className="mt-1 text-xs text-[var(--bb-text-faint)]">ไปที่ Studio เพื่อสร้างโปรเจกต์แรก</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -423,18 +386,18 @@ export const CommandCenterPage = () => {
             <div className="grid gap-4 lg:grid-cols-3">
               <FinanceTile
                 eyebrow="Investments"
-                title={formatTHB(portfolioValue)}
-                body={`${data.holdings.length} holdings / DCA + dividends estimate`}
+                title={portfolioValue > 0 ? formatTHB(portfolioValue) : '—'}
+                body={portfolioValue > 0 ? `${data.holdings.length} holdings / DCA + dividends estimate` : 'ยังไม่มีข้อมูลพอร์ตการลงทุน'}
               />
               <FinanceTile
                 eyebrow="Family Office"
-                title={formatTHB(reserveValue)}
-                body={`Reserve status / Upcoming expenses ${formatTHB(monthlyBills)}`}
+                title={reserveValue > 0 ? formatTHB(reserveValue) : '—'}
+                body={reserveValue > 0 ? `Reserve status / Upcoming expenses ${formatTHB(monthlyBills)}` : 'ยังไม่มีข้อมูลครอบครัว'}
               />
               <FinanceTile
                 eyebrow="Trading Lab"
-                title={`${data.tradingSignals.length} signals`}
-                body="Sandbox only. No live execution."
+                title={data.tradingSignals.length > 0 ? `${data.tradingSignals.length} signals` : '—'}
+                body={data.tradingSignals.length > 0 ? 'Sandbox only. No live execution.' : 'ยังไม่มีสัญญาณ'}
                 warning
               />
             </div>
@@ -459,6 +422,12 @@ export const CommandCenterPage = () => {
                   </div>
                 </div>
               ))}
+              {activity.length === 0 && (
+                <div className="rounded-[20px] border border-dashed border-black/[0.08] bg-white/50 p-4 text-center">
+                  <p className="text-sm font-semibold text-[var(--bb-text-muted)]">ยังไม่มีกิจกรรม</p>
+                  <p className="mt-1 text-xs text-[var(--bb-text-faint)]">กิจกรรมจะปรากฏเมื่อมีข้อมูลโปรเจกต์และการเงิน</p>
+                </div>
+              )}
             </div>
           </div>
         </main>
@@ -472,24 +441,11 @@ export const CommandCenterPage = () => {
               <span className="pill">{alerts.length}</span>
             </div>
             <div className="space-y-2">
-              {alerts.map((alert) => {
-                const severityClass = alert.severity === 'high'
-                  ? 'os-severity-dot-red'
-                  : alert.severity === 'medium'
-                    ? 'os-severity-dot-amber'
-                    : 'os-severity-dot-green'
-                return (
-                  <div key={alert.id} className="os-list-row flex items-center gap-3">
-                    <span className={`os-severity-dot ${severityClass}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold">{alert.label}</p>
-                      <p className={`mt-0.5 font-mono text-[9px] uppercase tracking-wide ${alert.tone}`}>{alert.meta}</p>
-                    </div>
-                  </div>
-                )
-              })}
               {alerts.length === 0 && atRiskTimeline.length === 0 ? (
-                <p className="text-sm text-[var(--bb-text-muted)]">No alerts</p>
+                <div className="rounded-2xl border border-dashed border-black/[0.08] bg-white/50 p-3 text-center">
+                  <p className="text-xs font-semibold text-[var(--bb-text-muted)]">ไม่มีรายการแจ้งเตือน</p>
+                  <p className="mt-0.5 text-[10px] text-[var(--bb-text-faint)]">ทุกระบบปกติ</p>
+                </div>
               ) : null}
             </div>
           </section>
@@ -513,14 +469,11 @@ export const CommandCenterPage = () => {
               <span className="pill">{data.aiSuggestions.length}</span>
             </div>
             <div className="space-y-2">
-              {data.aiSuggestions.slice(0, 2).map((suggestion) => (
-                <div key={suggestion.id} className="os-list-row">
-                  <p className="text-xs font-semibold">{suggestion.title}</p>
-                  <p className="mt-0.5 font-mono text-[9px] uppercase tracking-wide text-[var(--bb-text-muted)]">{suggestion.status}</p>
-                </div>
-              ))}
               {data.aiSuggestions.length === 0 && (
-                <p className="text-xs text-[var(--bb-text-muted)]">No suggestions</p>
+                <div className="rounded-2xl border border-dashed border-black/[0.08] bg-white/50 p-3 text-center">
+                  <p className="text-xs font-semibold text-[var(--bb-text-muted)]">ไม่มีคำแนะนำ AI</p>
+                  <p className="mt-0.5 text-[10px] text-[var(--bb-text-faint)]">คำแนะนำจะปรากฏเมื่อมีข้อมูลในระบบ</p>
+                </div>
               )}
             </div>
           </section>
@@ -536,6 +489,8 @@ export const CommandCenterPage = () => {
         <SnapshotLog items={snapshots} />
         <ChangeLogList items={changeLogs} />
       </section>
+          </>
+        )}
     </section>
   )
 }

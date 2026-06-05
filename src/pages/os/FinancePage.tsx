@@ -13,12 +13,12 @@ export const FinancePage = () => {
   const reserveValue = data.reserveRows.reduce((sum, reserve) => sum + reserve.currentAmountTHB, 0)
   const sandboxExposure = data.sandboxPositions.reduce((sum, position) => sum + position.units * position.entryPriceTHB, 0)
   const driftCount = data.holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2).length
-  const financeIsEmpty = data.holdings.length === 0 && data.reserveRows.length === 0 && data.tradingWatchlist.length === 0
+  const financeIsEmpty = data.holdings.length === 0 && data.reserveRows.length === 0
 
   const cards = [
-    { title: 'Investments', to: '/os/finance/investments', detail: 'Long-term allocation, DCA, dividends, holdings.', metric: thb(portfolioValue), note: `${driftCount} allocation reviews` },
-    { title: 'Capital', to: '/os/capital', detail: 'Overview, studio office ledger, family finance, reserves.', metric: thb(reserveValue), note: `${data.financeLedgerRows.length} ledger rows` },
-    { title: 'Trading Lab', to: '/os/finance/trading-lab', detail: 'Paper-only signals, watchlist, sandbox strategy notes.', metric: thb(sandboxExposure), note: 'no broker execution' },
+    { title: 'Investments', to: '/os/finance/investments', detail: 'Long-term allocation, DCA, dividends, holdings.', metric: portfolioValue > 0 ? thb(portfolioValue) : '—', note: portfolioValue > 0 ? `${driftCount} allocation reviews` : 'ยังไม่มีพอร์ตการลงทุน' },
+    { title: 'Capital', to: '/os/capital', detail: 'Overview, studio office ledger, family finance, reserves.', metric: reserveValue > 0 ? thb(reserveValue) : '—', note: reserveValue > 0 ? `${data.financeLedgerRows.length} ledger rows` : 'ยังไม่มีข้อมูลทางการเงิน' },
+    { title: 'Trading Lab', to: '/os/finance/trading-lab', detail: 'Paper-only signals, watchlist, sandbox strategy notes.', metric: sandboxExposure > 0 ? thb(sandboxExposure) : '—', note: 'ยังไม่มีสัญญาณ' },
   ]
 
   return (

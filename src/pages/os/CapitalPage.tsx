@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CapitalAnalyticsCards } from '../../components/capital/CapitalAnalyticsCards'
 import { CapitalCategoryBreakdown } from '../../components/capital/CapitalCategoryBreakdown'
 import { DeleteLedgerDialog } from '../../components/capital/DeleteLedgerDialog'
@@ -26,6 +27,22 @@ const tabs = [
 
 type TabKey = (typeof tabs)[number]['key']
 
+const EmptyFinanceState = () => {
+  const navigate = useNavigate()
+  return (
+    <div className="rounded-[28px] border border-dashed border-black/[0.12] bg-[#faf9f8] p-6 text-center">
+      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Empty finance state</p>
+      <h3 className="mt-3 text-2xl font-bold tracking-tight">ยังไม่มีข้อมูลทางการเงิน</h3>
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#666666]">
+        เพิ่มรายการเดินบัญชีแรกของคุณ หรือเชื่อมต่อข้อมูลจาก Investments
+      </p>
+      <div className="mt-5 flex items-center justify-center gap-3">
+        <button className="btn-primary" type="button" onClick={() => navigate('/os/finance/investments')}>ไปที่ Investments</button>
+      </div>
+    </div>
+  )
+}
+
 export const CapitalPage = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const {
@@ -44,13 +61,16 @@ export const CapitalPage = () => {
   const reserveTotal = data.reserveRows.reduce((sum, row) => sum + row.currentAmountTHB, 0)
   const monthlyBurn = Math.max(outflow + 85000, 1)
   const runwayMonths = Math.round((reserveTotal / monthlyBurn) * 10) / 10
+  const hasFinanceData = data.financeLedgerRows.length > 0 || data.reserveRows.length > 0 || data.familyFinanceRecords.length > 0
+  const navigate = useNavigate()
 
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">เงินทุน / วินัยการเงิน</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">Capital / financial discipline</p>
         <h2 className="mt-2 text-2xl font-extrabold">เงินทุน / วินัยการเงิน</h2>
 
+        {hasFinanceData ? (
         <div className="mt-6 grid gap-4 md:grid-cols-4">
           <div className="os-hero-metric os-hero-metric-green">
             <div className="os-icon-badge os-icon-badge-green">↓</div>
@@ -86,6 +106,15 @@ export const CapitalPage = () => {
             </div>
           </div>
         </div>
+        ) : (
+          <div className="mt-6 rounded-[28px] border border-dashed border-black/[0.12] bg-white/60 p-6 text-center">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">ยังไม่มีข้อมูลทางการเงิน</p>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#666666]">
+              เพิ่มรายการเดินบัญชีแรก หรือเพิ่มสินทรัพย์การลงทุนเพื่อดูภาพรวมทางการเงิน
+            </p>
+            <button className="btn-primary mt-5" type="button" onClick={() => navigate('/os/finance/investments')}>ไปที่ Investments</button>
+          </div>
+        )}
       </header>
 
       <div className="flex gap-2 border-b border-black/[0.06] pb-3">
@@ -107,7 +136,7 @@ export const CapitalPage = () => {
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <main className="space-y-5">
-          {activeTab === 'overview' && <OverviewTab />}
+          {activeTab === 'overview' && (hasFinanceData ? <OverviewTab /> : <EmptyFinanceState />)}
           {activeTab === 'studio-office' && <StudioOfficeTab />}
           {activeTab === 'family' && <FamilyPage />}
         </main>

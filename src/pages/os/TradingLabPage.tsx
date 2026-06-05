@@ -36,6 +36,7 @@ export const TradingLabPage = () => {
     queueSuggestionImport,
   } = useOs()
 
+  const hasTradingData = data.tradingSignals.length > 0 || data.tradingWatchlist.length > 0 || data.sandboxPositions.length > 0
   const draftPaperTrade = data.paperTradeRecords.find((record) => record.status === 'draft')
   const reviewPosition = data.sandboxPositions.find((position) => position.status === 'review')
   const activeStrategies = data.tradingStrategyNotes.filter((note) => note.status !== 'archived')
@@ -100,43 +101,54 @@ export const TradingLabPage = () => {
           <div className="flex items-center gap-3">
             <span className="os-icon-badge os-icon-badge-amber">△</span>
             <div className="min-w-0 flex-1">
-              <p className="os-hero-value">{data.tradingSignals.length}</p>
+              <p className="os-hero-value">{hasTradingData ? data.tradingSignals.length : '—'}</p>
               <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Active Signals</p>
             </div>
           </div>
-          <p className="os-hero-sub">{highConviction.length} high conviction</p>
+          <p className="os-hero-sub">{hasTradingData ? `${highConviction.length} high conviction` : 'ยังไม่มีสัญญาณ'}</p>
         </div>
         <div className="os-hero-metric os-hero-metric-green">
           <div className="flex items-center gap-3">
             <span className="os-icon-badge os-icon-badge-green">◆</span>
             <div className="min-w-0 flex-1">
-              <p className="os-hero-value">{highConviction.length}</p>
+              <p className="os-hero-value">{hasTradingData ? highConviction.length : '—'}</p>
               <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">High Conviction</p>
             </div>
           </div>
-          <p className="os-hero-sub">confidence ≥ 70%</p>
+          <p className="os-hero-sub">{hasTradingData ? 'confidence ≥ 70%' : 'ไม่มีข้อมูล'}</p>
         </div>
         <div className="os-hero-metric os-hero-metric-red">
           <div className="flex items-center gap-3">
             <span className="os-icon-badge os-icon-badge-red">!</span>
             <div className="min-w-0 flex-1">
-              <p className="os-hero-value">{data.paperTradeRecords.length}</p>
+              <p className="os-hero-value">{hasTradingData ? data.paperTradeRecords.length : '—'}</p>
               <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Pending Reviews</p>
             </div>
           </div>
-          <p className="os-hero-sub">{draftPaperTrade ? '1 draft pending' : 'no drafts'}</p>
+          <p className="os-hero-sub">{hasTradingData ? (draftPaperTrade ? '1 draft pending' : 'no drafts') : 'ไม่มีรายการ'}</p>
         </div>
         <div className="os-hero-metric os-hero-metric-neutral">
           <div className="flex items-center gap-3">
             <span className="os-icon-badge os-icon-badge-neutral">◎</span>
             <div className="min-w-0 flex-1">
-              <p className="os-hero-value">{thb(sandboxExposure)}</p>
+              <p className="os-hero-value">{hasTradingData ? thb(sandboxExposure) : '—'}</p>
               <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Risk Exposure</p>
             </div>
           </div>
-          <p className="os-hero-sub">{activeStrategies.length} active strategies</p>
+          <p className="os-hero-sub">{hasTradingData ? `${activeStrategies.length} active strategies` : 'ไม่มีข้อมูล'}</p>
         </div>
       </div>
+
+      {!hasTradingData ? (
+        <div className="rounded-[28px] border border-dashed border-black/[0.12] bg-[#faf9f8] p-6 text-center">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Empty trading lab</p>
+          <h3 className="mt-3 text-2xl font-bold tracking-tight">ยังไม่มีสัญญาณทดลอง</h3>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#666666]">
+            เพิ่ม watchlist หรือเชื่อม signal intake ในอนาคต
+          </p>
+          <button className="btn-primary mt-5" type="button" onClick={queueSignal}>เพิ่มรายการเฝ้าดู</button>
+        </div>
+      ) : null}
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <main className="space-y-5">

@@ -115,6 +115,7 @@ export const InvestmentsPage = () => {
     basePayload: Record<string, unknown>
   } | null>(null)
 
+  const hasInvestments = data.holdings.length > 0 || data.financeAssets.length > 0
   const totalValue = data.holdings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
   const driftHoldings = data.holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
   const dcaQueue = data.dcaRecords.filter((record) => record.status === 'planned' || record.status === 'review')
@@ -388,13 +389,24 @@ export const InvestmentsPage = () => {
         <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
         <h2 className="mt-4 text-2xl font-extrabold leading-[0.92]">การลงทุน / หุ้น</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <OsHeroMetric icon="◆" value={thb(totalValue)} label="มูลค่าพอร์ต" helper="รวมทุกประเภท" color="neutral" progress={100} />
-          <OsHeroMetric icon="○" value={thb(cashPosture)} label="เงินสดรอจัดสรร" helper="สำรอง" color="blue" progress={totalValue > 0 ? (cashPosture / totalValue) * 100 : 0} />
-          <OsHeroMetric icon="↓" value={thb(monthlyDcaTarget)} label="แผน DCA เดือนนี้" helper="เป้าหมายรายเดือน" color="green" progress={totalValue > 0 ? (monthlyDcaTarget / totalValue) * 100 : 0} />
-          <OsHeroMetric icon="☆" value={thb(expectedDividends)} label="ปันผลประมาณการ" helper="ต่อปี" color="purple" progress={totalValue > 0 ? (expectedDividends / totalValue) * 100 : 0} />
-          <OsHeroMetric icon="△" value={`${driftHoldings.length} รายการ`} label="ความคลาดเคลื่อน" helper="สัดส่วนที่ดริฟท์" color={driftHoldings.length > 0 ? 'amber' : 'green'} progress={Math.min(driftHoldings.length * 10, 100)} />
+          <OsHeroMetric icon="◆" value={hasInvestments ? thb(totalValue) : '—'} label="มูลค่าพอร์ต" helper={hasInvestments ? 'รวมทุกประเภท' : 'ยังไม่มีข้อมูล'} color="neutral" progress={100} />
+          <OsHeroMetric icon="○" value={cashPosture > 0 ? thb(cashPosture) : '—'} label="เงินสดรอจัดสรร" helper={cashPosture > 0 ? 'สำรอง' : 'ยังไม่มีข้อมูล'} color="blue" progress={totalValue > 0 ? (cashPosture / totalValue) * 100 : 0} />
+          <OsHeroMetric icon="↓" value={monthlyDcaTarget > 0 ? thb(monthlyDcaTarget) : '—'} label="แผน DCA เดือนนี้" helper={monthlyDcaTarget > 0 ? 'เป้าหมายรายเดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={totalValue > 0 ? (monthlyDcaTarget / totalValue) * 100 : 0} />
+          <OsHeroMetric icon="☆" value={expectedDividends > 0 ? thb(expectedDividends) : '—'} label="ปันผลประมาณการ" helper={expectedDividends > 0 ? 'ต่อปี' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalValue > 0 ? (expectedDividends / totalValue) * 100 : 0} />
+          <OsHeroMetric icon="△" value={driftHoldings.length > 0 ? `${driftHoldings.length} รายการ` : '—'} label="ความคลาดเคลื่อน" helper={driftHoldings.length > 0 ? 'สัดส่วนที่ดริฟท์' : 'ไม่มีรายการ'} color={driftHoldings.length > 0 ? 'amber' : 'green'} progress={Math.min(driftHoldings.length * 10, 100)} />
         </div>
       </header>
+
+      {!hasInvestments ? (
+        <div className="rounded-[28px] border border-dashed border-black/[0.12] bg-[#faf9f8] p-6 text-center">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Empty portfolio</p>
+          <h3 className="mt-3 text-2xl font-bold tracking-tight">ยังไม่มีพอร์ตการลงทุน</h3>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#666666]">
+            เพิ่มพอร์ตหรือ import allocation เพื่อเริ่มวิเคราะห์
+          </p>
+          <button className="btn-primary mt-5" type="button" onClick={() => setShowAssetModal(true)}>ตั้งค่าพอร์ตแรก</button>
+        </div>
+      ) : null}
 
       <nav className="flex flex-wrap gap-2" role="tablist">
         {tabs.map((tab) => (
