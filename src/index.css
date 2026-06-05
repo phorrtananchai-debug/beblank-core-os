@@ -7,7 +7,7 @@
 @layer base {
   body {
     @apply m-0;
-    background: var(--bb-bg);
+    background: var(--bb-canvas);
     color: var(--bb-text);
     font-family: 'Prompt', 'Manrope', 'Inter', sans-serif;
   }
@@ -30,12 +30,21 @@
 }
 
 :root {
-  --bb-bg: #FAF8F4;
+  --bb-canvas: #E7EAF0;
+  --bb-shell: #F8F7F4;
+  --bb-surface-1: #FBFAF7;
+  --bb-surface-2: #FFFFFF;
+  --bb-surface-3: #F6F4F0;
+  --bb-surface-4: #F2F1EE;
+  --bb-active-soft: #FFF1E2;
+
+  --bb-bg: #E7EAF0;
+  --bb-shell-bg: #F8F7F4;
   --bb-surface: #FFFFFF;
-  --bb-surface-warm: #FFF9EF;
-  --bb-surface-soft: #F6F1E8;
-  --bb-border: #E7DED2;
-  --bb-border-strong: #D8CABC;
+  --bb-surface-warm: #FFF1E2;
+  --bb-surface-soft: #F6F4F0;
+  --bb-border: #E0E3E8;
+  --bb-border-strong: #D0D4DB;
 
   --bb-text: #171412;
   --bb-text-soft: #4E463E;
@@ -63,11 +72,11 @@
   --bb-purple: #8756E8;
   --bb-purple-soft: #F1EAFE;
   --bb-purple-border: #CBB8FA;
-  --bb-neutral-soft: #F1EEE9;
-  --bb-neutral-border: #DDD4C8;
+  --bb-neutral-soft: #EDEFF2;
+  --bb-neutral-border: #D5D9E0;
 
-  --bb-shadow-sm: 0 6px 18px rgba(38, 29, 20, 0.06);
-  --bb-shadow-md: 0 14px 38px rgba(38, 29, 20, 0.10);
+  --bb-shadow-sm: 0 6px 18px rgba(28, 35, 48, 0.05);
+  --bb-shadow-md: 0 14px 38px rgba(28, 35, 48, 0.08);
   --bb-shadow-soft: 0 18px 60px rgba(255, 136, 0, 0.10);
 
   --bb-radius-card: 24px;
@@ -133,7 +142,7 @@
 
 @layer components {
   .panel {
-    background: var(--bb-surface);
+    background: var(--bb-surface-3);
     border: 1px solid var(--bb-border);
     border-radius: var(--bb-radius-card);
     padding: 1.25rem;
@@ -288,7 +297,7 @@
 
 
     .os-level-1 {
-    background: var(--bb-surface);
+    background: var(--bb-surface-3);
     border: 1px solid var(--bb-border);
     border-radius: 30px;
     padding: 1.5rem;
@@ -453,7 +462,7 @@
   }
 
   .os-hero-metric {
-    background: var(--bb-surface);
+    background: var(--bb-surface-2);
     border: 1px solid var(--bb-border);
     border-radius: 24px;
     padding: 1.25rem;
@@ -544,7 +553,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: var(--bb-surface);
+    background: var(--bb-surface-2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -586,7 +595,7 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: var(--bb-surface);
+    background: var(--bb-surface-2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -660,7 +669,7 @@
   .os-trend-flat { color: var(--bb-text-muted); }
 
   .os-section-card {
-    background: var(--bb-surface);
+    background: var(--bb-surface-3);
     border: 1px solid var(--bb-border);
     border-radius: var(--bb-radius-card);
     padding: 1.25rem;
@@ -675,7 +684,7 @@
   }
 
   .os-card-primary {
-    background: var(--bb-surface);
+    background: var(--bb-surface-2);
     border: 1px solid var(--bb-border);
     border-radius: 28px;
     padding: 1.25rem;
@@ -688,14 +697,14 @@
   .os-list-row {
     border-radius: 14px;
     padding: 0.625rem 0.875rem;
-    background: var(--bb-bg);
+    background: var(--bb-surface-4);
     border: 1px solid transparent;
     transition:
       background 420ms cubic-bezier(0.16, 1, 0.3, 1),
       border-color 420ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   .os-list-row:hover {
-    background: var(--bb-surface-warm);
+    background: var(--bb-active-soft);
     border-color: var(--bb-border);
   }
   .os-list-row + .os-list-row {
@@ -910,6 +919,7 @@
   .command-hero {
     position: relative;
     overflow: hidden;
+    background: var(--bb-surface-1);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), var(--bb-shadow-md);
   }
 
