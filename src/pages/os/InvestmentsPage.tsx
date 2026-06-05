@@ -9,6 +9,11 @@ import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
+import { AllocationDonut } from '../../components/investments/AllocationDonut'
+import { AllocationComparison } from '../../components/investments/AllocationComparison'
+import { RebalancePreview } from '../../components/investments/RebalancePreview'
+import { computePostureBuckets, computeRebalanceSuggestions } from '../../core/investments/allocationUtils'
+import { generateId } from '../../app/utils'
 import { getSupportedFinnhubSymbols } from '../../core/connectors'
 import { useOs } from '../../core/os/OsContext'
 import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, ThaiNavAsset } from '../../types/models'
@@ -473,7 +478,6 @@ export const InvestmentsPage = () => {
           createActionRequest={createActionRequest}
           financeAssets={data.financeAssets}
           holdings={data.holdings}
-          holdingsByCategory={holdingsByCategory}
           totalValue={totalValue}
         />
       ) : null}
@@ -884,93 +888,65 @@ const AllocationTab = ({
   createActionRequest,
   financeAssets,
   holdings,
-  holdingsByCategory,
   totalValue,
 }: {
   createActionRequest: (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
   financeAssets: Array<{ id: string; symbol?: string; name?: string; category?: string }>
   holdings: Array<Holding & { currentPosture?: string }>
-  holdingsByCategory: Record<string, number>
   totalValue: number
 }) => {
-  const driftHoldings = holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
+  const buckets = useMemo(() => computePostureBuckets(holdings as Holding[]), [holdings])
+  const rebalanceSuggestions = useMemo(() => computeRebalanceSuggestions(holdings as Holding[], financeAssets), [holdings, financeAssets])
+  const driftCount = holdings.filter((h) => Math.abs((h.allocationPercent ?? 0) - (h.targetAllocationPercent ?? 0)) >= 2).length
+
+  const donutSlices = buckets.map((b) => ({
+    id: b.id,
+    label: b.label,
+    color: b.color,
+    percent: b.currentPercent,
+    valueTHB: b.valueTHB,
+  }))
+
+  const handleQueueRebalance = (suggestions: Array<{ symbol: string; direction: string; suggestedAdjustmentTHB: number }>) => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.rebalancePlan',
+      description: `Rebalance plan: ${suggestions.filter((s) => s.direction === 'buy').length} buys, ${suggestions.filter((s) => s.direction === 'sell').length} sells`,
+      payload: {
+        planId: generateId('rb'),
+        suggestions,
+        totalValue,
+        createdAt: new Date().toISOString(),
+      },
+    })
+  }
 
   return (
     <div className="space-y-5">
-      <SectionPanel label="จัดสรรพอร์ต" title="เป้าหมาย vs ปัจจุบัน" endSlot={<span className="pill">{driftHoldings.length} รายการดริฟท์</span>}>
-        <div className="grid gap-3 md:grid-cols-4">
-          {Object.entries(holdingsByCategory).map(([category, value]) => <Metric key={category} label={category} value={thb(value)} />)}
-        </div>
-        <p className="mt-4 text-sm leading-6 text-[var(--bb-text-soft)]">สัดส่วนปัจจุบันตามหมวดหมู่ ตรวจสอบดริฟท์ด้านล่าง ไม่มีการปรับสมดุลอัตโนมัติ — ทุกการเปลี่ยนแปลงต้องผ่านการตรวจสอบและอนุมัติ</p>
+      {/* Donut + Comparison side by side */}
+      <SectionPanel label="จัดสรรพอร์ต" title="Allocation Overview" endSlot={<span className="pill">{driftCount} holdings drifted</span>}>
+        {holdings.length === 0 ? (
+          <p className="text-sm text-[var(--bb-text-muted)]">No holdings yet. Add investments to see allocation.</p>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
+            <AllocationDonut slices={donutSlices} totalValue={totalValue} size={220} strokeWidth={32} />
+            <AllocationComparison buckets={buckets} />
+          </div>
+        )}
       </SectionPanel>
 
-      <SectionPanel label="ตรวจจับดริฟท์" title="ความคลาดเคลื่อนของสัดส่วน" endSlot={<span className="pill">{driftHoldings.length} รายการเกินเกณฑ์</span>}>
-        <div className="grid gap-3 md:grid-cols-2">
-          {holdings.map((holding) => {
-            const asset = financeAssets.find((item) => item.id === holding.assetId)
-            const currentPct = holding.allocationPercent ?? 0
-            const targetPct = holding.targetAllocationPercent ?? 0
-            const drift = currentPct - targetPct
-            const isDrifted = Math.abs(drift) >= 2
-            return (
-              <div key={holding.id} className={`rounded-2xl border p-4 ${isDrifted ? 'border-[#ead7c3] bg-[#fffaf4]' : 'border-black/[0.05] bg-[#faf9f8]'}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold break-words">{asset?.symbol ?? holding.assetId}</p>
-                    <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{thb(holding.marketValueTHB)}</p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <span className={`font-mono text-xs font-bold ${drift > 0 ? 'text-[var(--bb-amber)]' : drift < 0 ? 'text-[var(--bb-green)]' : ''}`}>
-                      {drift > 0 ? `+${drift.toFixed(1)}%` : `${drift.toFixed(1)}%`}
-                    </span>
-                    <p className="font-mono text-[10px] text-[var(--bb-text-muted)]">{currentPct}% → {targetPct}%</p>
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className="pill">{holding.currentPosture ?? '—'}</span>
-                  {isDrifted ? (
-                    <InvestmentActionButton
-                      actionType="finance.resolveAllocationDrift"
-                      description={`Resolve allocation drift for ${asset?.symbol ?? holding.assetId}`}
-                      payload={{ holdingId: holding.id }}
-                      createActionRequest={createActionRequest}
-                      label="แก้ไขดริฟท์"
-                    />
-                  ) : null}
-                  <InvestmentActionButton
-                    actionType="finance.markRebalanceReviewed"
-                    description={`Mark rebalance reviewed for ${asset?.symbol ?? holding.assetId}`}
-                    payload={{ holdingId: holding.id }}
-                    createActionRequest={createActionRequest}
-                    label="รีวิวแล้ว"
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-        <p className="mt-4 text-sm leading-6 text-[var(--bb-text-soft)]">รายการที่ไฮไลต์ถ้าดริฟท์เกิน ±2% การเปลี่ยนแปลงสัดส่วนต้องผ่านการตรวจสอบและอนุมัติ ไม่มีการปรับสมดุลอัตโนมัติ</p>
-      </SectionPanel>
-
-      <SectionPanel label="จัดสรรเงินสด" title="สถานะเงินสำรอง">
-        {holdings.filter((h) => financeAssets.find((a) => a.id === h.assetId)?.category === 'cash').map((holding) => {
-          const asset = financeAssets.find((a) => a.id === holding.assetId)
-          return (
-            <div key={holding.id} className="os-list-row">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold">{asset?.name}</p>
-                  <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{holding.notes}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold">{thb(holding.marketValueTHB)}</p>
-                  <p className="font-mono text-[10px] text-[var(--bb-text-muted)]">{holding.allocationPercent}%</p>
-                </div>
-              </div>
-            </div>
-          )
-        })}
-        <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">Cash / dry powder = {thb(totalValue > 0 ? (holdings.filter((h) => financeAssets.find((a) => a.id === h.assetId)?.category === 'cash').reduce((s, h) => s + (h.marketValueTHB ?? 0), 0)) : 0)}.</p>
+      {/* Rebalance Preview */}
+      <SectionPanel label="ปรับสมดุล" title="Rebalance Preview" endSlot={
+        <span className="pill">{rebalanceSuggestions.length} suggestions</span>
+      }>
+        {holdings.length === 0 ? (
+          <p className="text-sm text-[var(--bb-text-muted)]">No rebalance data available.</p>
+        ) : (
+          <RebalancePreview
+            suggestions={rebalanceSuggestions}
+            onQueueRebalance={handleQueueRebalance}
+          />
+        )}
       </SectionPanel>
     </div>
   )
