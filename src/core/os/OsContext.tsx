@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { isFinnhubConfigured, isKarunBridgeConfigured, readKarunPhuketBridge } from '../connectors'
 import { createInitialOsDataFromProviders } from '../data/providers'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
@@ -23,7 +23,11 @@ interface OsContextValue {
   approveActionRequest: (requestId: string) => void
   rejectActionRequest: (requestId: string) => void
   queueSuggestionImport: (module: string, title: string, recommendation: string, riskNotes: string) => void
+  bulkMergeData: (field: string, rows: unknown[]) => { appended: number; updated: number; skipped: number }
+  restoreField: (field: string, rows: unknown[]) => void
 }
+
+const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'financeLedgerRows', 'holdings', 'aiContexts'])
 
 const OsContext = createContext<OsContextValue | undefined>(undefined)
 const initialProviderState = createInitialOsDataFromProviders()
@@ -57,6 +61,64 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     rejectActionRequest,
     queueSuggestionImport,
   } = useApprovalWorkflow(data, setData, sourceStatuses, setSourceStatuses, setFinnhubStatus)
+
+  const bulkMergeData = useCallback((field: string, rows: unknown[]): { appended: number; updated: number; skipped: number } => {
+    if (!ALLOWED_BRIDGE_FIELDS.has(field)) {
+      return { appended: 0, updated: 0, skipped: rows.length }
+    }
+
+    const currentArray = (data as unknown as Record<string, unknown>)[field]
+    if (!Array.isArray(currentArray)) {
+      return { appended: 0, updated: 0, skipped: rows.length }
+    }
+
+    const currentIds = new Set(currentArray.map((item) => (item as Record<string, unknown>)?.id))
+    let appended = 0
+    let updated = 0
+
+    for (const row of rows) {
+      const id = (row as Record<string, unknown>)?.id
+      if (id === undefined || id === null) {
+        appended++
+      } else if (currentIds.has(id)) {
+        updated++
+      } else {
+        appended++
+        currentIds.add(id)
+      }
+    }
+
+    setData((current) => {
+      const arr = (current as unknown as Record<string, unknown>)[field]
+      if (!Array.isArray(arr)) return current
+
+      const ids = new Set(arr.map((item) => (item as Record<string, unknown>)?.id))
+      const merged = [...arr]
+
+      for (const row of rows) {
+        const id = (row as Record<string, unknown>)?.id
+        if (id === undefined || id === null) {
+          merged.push(row)
+        } else if (ids.has(id)) {
+          const index = merged.findIndex((item) => (item as Record<string, unknown>)?.id === id)
+          if (index !== -1) {
+            merged[index] = { ...(merged[index] as Record<string, unknown>), ...(row as Record<string, unknown>) }
+          }
+        } else {
+          merged.push(row)
+          ids.add(id)
+        }
+      }
+
+      return { ...current, [field]: merged }
+    })
+
+    return { appended, updated, skipped: rows.length - appended - updated }
+  }, [data])
+
+  const restoreField = useCallback((field: string, rows: unknown[]) => {
+    setData((current) => ({ ...current, [field]: rows }))
+  }, [])
 
   const refreshKarunBridge = async () => {
     setKarunBridgeStatus((current) => ({ ...current, mode: isKarunBridgeConfigured ? 'live' : 'fallback', stale: true }))
@@ -139,8 +201,10 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       approveActionRequest,
       rejectActionRequest,
       queueSuggestionImport,
+      bulkMergeData,
+      restoreField,
     }),
-    [data, sourceStatuses, providerStatuses, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots],
+    [data, sourceStatuses, providerStatuses, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots, bulkMergeData, restoreField, createActionRequest, approveActionRequest, rejectActionRequest, queueSuggestionImport],
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>

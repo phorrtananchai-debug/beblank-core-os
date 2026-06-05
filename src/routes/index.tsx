@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { OSLayout } from '../layouts/OSLayout'
 import { PublicWebsiteLayout } from '../layouts/PublicWebsiteLayout'
 import { AIWorkflowPage } from '../pages/os/AIWorkflowPage'
+import { BridgeSettingsPage } from '../pages/os/BridgeSettingsPage'
 import { CommandCenterPage } from '../pages/os/CommandCenterPage'
 import { CapitalPage } from '../pages/os/CapitalPage'
 import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
@@ -69,6 +70,7 @@ export const AppRoutes = () => {
         <Route path="ai/imports" element={<AIWorkflowPage view="imports" />} />
         <Route path="ai-workflow" element={<AIWorkflowPage view="overview" />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="bridge" element={<BridgeSettingsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
