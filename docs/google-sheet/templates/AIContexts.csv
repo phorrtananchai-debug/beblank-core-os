@@ -1,0 +1,4 @@
+id,module,title,body,createdAt
+ctx-studio,studio,Studio Operations,"Use this context for studio project planning and daily priorities.",2026-06-06T00:00:00.000Z
+ctx-capital,capital,Capital Planning,"Use this context for cash flow, runway, reserve and commitments.",2026-06-06T00:00:00.000Z
+ctx-investments,investments,Investment Review,"Use this context for allocation, DCA, drift and rebalance review.",2026-06-06T00:00:00.000Z

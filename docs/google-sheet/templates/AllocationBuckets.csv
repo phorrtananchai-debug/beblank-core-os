@@ -1,0 +1,5 @@
+id,name,targetPercent,toleranceBand
+core,Core Wealth,40,5
+growth,Growth Engine,15,5
+income,Income Layer,25,5
+reserve,Cash Reserve,20,5

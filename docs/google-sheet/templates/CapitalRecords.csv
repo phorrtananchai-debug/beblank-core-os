@@ -1,0 +1,4 @@
+id,label,amountTHB,direction,category,date,status
+cap-001,Studio operating reserve,0,income,Studio,2026-06-06,draft
+cap-002,Family reserve placeholder,0,income,Family,2026-06-06,draft
+cap-003,Personal cash placeholder,0,income,Personal,2026-06-06,draft

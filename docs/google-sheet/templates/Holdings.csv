@@ -1,0 +1,6 @@
+id,assetId,quantity,averageCost,allocationPercent,targetAllocationPercent,currentPosture
+hold-voo,VOO,0,0,0,40,core
+hold-schd,SCHD,0,0,0,15,income
+hold-msft,MSFT,0,0,0,15,growth
+hold-jepq,JEPQ,0,0,0,10,income
+hold-cash,CASH,0,0,0,20,reserve

@@ -20,8 +20,20 @@ const DEFAULT_CONFIG: SheetBridgeConfig = {
 function loadConfig(): SheetBridgeConfig {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) return { ...DEFAULT_CONFIG, ...JSON.parse(stored) }
+    if (stored) {
+      const parsed = JSON.parse(stored) as SheetBridgeConfig
+      const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
+      if (!parsed.appsScriptEndpoint && envEndpoint?.startsWith('https://')) {
+        parsed.appsScriptEndpoint = envEndpoint
+        parsed.isEnvDefault = true
+      }
+      return { ...DEFAULT_CONFIG, ...parsed }
+    }
   } catch { /* ignore */ }
+  const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
+  if (envEndpoint?.startsWith('https://')) {
+    return { ...DEFAULT_CONFIG, appsScriptEndpoint: envEndpoint, isEnvDefault: true }
+  }
   return { ...DEFAULT_CONFIG }
 }
 
@@ -37,9 +49,9 @@ export function useSheetBridge() {
   const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
   const envEndpointStatus = !envEndpoint ? 'missing' : envEndpoint.startsWith('https://') ? 'configured' : 'invalid'
   const activeEndpointUrl = config.appsScriptEndpoint || envEndpoint || ''
-  const activeEndpointSource: 'manual' | 'env' | 'none' = config.appsScriptEndpoint
+  const activeEndpointSource: 'manual' | 'env' | 'none' = config.appsScriptEndpoint && !config.isEnvDefault
     ? 'manual'
-    : envEndpoint
+    : config.appsScriptEndpoint || envEndpoint
       ? 'env'
       : 'none'
 
@@ -51,6 +63,9 @@ export function useSheetBridge() {
   const updateConfig = useCallback((patch: Partial<SheetBridgeConfig>) => {
     setConfigState((prev) => {
       const next = { ...prev, ...patch }
+      if ('appsScriptEndpoint' in patch) {
+        next.isEnvDefault = false
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       return next
     })

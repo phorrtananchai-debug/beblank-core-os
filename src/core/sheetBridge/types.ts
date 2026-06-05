@@ -10,6 +10,7 @@ export interface SheetBridgeConfig {
   lastSyncAt: string | null
   lastSyncStatus: BridgeConnectionStatus
   lastErrorMessage: string | null
+  isEnvDefault?: boolean
 }
 
 export interface SheetColumnDef {
