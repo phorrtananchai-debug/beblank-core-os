@@ -60,7 +60,7 @@ export const LedgerForm = ({ initial, onSubmit, onCancel, title }: Props) => {
       <div className="modal-panel max-w-lg" onClick={(e) => e.stopPropagation()}>
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Ledger / บัญชีรายการ</p>
+            <p className="text-[10px] font-semibold text-[#777777]">Ledger / บัญชีรายการ</p>
             <h3>{title}</h3>
           </div>
           <button className="btn-secondary" type="button" onClick={onCancel}>ปิด</button>
@@ -68,32 +68,32 @@ export const LedgerForm = ({ initial, onSubmit, onCancel, title }: Props) => {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Label / รายการ</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Label / รายการ</span>
             <input className="input" value={form.label} onChange={(e) => set('label', e.target.value)} placeholder="เช่น ค่าเช่าสตูดิโอ" />
           </label>
           <label className="block">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Amount THB / จำนวนเงิน</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Amount THB / จำนวนเงิน</span>
             <input className="input" type="number" inputMode="decimal" value={form.amountTHB || ''} onChange={(e) => set('amountTHB', Number(e.target.value))} placeholder="0" />
           </label>
           <label className="block">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Direction / ทิศทาง</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Direction / ทิศทาง</span>
             <select className="input" value={form.direction} onChange={(e) => set('direction', e.target.value)}>
               <option value="inflow">Inflow / รายรับ</option>
               <option value="outflow">Outflow / รายจ่าย</option>
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Category / หมวดหมู่</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Category / หมวดหมู่</span>
             <select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
               {categories.map((cat) => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Date / วันที่</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Date / วันที่</span>
             <input className="input" type="date" value={form.occurredAt} onChange={(e) => set('occurredAt', e.target.value)} />
           </label>
           <label className="block">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Risk / ความเสี่ยง</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Risk / ความเสี่ยง</span>
             <select className="input" value={form.risk} onChange={(e) => set('risk', e.target.value)}>
               <option value="low">Low / ต่ำ</option>
               <option value="medium">Medium / ปานกลาง</option>
@@ -101,11 +101,11 @@ export const LedgerForm = ({ initial, onSubmit, onCancel, title }: Props) => {
             </select>
           </label>
           <label className="block md:col-span-2">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Notes / หมายเหตุ</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Notes / หมายเหตุ</span>
             <textarea className="input min-h-16" value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="บันทึกเพิ่มเติม..." />
           </label>
           <label className="block md:col-span-2">
-            <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Tags / แท็ก</span>
+            <span className="mb-1 block text-[9px] font-semibold text-[#777777]">Tags / แท็ก</span>
             <input className="input" value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="เช่น studio, recurring" />
           </label>
         </div>

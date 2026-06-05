@@ -52,7 +52,7 @@ export const CapitalAnalyticsCards = () => {
         <MetricCard label="Runway / ระยะเวลาสำรอง" value={`${a.runwayMonths} months`} note={`Reserve ${thb(a.reserveTotal)}`} />
         <MetricCard label="Reserve Health / สถานะสำรอง" value={`${a.reserveHealthPct}%`} note={`Target ${thb(a.reserveTarget)}`} />
         <div className="rounded-2xl border border-black/[0.04] bg-white/75 p-3">
-          <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-[#777777]">Direction / ทิศทาง</p>
+          <p className="text-[8px] font-semibold text-[#777777]">Direction / ทิศทาง</p>
           <div className="mt-2 space-y-1 text-xs">
             <div className="flex items-center justify-between"><span className="text-[#59634a]">Inflow</span><span className="font-semibold">{((a.inflow / Math.max(a.inflow + a.outflow, 1)) * 100).toFixed(0)}%</span></div>
             <div className="flex items-center justify-between"><span className="text-[#c2410c]">Outflow</span><span className="font-semibold">{((a.outflow / Math.max(a.inflow + a.outflow, 1)) * 100).toFixed(0)}%</span></div>
@@ -83,7 +83,7 @@ export const CapitalAnalyticsCards = () => {
 
 const MetricCard = ({ label, value, note, valueClass }: { label: string; value: string; note?: string; valueClass?: string }) => (
   <div className="rounded-2xl border border-black/[0.04] bg-white/75 p-3">
-    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-[#777777]">{label}</p>
+    <p className="text-[8px] font-semibold text-[#777777]">{label}</p>
     <p className={`mt-1 text-lg font-bold ${valueClass ?? ''}`}>{value}</p>
     {note ? <p className="mt-0.5 text-[10px] text-[#777777]">{note}</p> : null}
   </div>

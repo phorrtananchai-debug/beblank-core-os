@@ -158,7 +158,7 @@ export const CommandCenterPage = () => {
     <section className="command-center-space space-y-6">
       {/* HERO */}
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-5 md:p-6">
-        <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">
+        <h2 className="text-2xl font-extrabold md:text-3xl">
           ศูนย์ควบคุมวันนี้
         </h2>
         <p className="mt-1 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">
@@ -236,7 +236,7 @@ export const CommandCenterPage = () => {
             <div className="os-card-primary reveal-soft flex-1">
               <div className="panel-header">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">โฟกัสวันนี้</p>
+                  <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">โฟกัสวันนี้</p>
                   <h3>คิวงานวันนี้</h3>
                 </div>
                 <button className="btn-primary" type="button" onClick={queueTodayFocusReview}>
@@ -261,7 +261,7 @@ export const CommandCenterPage = () => {
             <div className="os-section-card reveal-soft reveal-delay-1">
               <div className="panel-header">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">งานสตูดิโอ</p>
+                  <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">งานสตูดิโอ</p>
                   <h3>ชีพจรโปรเจกต์</h3>
                 </div>
                 <span className="pill">{activeProjects.length} โปรเจค</span>
@@ -300,7 +300,7 @@ export const CommandCenterPage = () => {
           <div className="os-section-card reveal-soft reveal-delay-3">
             <div className="panel-header">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">การเงิน</p>
+                <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">การเงิน</p>
                 <h3>สรุปการเงิน</h3>
               </div>
               <span className="pill">ป้อนด้วยมือ</span>
@@ -329,7 +329,7 @@ export const CommandCenterPage = () => {
           <div className="os-section-card reveal-soft reveal-delay-4">
             <div className="panel-header">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">กิจกรรม</p>
+                <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">กิจกรรม</p>
                 <h3>จังหวะกิจกรรม</h3>
               </div>
               <span className="pill">{activity.length}</span>

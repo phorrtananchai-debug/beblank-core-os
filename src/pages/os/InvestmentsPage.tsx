@@ -385,8 +385,8 @@ export const InvestmentsPage = () => {
   return (
     <section className="space-y-7">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
-        <h2 className="mt-4 text-2xl font-extrabold leading-[0.92] tracking-tight">การลงทุน / หุ้น</h2>
+        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
+        <h2 className="mt-4 text-2xl font-extrabold leading-[0.92]">การลงทุน / หุ้น</h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <OsHeroMetric icon="◆" value={thb(totalValue)} label="มูลค่าพอร์ต" helper="รวมทุกประเภท" color="neutral" progress={100} />
           <OsHeroMetric icon="○" value={thb(cashPosture)} label="เงินสดรอจัดสรร" helper="สำรอง" color="blue" progress={totalValue > 0 ? (cashPosture / totalValue) * 100 : 0} />
@@ -513,7 +513,7 @@ export const InvestmentsPage = () => {
             <section className="panel panel-float">
               <div className="panel-header">
                 <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">แหล่งข้อมูลหลัก</p>
+                  <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">แหล่งข้อมูลหลัก</p>
                   <h3>เพิ่มสินทรัพย์ในสมุด Aequitas</h3>
                 </div>
                 <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal</button>
@@ -536,7 +536,7 @@ export const InvestmentsPage = () => {
           <div className="modal-panel">
             <div className="panel-header">
               <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">เพิ่มสินทรัพย์</p>
+                <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">เพิ่มสินทรัพย์</p>
                 <h3>ตรวจสอบก่อนอนุมัติ</h3>
               </div>
               <button className="btn-secondary" type="button" onClick={() => setShowAssetModal(false)}>ปิด</button>
@@ -761,7 +761,7 @@ const PortfolioTab = ({
           </article>
           <article className="rounded-[28px] border border-black/[0.05] bg-white/75 p-5">
             <div className="flex items-center justify-between gap-4">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">แถวแคชชีท</p>
+              <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">แถวแคชชีท</p>
               <span className="pill">{marketSymbols.length} symbols</span>
             </div>
             <div className="mt-4 grid gap-2 md:grid-cols-2">

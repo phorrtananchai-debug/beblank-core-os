@@ -257,7 +257,7 @@ export const StudioProjectDetailPage = () => {
       <section>
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">บริบท AI สตูดิโอ</p>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">บริบท AI สตูดิโอ</p>
             <h3>ข้อมูลสนับสนุนการทำงาน</h3>
           </div>
           <span className="pill">{aiContexts.length} รายการ</span>
@@ -333,7 +333,7 @@ const OverviewSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ภาพรวมโปรเจค</p>
+        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ภาพรวมโปรเจค</p>
         <h3>สรุปข้อมูลที่เชื่อมโยง</h3>
       </div>
       <span className="pill">{project.name}</span>
@@ -365,7 +365,7 @@ const WorkScopeSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">โครงสร้างสตูดิโอ</p>
+        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">โครงสร้างสตูดิโอ</p>
         <h3>หมวดงาน</h3>
       </div>
       <span className="pill">{workScopeSections.length} หมวด</span>
@@ -419,7 +419,7 @@ const TimelineSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ไทม์ไลน์โปรเจค</p>
+        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ไทม์ไลน์โปรเจค</p>
         <h3>เฟสและเหตุการณ์สำคัญ</h3>
       </div>
       <span className="pill">{phases.length} เฟส / {timelineItems.length} เหตุการณ์</span>
@@ -430,7 +430,7 @@ const TimelineSection = ({
       <div className="grid gap-6 lg:grid-cols-2">
         {phases.length > 0 && (
           <div>
-            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">เฟส</p>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--bb-text-muted)]">เฟส</p>
             <div className="space-y-3">
               {phases.map((phase) => (
                 <div key={phase.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
@@ -457,7 +457,7 @@ const TimelineSection = ({
         )}
         {timelineItems.length > 0 && (
           <div>
-            <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">เหตุการณ์สำคัญ</p>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--bb-text-muted)]">เหตุการณ์สำคัญ</p>
             <div className="space-y-3">
               {timelineItems.map((item) => (
                 <div key={item.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
@@ -499,7 +499,7 @@ const SiteWatchSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ข้อมูลหน้างาน</p>
+        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ข้อมูลหน้างาน</p>
         <h3>ไซต์และการแจ้งปัญหา</h3>
       </div>
       <span className="pill">{siteWatchUpdates.length} อัพเดต / {siteIssues.length} ปัญหา</span>
@@ -510,7 +510,7 @@ const SiteWatchSection = ({
       <div className="grid gap-5 lg:grid-cols-2">
         {siteWatchUpdates.length > 0 && (
           <div className="space-y-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">อัพเดตหน้างาน</p>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">อัพเดตหน้างาน</p>
             {siteWatchUpdates.map((update) => (
               <div key={update.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -535,7 +535,7 @@ const SiteWatchSection = ({
         )}
         {siteIssues.length > 0 && (
           <div className="space-y-3">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ปัญหาหน้างาน</p>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ปัญหาหน้างาน</p>
             {siteIssues.map((issue) => (
               <div key={issue.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -573,7 +573,7 @@ const DocumentsSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">จัดการเอกสาร</p>
+        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">จัดการเอกสาร</p>
         <h3>ชุดเอกสารที่เชื่อมโยง</h3>
       </div>
       <span className="pill">{documents.length} ชุด</span>
@@ -624,7 +624,7 @@ const ReviewsSection = ({
   <section className="panel panel-float">
     <div className="panel-header">
       <div>
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">คิวรีวิว</p>
+        <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">คิวรีวิว</p>
         <h3>รีวิวของโปรเจคนี้</h3>
       </div>
       <span className="pill">{reviews.length} รายการ</span>

@@ -26,7 +26,7 @@ export const OSLayout = () => {
       <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[36px] border border-[var(--bb-border)]/60 bg-white/80 p-3 shadow-[0_36px_90px_-56px_rgba(0,0,0,0.34)] backdrop-blur-xl">
         <aside className="os-sidebar sticky top-5 h-[calc(100vh-2.5rem)] w-[292px] rounded-[34px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)]/95 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.36)] backdrop-blur-xl">
           <div className="mb-6">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">สภาพแวดล้อมสตูดิโอ</p>
+            <p className="text-[10px] font-semibold text-[#777777]">สภาพแวดล้อมสตูดิโอ</p>
             <h1 className="mt-2 text-2xl font-bold leading-none tracking-tight">BE BLANK OS</h1>
             <p className="mt-2 text-xs leading-5 text-[#777777]">ระบบปฏิบัติการที่เชื่อมต่อชีทสำหรับทีม</p>
           </div>

@@ -15,7 +15,7 @@ export const DeleteLedgerDialog = ({ row, onConfirm, onCancel }: Props) => {
       <div className="modal-panel max-w-sm" onClick={(e) => e.stopPropagation()}>
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Delete / ลบ</p>
+            <p className="text-[10px] font-semibold text-[#777777]">Delete / ลบ</p>
             <h3>Confirm Delete / ยืนยันการลบ</h3>
           </div>
           <button className="btn-secondary" type="button" onClick={onCancel}>ปิด</button>

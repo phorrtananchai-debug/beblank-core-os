@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,7 +9,7 @@
     @apply m-0;
     background: var(--bb-canvas);
     color: var(--bb-text);
-    font-family: 'Prompt', 'Manrope', 'Inter', sans-serif;
+    font-family: "Inter", "Noto Sans Thai", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
   }
 
   * {
@@ -30,19 +30,19 @@
 }
 
 :root {
-  --bb-canvas: #E7EAF0;
-  --bb-shell: #F8F7F4;
-  --bb-surface-1: #FBFAF7;
+  --bb-canvas: #AEB9C8;
+  --bb-shell: #F6F8FB;
+  --bb-surface-1: #EEF2F6;
   --bb-surface-2: #FFFFFF;
-  --bb-surface-3: #F6F4F0;
-  --bb-surface-4: #F2F1EE;
-  --bb-active-soft: #FFF1E2;
+  --bb-surface-3: #E9EEF4;
+  --bb-surface-4: #E3E8EF;
+  --bb-active-soft: #FFE8D2;
 
-  --bb-bg: #E7EAF0;
-  --bb-shell-bg: #F8F7F4;
+  --bb-bg: #AEB9C8;
+  --bb-shell-bg: #F6F8FB;
   --bb-surface: #FFFFFF;
-  --bb-surface-warm: #FFF1E2;
-  --bb-surface-soft: #F6F4F0;
+  --bb-surface-warm: #FFE8D2;
+  --bb-surface-soft: #E9EEF4;
   --bb-border: #E0E3E8;
   --bb-border-strong: #D0D4DB;
 
@@ -742,7 +742,7 @@
   }
 
   .editorial-thai {
-    font-family: 'Prompt', 'Manrope', 'Inter', sans-serif;
+    font-family: "Inter", "Noto Sans Thai", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
     letter-spacing: -0.01em;
   }
 
@@ -756,7 +756,7 @@
   .public-studio-canvas {
     background: #d7d3c8;
     min-height: 100vh;
-    font-family: 'Inter', 'Manrope', sans-serif;
+    font-family: "Inter", "Noto Sans Thai", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
   }
 
   .public-masthead-nav,
@@ -772,7 +772,7 @@
   }
 
   .public-masthead-type {
-    font-family: 'Inter', 'Manrope', sans-serif;
+    font-family: "Inter", "Noto Sans Thai", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
     font-size: clamp(3.25rem, 8.4vw, 9.4rem);
     font-weight: 800;
     letter-spacing: 0;
@@ -837,7 +837,7 @@
   }
 
   .public-project-title {
-    font-family: 'Inter', 'Manrope', sans-serif;
+    font-family: "Inter", "Noto Sans Thai", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
     font-size: var(--public-project-title-size, 0.82rem);
     font-weight: 700;
     letter-spacing: 0.01em;
@@ -867,13 +867,13 @@
     background: #111111;
     color: white;
     padding: 0.5rem 0.75rem;
-    font-family: 'Prompt', 'Manrope', sans-serif;
+    font-family: "Inter", "Noto Sans Thai", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
     font-size: 0.75rem;
     text-transform: none;
   }
 
   .os-shell {
-    font-family: 'Prompt', 'Manrope', 'Inter', sans-serif;
+    font-family: "Inter", "Noto Sans Thai", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
   }
 
   .os-ambient-plane {

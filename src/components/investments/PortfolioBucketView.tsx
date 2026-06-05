@@ -245,19 +245,19 @@ const BucketSection = ({
         </div>
         <div className="flex items-center gap-4 text-right">
           <div>
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">มูลค่า</p>
+            <p className="text-[9px] font-semibold text-[#777777]">มูลค่า</p>
             <p className="text-sm font-bold">{thb(bucket.valueTHB)}</p>
           </div>
           <div>
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">สัดส่วน</p>
+            <p className="text-[9px] font-semibold text-[#777777]">สัดส่วน</p>
             <p className="text-sm font-bold">{valuePct}%</p>
           </div>
           <div>
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">เป้าหมาย</p>
+            <p className="text-[9px] font-semibold text-[#777777]">เป้าหมาย</p>
             <p className="text-sm font-bold">{pct(bucket.targetAllocationPercent)}</p>
           </div>
           <div>
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">ดริฟท์</p>
+            <p className="text-[9px] font-semibold text-[#777777]">ดริฟท์</p>
             <p className={`text-sm font-bold ${driftStyle(bucket.drift)}`}>{bucket.drift > 0 ? '+' : ''}{bucket.drift.toFixed(1)}%</p>
           </div>
         </div>
