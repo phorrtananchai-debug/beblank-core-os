@@ -205,6 +205,15 @@ export const CommandCenterPage = () => {
   const alertProgress = attentionItems > 0 ? Math.round((highSeverityCount / attentionItems) * 100) : 0
   const financeProgress = totalAssets > 0 ? Math.round((portfolioValue / totalAssets) * 100) : 0
 
+  const setupModules = [
+    { label: 'Studio', icon: '◇', count: data.projects.length, unit: 'Projects', href: '/os/studio', action: 'Create First Project' },
+    { label: 'Capital', icon: '◎', count: data.financeLedgerRows.length + data.reserveRows.length, unit: 'Records', href: '/os/capital', action: 'Add Capital Record' },
+    { label: 'Investments', icon: '◈', count: data.holdings.length, unit: 'Assets', href: '/os/finance/investments', action: 'Setup Portfolio' },
+    { label: 'AI', icon: '✦', count: data.aiContexts.length, unit: 'Contexts', href: '/os/ai', action: 'Create AI Context' },
+  ]
+  const completedCount = setupModules.filter((m) => m.count > 0).length
+  const totalModules = setupModules.length
+
   const isEmpty = data.projects.length === 0 && data.tasks.length === 0
 
   const queueTodayFocusReview = () => {
@@ -225,7 +234,7 @@ export const CommandCenterPage = () => {
             <h2 className="text-xl font-extrabold md:text-2xl">{greetingText()}, Por.</h2>
             <p className="mt-1 text-sm leading-6 text-[var(--bb-text-soft)]">
               {isEmpty
-                ? 'ยังไม่มีข้อมูลในระบบ พร้อมเริ่มต้นการทำงาน'
+                ? 'Workspace พร้อมเริ่มต้น — ทำตามขั้นตอนด้านล่างเพื่อตั้งค่าระบบ'
                 : `วันนี้มี ${attentionItems} รายการที่ต้องตรวจสอบ และ ${pendingApprovals.length} งานที่ควรตัดสินใจ`}
             </p>
           </div>
@@ -243,17 +252,73 @@ export const CommandCenterPage = () => {
       </header>
 
         {isEmpty ? (
-          <div className="rounded-[28px] border border-dashed border-black/[0.12] bg-white/60 p-6 text-center">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777]">Empty workspace</p>
-            <h3 className="mt-3 text-2xl font-bold tracking-tight">ยังไม่มีข้อมูลในระบบ</h3>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#666666]">
-              เริ่มต้นด้วยการเพิ่มโปรเจกต์แรกที่ Studio หรือเชื่อมต่อข้อมูลการเงินที่ Capital
-            </p>
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <button className="btn-primary" type="button" onClick={() => navigate('/os/studio')}>ไปที่ Studio</button>
-              <button className="btn-secondary" type="button" onClick={() => navigate('/os/capital')}>ไปที่ Capital</button>
+          <>
+            {/* WORKSPACE SUMMARY */}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {setupModules.map((mod) => (
+                <div
+                  key={mod.label}
+                  className="os-hero-metric os-hero-metric-neutral cursor-pointer"
+                  onClick={() => navigate(mod.href)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(mod.href) }}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={`os-icon-badge os-icon-badge-neutral`}>{mod.icon}</span>
+                    <span className="mt-1 text-xs text-[var(--bb-text-faint)]">→</span>
+                  </div>
+                  <p className="os-hero-value">{mod.count}</p>
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{mod.label}</p>
+                  <p className="os-hero-sub">{mod.unit}</p>
+                </div>
+              ))}
             </div>
-          </div>
+
+            {/* SETUP + QUICK START */}
+            <div className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-8">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Workspace Setup</p>
+                  <h3 className="mt-2 text-2xl font-bold tracking-tight">Workspace พร้อมเริ่มต้น</h3>
+                  <p className="mt-1 text-sm text-[var(--bb-text-soft)]">
+                    {completedCount}/{totalModules} Complete
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
+                  {setupModules.map((mod) => (
+                    <div
+                      key={mod.label}
+                      className={`h-2 w-8 rounded-full ${mod.count > 0 ? 'bg-[var(--bb-green)]' : 'bg-black/[0.08]'}`}
+                      title={mod.label}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <hr className="my-6 border-black/[0.06]" />
+
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Quick Start</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {setupModules.filter((mod) => mod.count === 0).map((mod) => (
+                  <div
+                    key={mod.label}
+                    className="rounded-[20px] border border-dashed border-black/[0.12] bg-white p-4 transition-shadow duration-200 hover:shadow-sm"
+                  >
+                    <p className="text-sm font-semibold">{mod.action}</p>
+                    <p className="mt-1 text-xs text-[var(--bb-text-muted)]">เริ่มต้นใช้งาน {mod.label}</p>
+                    <button
+                      className="btn-primary mt-4"
+                      type="button"
+                      onClick={() => navigate(mod.href)}
+                    >
+                      ไปที่ {mod.label}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         ) : (
           <>
         {/* KPI NAV CARDS */}
