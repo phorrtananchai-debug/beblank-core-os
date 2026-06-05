@@ -46,6 +46,8 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
       { key: 'quantity', label: 'Quantity', type: 'number', required: true },
       { key: 'averageCost', label: 'Avg Cost', type: 'number', required: true },
       { key: 'allocationPercent', label: 'Allocation %', type: 'number', required: false },
+      { key: 'targetAllocationPercent', label: 'Target Allocation %', type: 'number', required: false },
+      { key: 'currentPosture', label: 'Current Posture', type: 'string', required: false },
     ],
   },
   {

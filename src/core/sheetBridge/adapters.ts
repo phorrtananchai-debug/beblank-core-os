@@ -30,7 +30,7 @@ export function normalizeRow(
   const errors: RowValidationError[] = []
 
   for (const col of resource.columns) {
-    const rawValue = raw[col.key] ?? raw[col.label] ?? raw[col.key.toLowerCase()]
+    const rawValue = raw[col.key] ?? raw[col.label] ?? raw[col.key.toLowerCase()] ?? (col.label ? raw[col.label.toLowerCase()] : undefined)
     const coerced = coerceValue(rawValue, col.type)
 
     if (col.required && (coerced === undefined || coerced === null)) {
@@ -73,7 +73,7 @@ export function validateRequired(raw: Record<string, unknown>, resource: SheetRe
   const errors: RowValidationError[] = []
   for (const col of resource.columns) {
     if (col.required) {
-      const rawValue = raw[col.key] ?? raw[col.label]
+      const rawValue = raw[col.key] ?? raw[col.label] ?? (col.label ? raw[col.label.toLowerCase()] : undefined)
       if (rawValue === undefined || rawValue === null || rawValue === '') {
         errors.push({ row: 0, field: col.key, message: `Missing required field "${col.label}"` })
       }
