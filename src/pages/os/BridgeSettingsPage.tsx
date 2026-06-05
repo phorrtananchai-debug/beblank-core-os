@@ -8,11 +8,17 @@ import { loadBackup, removeBackup } from '../../core/sheetBridge/backup'
 const ResourceCard = ({
   resource,
   onSimulateImport,
+  onFetchFromEndpoint,
   onBuildExport,
+  fetching,
+  hasEndpoint,
 }: {
   resource: typeof SHEET_RESOURCES[number]
   onSimulateImport: () => void
+  onFetchFromEndpoint: () => void
   onBuildExport: () => void
+  fetching: boolean
+  hasEndpoint: boolean
 }) => (
   <div className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
     <div className="flex items-start justify-between gap-3">
@@ -39,6 +45,11 @@ const ResourceCard = ({
     </div>
     <div className="mt-4 flex gap-2">
       <button className="btn-primary" type="button" onClick={onSimulateImport}>Simulate Import</button>
+      {resource.importEnabled !== false && hasEndpoint && (
+        <button className="btn-secondary" type="button" onClick={onFetchFromEndpoint} disabled={fetching}>
+          {fetching ? 'Fetching...' : 'Fetch from Endpoint'}
+        </button>
+      )}
       <button className="btn-secondary" type="button" onClick={onBuildExport}>Build Export</button>
     </div>
   </div>
@@ -70,9 +81,15 @@ export const BridgeSettingsPage = () => {
     exportPreview,
     testing,
     importError,
+    fetchError,
+    fetchingResource,
+    envEndpointStatus,
+    activeEndpointUrl,
+    activeEndpointSource,
     updateConfig,
     testConnection,
     simulateImport,
+    fetchFromEndpoint,
     confirmImport,
     cancelImport,
     buildExportPreview,
@@ -99,6 +116,11 @@ export const BridgeSettingsPage = () => {
     if (raw) {
       simulateImport(resourceId, raw)
     }
+  }
+
+  const handleFetchFromEndpoint = async (resourceId: string) => {
+    setImportResult(null)
+    await fetchFromEndpoint(resourceId)
   }
 
   const handleConfirmImport = () => {
@@ -152,6 +174,23 @@ export const BridgeSettingsPage = () => {
 
   const sheetUrlWarning = config.sheetUrl && !isValidUrl(config.sheetUrl) ? 'Not a valid URL.' : null
   const endpointWarning = config.appsScriptEndpoint && !isValidUrl(config.appsScriptEndpoint) ? 'Not a valid URL.' : null
+  const hasLiveEndpoint = !!activeEndpointUrl && activeEndpointUrl.startsWith('https://')
+
+  const sourceBadge = activeEndpointSource === 'manual'
+    ? { label: 'Manual Endpoint', style: 'text-[var(--bb-accent)] border-[var(--bb-accent)]/20 bg-[var(--bb-accent)]/5' as const }
+    : activeEndpointSource === 'env'
+      ? { label: 'Environment Endpoint', style: 'text-[var(--bb-blue)] border-blue/20 bg-blue/5' as const }
+      : { label: 'Not Configured', style: 'text-[var(--bb-text-muted)] border-black/[0.08] bg-black/[0.03]' as const }
+
+  const connectionLabel = activeEndpointSource === 'none'
+    ? { status: 'unconfigured' as const, label: 'Not configured', color: 'bg-black/[0.12]' as const }
+    : config.lastSyncStatus === 'success'
+      ? { status: 'connected' as const, label: `Connected — Last tested ${config.lastSyncAt ? new Date(config.lastSyncAt).toLocaleString() : ''}`, color: 'bg-[var(--bb-green)]' as const }
+      : config.lastSyncStatus === 'error'
+        ? { status: 'error' as const, label: `Failed — ${config.lastErrorMessage}`, color: 'bg-red' as const }
+        : config.lastSyncStatus === 'connecting'
+          ? { status: 'connecting' as const, label: 'Testing connection...', color: 'bg-[var(--bb-amber)]' as const }
+          : { status: 'ready' as const, label: 'Ready to connect — Click Test', color: 'bg-black/[0.12]' as const }
 
   return (
     <section className="space-y-7">
@@ -171,6 +210,9 @@ export const BridgeSettingsPage = () => {
             <h3>Sheet Connection</h3>
           </div>
           <div className="flex gap-2">
+            <span className={`pill ${connectionLabel.color === 'bg-[var(--bb-green)]' ? 'text-[var(--bb-green)]' : connectionLabel.color === 'bg-red' ? 'text-red' : ''}`}>
+              {connectionLabel.label}
+            </span>
             <button className="btn-secondary" type="button" onClick={resetConfig}>Reset</button>
           </div>
         </div>
@@ -231,26 +273,81 @@ export const BridgeSettingsPage = () => {
               className="btn-primary"
               type="button"
               onClick={testConnection}
-              disabled={testing || (!config.sheetUrl && !config.appsScriptEndpoint)}
+              disabled={testing || !activeEndpointUrl}
             >
               {testing ? 'Testing...' : 'Test Connection'}
             </button>
 
             <div className="flex items-center gap-2">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${
-                config.lastSyncStatus === 'success' ? 'bg-[var(--bb-green)]' :
-                config.lastSyncStatus === 'error' ? 'bg-red' :
-                config.lastSyncStatus === 'connecting' ? 'bg-[var(--bb-amber)]' :
-                'bg-black/[0.12]'
-              }`} />
-              <span className="text-xs text-[var(--bb-text-muted)]">
-                {config.lastSyncStatus === 'idle' ? 'Not tested' :
-                 config.lastSyncStatus === 'connecting' ? 'Connecting...' :
-                 config.lastSyncStatus === 'success' ? `Connected${config.lastSyncAt ? ` — ${new Date(config.lastSyncAt).toLocaleString()}` : ''}` :
-                 `Error: ${config.lastErrorMessage}`}
-              </span>
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${connectionLabel.color}`} />
+              <span className="text-xs text-[var(--bb-text-muted)]">{connectionLabel.label}</span>
+            </div>
+
+            <span className={`rounded-full border px-2.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.08em] ${sourceBadge.style}`}>
+              {sourceBadge.label}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ENVIRONMENT VARIABLE SETUP */}
+      <section className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-5">
+        <div className="panel-header">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">ENVIRONMENT</p>
+            <h3>Apps Script Endpoint Setup</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border px-2.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--bb-text-muted)] border-black/[0.08] bg-black/[0.03]">
+              Active: {activeEndpointSource === 'manual' ? 'Manual' : activeEndpointSource === 'env' ? 'Environment' : 'None'}
+            </span>
+            <span className={`pill ${envEndpointStatus === 'configured' ? 'text-[var(--bb-green)]' : envEndpointStatus === 'invalid' ? 'text-red' : 'text-[var(--bb-amber)]'}`}>
+              {envEndpointStatus === 'configured' ? 'Env Var Ready' : envEndpointStatus === 'invalid' ? 'Invalid Env Var' : 'No Env Var'}
+            </span>
+          </div>
+        </div>
+        <div className="mt-3 space-y-3 text-sm leading-6 text-[var(--bb-text-soft)]">
+          <p>
+            The bridge connects to a Google Sheet via an <strong>Apps Script Web App</strong> endpoint.
+            Priority: Manual entry (highest) → Environment variable → Not configured.
+            You can configure the endpoint URL in two ways:
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-2xl border border-black/[0.05] bg-white p-3">
+              <p className="font-semibold text-[var(--bb-text)]">1. Environment Variable</p>
+              <p className="mt-1 text-xs">Set <code className="rounded bg-black/[0.05] px-1 py-0.5 font-mono text-[11px]">VITE_APPS_SCRIPT_KARUN_ENDPOINT</code> in <code className="rounded bg-black/[0.05] px-1 py-0.5 font-mono text-[11px]">.env.local</code> or Vercel Environment Variables.</p>
+            </div>
+            <div className="rounded-2xl border border-black/[0.05] bg-white p-3">
+              <p className="font-semibold text-[var(--bb-text)]">2. Manual Entry</p>
+              <p className="mt-1 text-xs">Paste any <strong>HTTPS</strong> endpoint URL into the field above. Stored in browser localStorage only. Not committed.</p>
             </div>
           </div>
+          <div className="rounded-2xl border border-[var(--bb-amber)]/20 bg-[var(--bb-amber)]/5 p-3">
+            <p className="text-xs font-semibold text-[var(--bb-amber)]">⚠ Never commit private endpoint URLs to git.</p>
+            <p className="mt-1 text-xs">Use <code className="rounded bg-black/[0.05] px-1 py-0.5 font-mono text-[11px]">.env.local</code> (gitignored) or enter manually in this UI.</p>
+          </div>
+          <details className="rounded-2xl border border-black/[0.05] bg-white p-3">
+            <summary className="cursor-pointer text-xs font-semibold text-[var(--bb-text-muted)]">Expected Response Shape</summary>
+            <pre className="mt-2 overflow-x-auto text-[11px] leading-5 text-[var(--bb-text-soft)]">{`{
+  "ok": true,
+  "resource": "studio-projects",
+  "rows": [
+    {
+      "id": "record-1",
+      "slug": "example",
+      "name": "Example Record",
+      ...
+    }
+  ],
+  "updatedAt": "2026-06-06T00:00:00.000Z"
+}`}</pre>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-[11px] text-[var(--bb-text-muted)]">
+              <li><code className="rounded bg-black/[0.05] px-1 font-mono">ok</code> — must be <code className="rounded bg-black/[0.05] px-1 font-mono">true</code></li>
+              <li><code className="rounded bg-black/[0.05] px-1 font-mono">resource</code> — string ID matching one of the defined tabs above</li>
+              <li><code className="rounded bg-black/[0.05] px-1 font-mono">rows</code> — array of objects with column keys from the resource definition</li>
+              <li><code className="rounded bg-black/[0.05] px-1 font-mono">updatedAt</code> — optional ISO timestamp</li>
+            </ul>
+          </details>
         </div>
       </section>
 
@@ -269,7 +366,10 @@ export const BridgeSettingsPage = () => {
               key={resource.id}
               resource={resource}
               onSimulateImport={() => handleSimulateImport(resource.id)}
+              onFetchFromEndpoint={() => handleFetchFromEndpoint(resource.id)}
               onBuildExport={() => handleBuildExport(resource.id)}
+              fetching={fetchingResource === resource.id}
+              hasEndpoint={hasLiveEndpoint}
             />
           ))}
         </div>
@@ -279,6 +379,12 @@ export const BridgeSettingsPage = () => {
       {importError && (
         <div className="rounded-2xl border border-red/20 bg-red/5 p-4 text-sm text-red">
           {importError}
+        </div>
+      )}
+
+      {fetchError && !importPreview && (
+        <div className="rounded-2xl border border-[var(--bb-amber)]/20 bg-[var(--bb-amber)]/5 p-4 text-sm text-[var(--bb-amber)]">
+          {fetchError}
         </div>
       )}
 
@@ -338,10 +444,10 @@ export const BridgeSettingsPage = () => {
               Copy Payload
             </button>
             <button className="btn-secondary" type="button" onClick={cancelExport}>Close</button>
-            {config.appsScriptEndpoint && (
+            {activeEndpointUrl && (
               <a
                 className="btn-primary"
-                href={config.appsScriptEndpoint}
+                href={activeEndpointUrl}
                 target="_blank"
                 rel="noreferrer"
               >

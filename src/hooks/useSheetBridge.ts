@@ -31,6 +31,17 @@ export function useSheetBridge() {
   const [exportPreview, setExportPreview] = useState<ExportPreview | null>(null)
   const [testing, setTesting] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
+  const [fetchingResource, setFetchingResource] = useState<string | null>(null)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+
+  const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
+  const envEndpointStatus = !envEndpoint ? 'missing' : envEndpoint.startsWith('https://') ? 'configured' : 'invalid'
+  const activeEndpointUrl = config.appsScriptEndpoint || envEndpoint || ''
+  const activeEndpointSource: 'manual' | 'env' | 'none' = config.appsScriptEndpoint
+    ? 'manual'
+    : envEndpoint
+      ? 'env'
+      : 'none'
 
   const persistConfig = useCallback((next: SheetBridgeConfig) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
@@ -50,9 +61,13 @@ export function useSheetBridge() {
     updateConfig({ lastSyncStatus: 'connecting' })
 
     try {
-      const endpoint = config.appsScriptEndpoint || config.sheetUrl
+      const endpoint = activeEndpointUrl
       if (!endpoint) {
-        throw new Error('No Sheet URL or Apps Script endpoint configured.')
+        throw new Error('No Apps Script endpoint configured. Enter the endpoint URL or use Simulate Import for mock data.')
+      }
+
+      if (!endpoint.startsWith('https://')) {
+        throw new Error('Endpoint must be an HTTPS URL.')
       }
 
       const response = await fetch(endpoint, {
@@ -65,6 +80,26 @@ export function useSheetBridge() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
+      const body: unknown = await response.json()
+
+      if (!body || typeof body !== 'object') {
+        throw new Error('Response is not a valid JSON object.')
+      }
+
+      const parsed = body as Record<string, unknown>
+
+      if (parsed.ok !== true) {
+        throw new Error(`Response ok flag is false or missing. ${parsed.error ? `Error: ${parsed.error}` : ''}`)
+      }
+
+      if (!Array.isArray(parsed.rows)) {
+        throw new Error('Response is missing "rows" array.')
+      }
+
+      if (typeof parsed.resource !== 'string' || !parsed.resource) {
+        throw new Error('Response is missing "resource" string identifier.')
+      }
+
       const now = new Date().toISOString()
       updateConfig({ lastSyncAt: now, lastSyncStatus: 'success', lastErrorMessage: null })
     } catch (err) {
@@ -73,7 +108,74 @@ export function useSheetBridge() {
     } finally {
       setTesting(false)
     }
-  }, [config.appsScriptEndpoint, config.sheetUrl, updateConfig])
+  }, [activeEndpointUrl, updateConfig])
+
+  const fetchFromEndpoint = useCallback(async (resourceId: string): Promise<ImportPreview | null> => {
+    const resource = SHEET_RESOURCES.find((r) => r.id === resourceId)
+    if (!resource) throw new Error(`Unknown resource: ${resourceId}`)
+
+    const endpoint = activeEndpointUrl
+    if (!endpoint) {
+      setFetchError('No Apps Script endpoint configured. Enter the endpoint URL in the Connection section.')
+      return null
+    }
+
+    setFetchingResource(resourceId)
+    setFetchError(null)
+    setImportError(null)
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        signal: AbortSignal.timeout(15000),
+        headers: { 'Accept': 'application/json' },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const body: unknown = await response.json()
+
+      if (!body || typeof body !== 'object') {
+        throw new Error('Response is not a valid JSON object.')
+      }
+
+      const parsed = body as Record<string, unknown>
+
+      if (parsed.ok !== true) {
+        throw new Error(`Endpoint returned ok: false. ${parsed.error ? parsed.error : ''}`)
+      }
+
+      if (!Array.isArray(parsed.rows)) {
+        throw new Error('Response is missing "rows" array.')
+      }
+
+      const { rows, errors } = normalizeRows(parsed.rows as Record<string, unknown>[], resource)
+
+      const rowIndicesWithErrors = new Set(errors.map((e) => e.row))
+      const validCount = rows.length - rowIndicesWithErrors.size
+
+      const preview: ImportPreview = {
+        resourceId,
+        resourceName: resource.name,
+        rows,
+        validCount,
+        invalidCount: errors.length,
+        errors,
+        createdAt: new Date().toISOString(),
+      }
+
+      setImportPreview(preview)
+      return preview
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch from endpoint.'
+      setFetchError(message)
+      return null
+    } finally {
+      setFetchingResource(null)
+    }
+  }, [activeEndpointUrl])
 
   const simulateImport = useCallback((resourceId: string, rawRows: Record<string, unknown>[]) => {
     const resource = SHEET_RESOURCES.find((r) => r.id === resourceId)
@@ -96,6 +198,7 @@ export function useSheetBridge() {
 
     setImportPreview(preview)
     setImportError(null)
+    setFetchError(null)
     return preview
   }, [])
 
@@ -124,6 +227,7 @@ export function useSheetBridge() {
     }
 
     setImportError(null)
+    setFetchError(null)
     onImport(resourceId, newRows)
     setImportPreview(null)
 
@@ -135,6 +239,7 @@ export function useSheetBridge() {
   const cancelImport = useCallback(() => {
     setImportPreview(null)
     setImportError(null)
+    setFetchError(null)
   }, [])
 
   const buildExportPreview = useCallback((resourceId: string, rows: Record<string, unknown>[]) => {
@@ -164,9 +269,15 @@ export function useSheetBridge() {
     exportPreview,
     testing,
     importError,
+    fetchError,
+    fetchingResource,
+    envEndpointStatus,
+    activeEndpointUrl,
+    activeEndpointSource,
     updateConfig,
     testConnection,
     simulateImport,
+    fetchFromEndpoint,
     confirmImport,
     cancelImport,
     buildExportPreview,

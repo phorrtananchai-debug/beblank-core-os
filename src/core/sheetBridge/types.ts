@@ -62,3 +62,11 @@ export interface BackupRecord {
   createdAt: string
   reason: string
 }
+
+export interface BridgeResourceResponse {
+  ok: boolean
+  resource: string
+  rows: Record<string, unknown>[]
+  updatedAt?: string
+  error?: string
+}
