@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import { SHEET_RESOURCES } from '../core/sheetBridge/resources'
 import type { ExportPreview } from '../core/sheetBridge/types'
 import type { ImportPreview, SheetBridgeConfig } from '../core/sheetBridge/types'
+import type { PendingWriteRow } from '../core/sheetBridge/writeback'
+import { buildRowForResource } from '../core/sheetBridge/writeback'
 import { normalizeRows } from '../core/sheetBridge/adapters'
 import { createBackup, loadBackup, removeBackup } from '../core/sheetBridge/backup'
 
@@ -45,6 +47,7 @@ export function useSheetBridge() {
   const [importError, setImportError] = useState<string | null>(null)
   const [fetchingResource, setFetchingResource] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [pendingWrites, setPendingWrites] = useState<PendingWriteRow[]>([])
 
   const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
   const envEndpointStatus = !envEndpoint ? 'missing' : envEndpoint.startsWith('https://') ? 'configured' : 'invalid'
@@ -278,6 +281,98 @@ export function useSheetBridge() {
     persistConfig({ ...DEFAULT_CONFIG })
   }, [persistConfig])
 
+  const addPendingWrite = useCallback((resourceId: string, fields: Record<string, unknown>) => {
+    const resource = SHEET_RESOURCES.find((r) => r.id === resourceId)
+    if (!resource) return
+
+    const row = buildRowForResource(resource, fields)
+    const write: PendingWriteRow = {
+      id: `write-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      resourceId,
+      resourceName: resource.name,
+      row,
+      createdAt: new Date().toISOString(),
+      approvedAt: null,
+      writtenAt: null,
+      writeError: null,
+      status: 'draft',
+    }
+
+    setPendingWrites((current) => [write, ...current])
+  }, [])
+
+  const approvePendingWrite = useCallback((writeId: string) => {
+    setPendingWrites((current) =>
+      current.map((w) =>
+        w.id === writeId ? { ...w, approvedAt: new Date().toISOString(), status: 'approved' as const } : w,
+      ),
+    )
+  }, [])
+
+  const removePendingWrite = useCallback((writeId: string) => {
+    setPendingWrites((current) => current.filter((w) => w.id !== writeId))
+  }, [])
+
+  const exportPendingWrite = useCallback((writeId: string): PendingWriteRow | null => {
+    let found: PendingWriteRow | null = null
+    setPendingWrites((current) =>
+      current.map((w) => {
+        if (w.id === writeId) {
+          found = { ...w, status: 'exported' as const }
+          return found
+        }
+        return w
+      }),
+    )
+    return found
+  }, [])
+
+  const writePendingWrite = useCallback(async (writeId: string): Promise<boolean> => {
+    const endpoint = activeEndpointUrl
+    if (!endpoint) return false
+
+    const write = pendingWrites.find((w) => w.id === writeId)
+    if (!write || write.status !== 'approved') return false
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        signal: AbortSignal.timeout(15000),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resource: write.resourceId,
+          row: write.row,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const body: unknown = await response.json()
+      const parsed = body as Record<string, unknown>
+
+      if (parsed.ok !== true) {
+        throw new Error(parsed.error ? String(parsed.error) : 'Sheet write failed.')
+      }
+
+      setPendingWrites((current) =>
+        current.map((w) =>
+          w.id === writeId ? { ...w, status: 'written' as const, writtenAt: new Date().toISOString(), writeError: null } : w,
+        ),
+      )
+      return true
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Write to sheet failed.'
+      setPendingWrites((current) =>
+        current.map((w) =>
+          w.id === writeId ? { ...w, status: 'failed' as const, writeError: message } : w,
+        ),
+      )
+      return false
+    }
+  }, [activeEndpointUrl, pendingWrites])
+
   return {
     config,
     importPreview,
@@ -300,5 +395,11 @@ export function useSheetBridge() {
     resetConfig,
     loadBackup,
     removeBackup,
+    pendingWrites,
+    addPendingWrite,
+    approvePendingWrite,
+    removePendingWrite,
+    exportPendingWrite,
+    writePendingWrite,
   }
 }

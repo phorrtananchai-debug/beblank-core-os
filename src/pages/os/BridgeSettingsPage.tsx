@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ImportPreviewPanel } from '../../components/shared/ImportPreviewPanel'
 import { SHEET_RESOURCES } from '../../core/sheetBridge/resources'
 import { useSheetBridge } from '../../hooks/useSheetBridge'
@@ -74,7 +74,7 @@ const DummyRawRows: Record<string, Record<string, unknown>[]> = {
 }
 
 export const BridgeSettingsPage = () => {
-  const { data, bulkMergeData, restoreField } = useOs()
+  const { data, bulkMergeData, restoreField, createActionRequest } = useOs()
   const {
     config,
     importPreview,
@@ -95,6 +95,12 @@ export const BridgeSettingsPage = () => {
     buildExportPreview,
     cancelExport,
     resetConfig,
+    pendingWrites,
+    addPendingWrite,
+    approvePendingWrite,
+    removePendingWrite,
+    exportPendingWrite,
+    writePendingWrite,
   } = useSheetBridge()
 
   const [importResult, setImportResult] = useState<{ resourceName: string; appended: number; updated: number; skipped: number } | null>(null)
@@ -170,6 +176,60 @@ export const BridgeSettingsPage = () => {
 
   const handleDeleteBackup = (resourceId: string) => {
     removeBackup(resourceId)
+  }
+
+  const [writeResourceId, setWriteResourceId] = useState('studio-projects')
+  const [writeFields, setWriteFields] = useState<Record<string, string>>({})
+  const writeResource = SHEET_RESOURCES.find((r) => r.id === writeResourceId)
+
+  const writeResourceColumns = useMemo(() => {
+    return writeResource?.columns ?? []
+  }, [writeResource])
+
+  const handleWriteFieldChange = (key: string, value: string) => {
+    setWriteFields((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleCreateWriteRow = () => {
+    if (!writeResource) return
+    const fields: Record<string, unknown> = {}
+    for (const col of writeResource.columns) {
+      const val = writeFields[col.key]
+      if (val !== undefined && val !== '') {
+        fields[col.key] = col.type === 'number' ? Number(val) : val
+      }
+    }
+    addPendingWrite(writeResourceId, fields)
+    setWriteFields({})
+    createActionRequest({
+      module: 'settings',
+      actionType: 'bridge.createSheetRow',
+      description: `Create ${writeResource.name} row for sheet write-back`,
+      payload: { resourceId: writeResourceId, fields },
+    })
+  }
+
+  const handleApproveWrite = (writeId: string) => {
+    approvePendingWrite(writeId)
+    createActionRequest({
+      module: 'settings',
+      actionType: 'bridge.approveSheetRow',
+      description: 'Approve sheet write-back row for export',
+      payload: { writeId },
+    })
+  }
+
+  const handleExportWrite = (writeId: string) => {
+    const row = exportPendingWrite(writeId)
+    if (row) {
+      const json = JSON.stringify(row.row, null, 2)
+      navigator.clipboard.writeText(json)
+      buildExportPreview(row.resourceId, [row.row])
+    }
+  }
+
+  const handleWriteToSheet = async (writeId: string) => {
+    await writePendingWrite(writeId)
   }
 
   const sheetUrlWarning = config.sheetUrl && !isValidUrl(config.sheetUrl) ? 'Not a valid URL.' : null
@@ -457,6 +517,102 @@ export const BridgeSettingsPage = () => {
           </div>
         </div>
       )}
+
+      {/* WRITE BACK */}
+      <section className="os-card-primary">
+        <div className="panel-header">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">WRITE BACK</p>
+            <h3>Create Sheet Row</h3>
+          </div>
+          <span className="pill">{pendingWrites.length} pending</span>
+        </div>
+
+        <div className="space-y-4">
+          <div className="os-list-row">
+            <label className="text-sm font-medium text-[var(--bb-text-muted)]">Resource</label>
+            <select
+              className="w-full max-w-xs rounded-xl border border-black/[0.08] bg-white/80 px-3 py-1.5 text-sm outline-none"
+              value={writeResourceId}
+              onChange={(e) => { setWriteResourceId(e.target.value); setWriteFields({}) }}
+            >
+              {SHEET_RESOURCES.filter((r) => r.importEnabled !== false).map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {writeResourceColumns.map((col) => (
+            <div key={col.key} className="os-list-row">
+              <label className="text-sm font-medium text-[var(--bb-text-muted)]">
+                {col.label}{col.required ? ' *' : ''}
+              </label>
+              <input
+                className="w-full max-w-xs rounded-xl border border-black/[0.08] bg-white/80 px-3 py-1.5 text-sm outline-none transition focus:border-[var(--bb-accent-border)] focus:bg-white"
+                value={writeFields[col.key] ?? ''}
+                onChange={(e) => handleWriteFieldChange(col.key, e.target.value)}
+                placeholder={col.type === 'date' ? '2026-06-06' : col.type === 'number' ? '0' : ''}
+              />
+            </div>
+          ))}
+
+          <div className="flex justify-end">
+            <button className="btn-primary" type="button" onClick={handleCreateWriteRow}>
+              Create Row
+            </button>
+          </div>
+        </div>
+
+        {pendingWrites.length > 0 && (
+          <div className="mt-6 space-y-2 border-t border-black/[0.05] pt-4">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Pending Rows</p>
+            {pendingWrites.map((write) => (
+              <div key={write.id} className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">{write.resourceName}</p>
+                    <pre className="mt-1 max-h-24 overflow-auto text-[10px] leading-4 text-[var(--bb-text-muted)]">{JSON.stringify(write.row, null, 2)}</pre>
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-1.5">
+                    <span className={`pill ${
+                      write.status === 'written' ? 'text-[var(--bb-green)]' :
+                      write.status === 'failed' ? 'text-red' :
+                      write.status === 'approved' ? 'text-[var(--bb-green)]' :
+                      write.status === 'exported' ? 'text-[var(--bb-blue)]' : 'text-[var(--bb-amber)]'
+                    }`}>{write.status}</span>
+                    {write.status === 'written' && write.writtenAt && (
+                      <span className="text-[10px] text-[var(--bb-text-muted)]">Written {new Date(write.writtenAt).toLocaleString()}</span>
+                    )}
+                    {write.status === 'failed' && write.writeError && (
+                      <span className="text-[10px] text-red/80">{write.writeError}</span>
+                    )}
+                    {write.status === 'draft' && (
+                      <button className="rounded-xl bg-[var(--bb-green)]/10 px-3 py-1 text-xs font-medium text-[var(--bb-green)]" type="button" onClick={() => handleApproveWrite(write.id)}>Approve</button>
+                    )}
+                    {write.status === 'approved' && (
+                      <>
+                        <button className="rounded-xl bg-[var(--bb-accent)]/10 px-3 py-1 text-xs font-medium text-[var(--bb-accent)]" type="button" onClick={() => handleWriteToSheet(write.id)}>Write to Sheet</button>
+                        <button className="rounded-xl bg-black/[0.05] px-3 py-1 text-xs font-medium" type="button" onClick={() => handleExportWrite(write.id)}>Export & Copy</button>
+                      </>
+                    )}
+                    {(write.status === 'draft') && (
+                      <button className="rounded-xl bg-black/[0.05] px-3 py-1 text-xs font-medium" type="button" onClick={() => handleExportWrite(write.id)}>Export & Copy</button>
+                    )}
+                    {write.status !== 'written' && (
+                      <button className="rounded-xl bg-red/10 px-3 py-1 text-xs font-medium text-red" type="button" onClick={() => removePendingWrite(write.id)}>Remove</button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <p className="mt-4 text-xs leading-5 text-[var(--bb-text-muted)]">
+          Rows are created locally and stored in memory. No data is written to the Google Sheet.
+          Approve a row to mark it ready, then export the JSON payload and paste it into your sheet manually.
+        </p>
+      </section>
 
       {/* BACKUPS */}
       <section className="os-card-primary">

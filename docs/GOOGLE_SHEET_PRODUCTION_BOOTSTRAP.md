@@ -259,6 +259,71 @@ function doGet(e) {
   })
 }
 
+/**
+ * POST handler — write a single row to the sheet.
+ * 
+ * Body: { "resource": "studio-projects", "row": { ... } }
+ * 
+ * Appends the row to the matching sheet tab.
+ */
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents)
+    const resource = data?.resource
+    const row = data?.row
+
+    if (!resource || !RESOURCE_MAP[resource]) {
+      return jsonResponse({
+        ok: false,
+        resource: resource || '',
+        rows: [],
+        error: resource
+          ? `Unknown resource: "${resource}". Valid resources: ${Object.keys(RESOURCE_MAP).join(', ')}`
+          : 'No resource provided.',
+      })
+    }
+
+    if (!row || typeof row !== 'object') {
+      return jsonResponse({
+        ok: false,
+        resource,
+        rows: [],
+        error: 'No row data provided.',
+      })
+    }
+
+    const config = RESOURCE_MAP[resource]
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.sheetName)
+
+    if (!sheet) {
+      return jsonResponse({
+        ok: false,
+        resource: config.id,
+        rows: [],
+        error: `Sheet tab "${config.sheetName}" not found.`,
+      })
+    }
+
+    const headers = sheet.getDataRange().getValues()[0] || []
+    const newRow = headers.map((header) => row[header] ?? '')
+    sheet.appendRow(newRow)
+
+    return jsonResponse({
+      ok: true,
+      resource: config.id,
+      rows: [row],
+      updatedAt: new Date().toISOString(),
+    })
+  } catch (err) {
+    return jsonResponse({
+      ok: false,
+      resource: '',
+      rows: [],
+      error: err.message || 'Unknown error during write.',
+    })
+  }
+}
+
 function jsonResponse(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
