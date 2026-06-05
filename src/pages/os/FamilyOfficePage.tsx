@@ -8,7 +8,7 @@ import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
 import { useOs } from '../../core/os/OsContext'
 import { FamilyPage } from './FamilyPage'
 
-const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
+const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
 
 export const FamilyOfficePage = () => {
   const {

@@ -93,7 +93,7 @@ export const SettingsPage = () => {
 
           <div className="grid gap-5 lg:grid-cols-2">
             <div className="panel"><div className="panel-header"><h3>Bridge contracts</h3><span className="pill">future adapters</span></div><div className="space-y-3">{data.bridgeContracts.map((contract) => <MiniRow key={contract.id} title={contract.name} meta={`${contract.connectorId} / approval ${contract.approvalRequired ? 'required' : 'optional'}`} status="contract" />)}</div></div>
-            <div className="panel"><div className="panel-header"><h3>Finnhub symbols</h3><span className="pill">delayed/manual</span></div><div className="space-y-3">{data.marketDataSymbols.map((symbol) => <MiniRow key={symbol.id} title={symbol.symbol} meta={`${symbol.delayedPriceTHB?.toLocaleString() ?? 'N/A'} THB / updated ${symbol.lastUpdated}`} status={symbol.sourceStatus.isStale ? 'stale' : 'fresh'} />)}</div></div>
+            <div className="panel"><div className="panel-header"><h3>Finnhub symbols</h3><span className="pill">delayed/manual</span></div><div className="space-y-3">{data.marketDataSymbols.map((symbol) => <MiniRow key={symbol.id} title={symbol.symbol} meta={`${symbol.delayedPriceTHB?.toLocaleString('en-US') ?? 'N/A'} THB / updated ${symbol.lastUpdated}`} status={symbol.sourceStatus.isStale ? 'stale' : 'fresh'} />)}</div></div>
           </div>
         </main>
 

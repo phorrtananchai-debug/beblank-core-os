@@ -160,11 +160,14 @@ export const StudioProjectDetailPage = () => {
         </Link>
         <div className="mt-5">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">
-            {project.client} / {project.location}
+            {project.client ?? 'Studio client'} / {project.location ?? '—'}
           </p>
           <h2 className="mt-4 max-w-4xl text-2xl font-extrabold leading-[0.92] tracking-tight">
             {project.name}
           </h2>
+          {project.operationalNotes && (
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--bb-text-soft)]">{project.operationalNotes}</p>
+          )}
         </div>
         <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
           <MetricCard
@@ -204,6 +207,22 @@ export const StudioProjectDetailPage = () => {
           />
         </div>
       </header>
+
+      {/* Media & Cover Image — future workflow */}
+      <section className="panel panel-float">
+        <div className="panel-header">
+          <div>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">Media & Cover Image</p>
+            <h3>Project Media</h3>
+          </div>
+        </div>
+        <div className="flex min-h-[160px] items-center justify-center rounded-[24px] border border-dashed border-black/[0.04] bg-white/40 px-4 py-8 text-center">
+          <div>
+            <p className="text-sm font-medium text-[var(--bb-text-muted)]">ยังไม่มีข้อมูลภาพในระบบนี้</p>
+            <p className="mt-1 text-xs text-[var(--bb-text-faint)]">Planned for future project media workflow</p>
+          </div>
+        </div>
+      </section>
 
       <OverviewSection
         artworkRecords={artworkRecords}
@@ -339,6 +358,12 @@ const OverviewSection = ({
       <span className="pill">{project.name}</span>
     </div>
     <div className="mt-5 grid gap-4 md:grid-cols-4">
+      {project.operationalNotes && (
+        <div className="md:col-span-4 rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-3.5">
+          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">บันทึกการดำเนินงาน</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--bb-text-soft)]">{project.operationalNotes}</p>
+        </div>
+      )}
       <MetricCard label="WorkScope" value={String(workScopeSections.length)} />
       <MetricCard label="ไทม์ไลน์เฟส" value={String(timelinePhases.length)} />
       <MetricCard label="เอกสาร" value={String(documents.length)} />

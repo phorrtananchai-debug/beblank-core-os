@@ -7,7 +7,7 @@ import type { LedgerTableCallbacks } from '../../components/capital/LedgerTable'
 import { useOs } from '../../core/os/OsContext'
 import type { FinanceLedgerRow } from '../../types/models'
 
-const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
+const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
 
 export const FamilyPage = () => {
   const { data, createActionRequest } = useOs()

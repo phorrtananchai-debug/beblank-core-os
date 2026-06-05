@@ -13,7 +13,7 @@ import { getSupportedFinnhubSymbols } from '../../core/connectors'
 import { useOs } from '../../core/os/OsContext'
 import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, ThaiNavAsset } from '../../types/models'
 
-const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
+const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
 const usdToThb = 36.5
 const statusClass = (status: string) => {
   if (['blocked', 'high', 'at-risk', 'open', 'failed'].includes(status)) return 'text-[var(--bb-red)]'
@@ -584,21 +584,27 @@ const OsHeroMetric = ({
   helper: string
   color: string
   progress: number
-}) => (
-  <div className={`os-hero-metric os-hero-metric-${color}`}>
-    <div className="flex items-center gap-3">
-      <span className={`os-icon-badge os-icon-badge-${color}`}>{icon}</span>
-      <div className="min-w-0 flex-1">
-        <p className="os-hero-value">{value}</p>
-        <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">{label}</p>
+}) => {
+  const parts = value.split(/\s+/)
+  const num = parts.filter((p) => p !== 'THB').join(' ')
+  const hasThb = parts.includes('THB')
+  return (
+    <div className={`os-hero-metric os-hero-metric-${color}`}>
+      <div className="flex items-center gap-3">
+        <span className={`os-icon-badge os-icon-badge-${color}`}>{icon}</span>
+        <div className="min-w-0 flex-1">
+          <p className="os-hero-value">{num}</p>
+          {hasThb && <p className="os-hero-unit">THB</p>}
+          <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">{label}</p>
+        </div>
       </div>
+      <div className="mt-3 os-progress-rail">
+        <div className={`os-progress-fill-${color}`} style={{ width: `${Math.min(progress, 100)}%` }} />
+      </div>
+      <p className="os-hero-sub">{helper}</p>
     </div>
-    <div className="mt-3 os-progress-rail">
-      <div className={`os-progress-fill-${color}`} style={{ width: `${Math.min(progress, 100)}%` }} />
-    </div>
-    <p className="os-hero-sub">{helper}</p>
-  </div>
-)
+  )
+}
 
 const Metric = ({ label, value }: { label: string; value: number | string }) => (
   <div className="rounded-2xl border border-black/[0.04] bg-white/75 px-4 py-3">

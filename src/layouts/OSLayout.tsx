@@ -1,68 +1,100 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../core/auth/AuthContext'
-import { useOs } from '../core/os/OsContext'
-import { AIContextExportPanel } from '../components/shared/AIContextExportPanel'
-import { AISuggestionImportPanel } from '../components/shared/AISuggestionImportPanel'
-import { ModuleAISummaryPanel } from '../components/shared/ModuleAISummaryPanel'
 
-const links = [
-  { to: '/os', label: 'Command Center', icon: '⊞', end: true },
-  { to: '/os/studio', label: 'Studio', icon: '◇' },
-  { to: '/os/finance', label: 'Capital', icon: '◎' },
-  { to: '/os/finance/investments', label: 'Investments', icon: '◆' },
-  { to: '/os/capital', label: 'Reserves', icon: '○' },
-  { to: '/os/finance/trading-lab', label: 'Trading Lab', icon: '△' },
-  { to: '/os/ai', label: 'AI Workspace', icon: '✦' },
-  { to: '/os/settings', label: 'Settings', icon: '⚙' },
+const groups = [
+  {
+    label: 'OPERATE',
+    links: [
+      { to: '/os', label: 'Command Center', icon: '⊞', end: true },
+      { to: '/os/studio', label: 'Studio', icon: '◇' },
+    ],
+  },
+  {
+    label: 'WEALTH',
+    links: [
+      { to: '/os/finance', label: 'Capital', icon: '◎' },
+      { to: '/os/finance/investments', label: 'Investments', icon: '◆' },
+      { to: '/os/capital', label: 'Reserves', icon: '○' },
+    ],
+  },
+  {
+    label: 'LAB',
+    links: [
+      { to: '/os/finance/trading-lab', label: 'Trading Lab', icon: '△' },
+      { to: '/os/ai', label: 'AI Workspace', icon: '✦' },
+    ],
+  },
+  {
+    label: 'SYSTEM',
+    links: [
+      { to: '/os/settings', label: 'Settings', icon: '⚙' },
+    ],
+  },
 ]
 
 export const OSLayout = () => {
   const { logout } = useAuth()
-  const { data, queueSuggestionImport } = useOs()
 
   return (
     <div className="os-shell min-h-screen overflow-hidden bg-[var(--bb-shell)] px-3 py-3 text-[var(--bb-text)] md:px-6 md:py-5">
       <div className="os-ambient-plane" />
       <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[36px] border border-[var(--bb-border)]/60 bg-white/80 p-3 shadow-[0_36px_90px_-56px_rgba(0,0,0,0.34)] backdrop-blur-xl">
-        <aside className="os-sidebar sticky top-5 h-[calc(100vh-2.5rem)] w-[292px] rounded-[34px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)]/95 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.36)] backdrop-blur-xl">
-          <div className="mb-6">
-            <p className="text-[10px] font-semibold text-[#777777]">สภาพแวดล้อมสตูดิโอ</p>
-            <h1 className="mt-2 text-2xl font-bold leading-none tracking-tight">BE BLANK OS</h1>
-            <p className="mt-2 text-xs leading-5 text-[#777777]">ระบบปฏิบัติการที่เชื่อมต่อชีทสำหรับทีม</p>
+        <aside className="os-sidebar sticky top-5 flex h-[calc(100vh-2.5rem)] w-[292px] flex-col rounded-[34px] border border-[var(--bb-border)] bg-white/92 p-5 shadow-[0_24px_60px_-42px_rgba(0,0,0,0.36)] backdrop-blur-xl">
+          <div className="flex-1 overflow-y-auto">
+            <div className="mb-6">
+              <p className="text-[10px] font-semibold text-[#777777]">สภาพแวดล้อมสตูดิโอ</p>
+              <h1 className="mt-2 text-2xl font-bold leading-none tracking-tight">BE BLANK OS</h1>
+              <p className="mt-2 text-xs leading-5 text-[#777777]">ระบบปฏิบัติการที่เชื่อมต่อชีทสำหรับทีม</p>
+            </div>
+            <div className="mb-6 grid grid-cols-3 gap-2">
+              {['sync', 'ai', 'sheet'].map((item) => (
+                <div key={item} className="rounded-2xl border border-black/[0.04] bg-white/55 px-2 py-3 text-center">
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">{item}</p>
+                </div>
+              ))}
+            </div>
+            <nav className="space-y-4">
+              {groups.map((group) => (
+                <div key={group.label}>
+                  <p className="mb-1 px-3 font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{group.label}</p>
+                  <div className="space-y-0.5">
+                    {group.links.map((link) => (
+                      <NavLink
+                        key={link.to}
+                        to={link.to}
+                        end={link.end}
+                        className={({ isActive }) =>
+                          `os-sidebar-link ${isActive ? 'active' : ''}`
+                        }
+                      >
+                        <span className="os-sidebar-icon">{link.icon}</span>
+                        {link.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </nav>
           </div>
-          <div className="mb-6 grid grid-cols-3 gap-2">
-            {['sync', 'ai', 'sheet'].map((item) => (
-              <div key={item} className="rounded-2xl border border-black/[0.04] bg-white/55 px-2 py-3 text-center">
-                <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#777777]">{item}</p>
+          <div className="mt-4 space-y-2">
+            <div className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-[var(--bb-border)]/60 bg-white px-3 py-2.5 shadow-sm transition-all duration-200 hover:border-[var(--bb-accent-border)] hover:shadow-[var(--bb-shadow-sm)]">
+              <div className="relative shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bb-accent)] text-sm font-bold text-white">P</div>
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[var(--bb-green)]" />
               </div>
-            ))}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold leading-tight">Por</p>
+                <p className="text-[10px] leading-tight text-[var(--bb-text-muted)] group-hover:text-[var(--bb-accent-strong)]">Director</p>
+              </div>
+              <span className="text-xs text-[var(--bb-text-faint)] transition-colors duration-200 group-hover:text-[var(--bb-accent)]">▼</span>
+            </div>
+            <button className="btn-secondary w-full" onClick={logout}>ออกจากระบบ</button>
           </div>
-          <nav className="space-y-0.5">
-            {links.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.end}
-                className={({ isActive }) =>
-                  `os-sidebar-link ${isActive ? 'active' : ''}`
-                }
-              >
-                <span className="os-sidebar-icon">{link.icon}</span>
-                {link.label}
-              </NavLink>
-            ))}
-          </nav>
-          <button className="btn-secondary mt-6 w-full" onClick={logout}>ออกจากระบบ</button>
         </aside>
 
           <div className="min-w-0 flex-1 space-y-5">
             <div className="os-workspace-panel break-words rounded-[34px] border border-[var(--bb-border)] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
               <Outlet />
-            </div>
-            <div className="os-ai-dock grid gap-4 rounded-[34px] border border-[var(--bb-border)] bg-white/88 p-4 shadow-[0_20px_70px_-58px_rgba(0,0,0,0.32)] xl:grid-cols-3">
-              <AIContextExportPanel contexts={data.aiContexts} />
-              <AISuggestionImportPanel onImport={queueSuggestionImport} />
-              <ModuleAISummaryPanel moduleName="" suggestions={data.aiSuggestions} />
             </div>
           </div>
       </div>

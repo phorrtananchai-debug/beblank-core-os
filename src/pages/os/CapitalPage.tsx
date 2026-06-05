@@ -16,7 +16,7 @@ import { useOs } from '../../core/os/OsContext'
 import type { FinanceLedgerRow } from '../../types/models'
 import { FamilyPage } from './FamilyPage'
 
-const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
+const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
 
 const tabs = [
   { key: 'overview', label: 'ภาพรวม' },
@@ -54,7 +54,8 @@ export const CapitalPage = () => {
         <div className="mt-6 grid gap-4 md:grid-cols-4">
           <div className="os-hero-metric os-hero-metric-green">
             <div className="os-icon-badge os-icon-badge-green">↓</div>
-            <p className="os-level-1-value">{thb(inflow)}</p>
+            <p className="os-level-1-value">{Math.round(inflow).toLocaleString('en-US')}</p>
+            <p className="os-level-1-unit">THB</p>
             <p className="text-xs text-[var(--bb-text-muted)]">รายรับ / เดือน</p>
             <div className="os-progress-rail">
               <div className="os-progress-fill-green" style={{ width: `${(inflow / maxFlow) * 100}%` }} />
@@ -62,7 +63,8 @@ export const CapitalPage = () => {
           </div>
           <div className="os-hero-metric os-hero-metric-red">
             <div className="os-icon-badge os-icon-badge-red">↑</div>
-            <p className="os-level-1-value">{thb(outflow)}</p>
+            <p className="os-level-1-value">{Math.round(outflow).toLocaleString('en-US')}</p>
+            <p className="os-level-1-unit">THB</p>
             <p className="text-xs text-[var(--bb-text-muted)]">รายจ่าย / เดือน</p>
             <div className="os-progress-rail">
               <div className="os-progress-fill-red" style={{ width: `${(outflow / maxFlow) * 100}%` }} />
@@ -70,7 +72,8 @@ export const CapitalPage = () => {
           </div>
           <div className="os-hero-metric os-hero-metric-blue">
             <div className="os-icon-badge os-icon-badge-blue">○</div>
-            <p className="os-level-1-value">{thb(reserveTotal)}</p>
+            <p className="os-level-1-value">{Math.round(reserveTotal).toLocaleString('en-US')}</p>
+            <p className="os-level-1-unit">THB</p>
             <p className="text-xs text-[var(--bb-text-muted)]">เงินสำรอง</p>
             <p className="text-[10px] text-[var(--bb-text-faint)]">กองทุนสำรอง</p>
           </div>
