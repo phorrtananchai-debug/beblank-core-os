@@ -20,7 +20,7 @@ This guide covers the complete setup of a live Google Sheet bridge for Be Blank 
 **OsData field:** `projects`
 
 | Column | Key | Type | Required | Example |
-|---|---|---|---|---|
+|---|---|---|---|---|---|---|
 | ID | `id` | string | Yes | `karun-phuket` |
 | Slug | `slug` | string | Yes | `karun-phuket-old-town` |
 | Name | `name` | string | Yes | `Karun Phuket Old Town` |
@@ -29,13 +29,15 @@ This guide covers the complete setup of a live Google Sheet bridge for Be Blank 
 | Client | `client` | string | No | `Karun Hospitality` |
 | Location | `location` | string | No | `Phuket` |
 | Phase | `phase` | string | No | `site-handoff` |
+| Timeline Status | `timelineStatus` | string | No | `steady` |
+| Operational Notes | `operationalNotes` | string | No | `receive space: 1 Jun 13:30 / target opening: 1 Jul` |
 
 **Example row:**
 
-| id | slug | name | status | owner | client | location | phase |
+| id | slug | name | status | owner | client | location | phase | timelineStatus | operationalNotes |
 |---|---|---|---|---|---|---|---|
-| `karun-phuket` | `karun-phuket-old-town` | Karun Phuket Old Town | active | Studio | Karun Hospitality | Phuket | site-handoff |
-| `blank-studio` | `blank-studio-hq` | Be Blank Studio HQ | active | Studio | Internal | Bangkok | operations |
+| `karun-phuket` | `karun-phuket-old-town` | Karun Phuket Old Town | active | Studio | Karun Hospitality | Phuket | site-handoff | `steady` | |
+| `karun-central-khonkaen` | `karun-central-khonkaen` | Karun Central Khon Kaen | active | Studio | Karun Hospitality | Khon Kaen | construction | `watch` | `receive space: 1 Jun 13:30 / target opening: 1 Jul / mall requested decorative column +50 cm / counter setback 60 cm / bench privacy concern` |
 
 ---
 

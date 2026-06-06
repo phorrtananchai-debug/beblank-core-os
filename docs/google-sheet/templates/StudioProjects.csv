@@ -1,4 +1,4 @@
-id,slug,name,status,owner,client,location,phase
-karun-phuket-old-town,karun-phuket-old-town,Karun Phuket Old Town,active,Por,Karun Hospitality,Phuket,site-handoff
-karun-central-khonkaen,karun-central-khonkaen,Karun Central Khonkaen,active,Por,Karun Hospitality,Khon Kaen,design-review
-ultimate-bkk,ultimate-bkk,Ultimate BKK,active,Por,Private Client,Bangkok,concept-design
+id,slug,name,status,owner,client,location,phase,timelineStatus,operationalNotes
+karun-phuket-old-town,karun-phuket-old-town,Karun Phuket Old Town,active,Por,Karun Hospitality,Phuket,site-handoff,steady,
+karun-central-khonkaen,karun-central-khonkaen,Karun Central Khonkaen,active,Por,Karun Hospitality,Khon Kaen,construction,watch,"receive space: 1 Jun 13:30 / target opening: 1 Jul / mall requested decorative column +50 cm / counter setback 60 cm / bench privacy / low planting concern"
+ultimate-bkk,ultimate-bkk,Ultimate BKK,active,Por,Private Client,Bangkok,concept-design,steady,

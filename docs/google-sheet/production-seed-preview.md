@@ -6,26 +6,58 @@
 
 ## StudioProjects
 
-6 rows to append.
+6 rows to append. Includes `timelineStatus` and `operationalNotes` columns for operational tracking.
 
-| id | slug | name | status | owner | client | location | phase |
-|---|---|---|---|---|---|---|---|
-| `karun-phuket-old-town` | `karun-phuket-old-town` | Karun Phuket Old Town | `active` | `Por` | `Karun Hospitality` | `Phuket` | `site-handoff` |
-| `karun-central-khonkaen` | `karun-central-khonkaen` | Karun Central Khon Kaen | `active` | `Por` | `Karun Hospitality` | `Khon Kaen` | `design-review` |
-| `karun-central-rama9` | `karun-central-rama9` | Karun Central Rama 9 | `active` | `Por` | `Karun Hospitality` | `Bangkok` | `concept-design` |
-| `nakhon-phanom-hotel` | `nakhon-phanom-hotel` | Nakhon Phanom Hotel | `active` | `Por` | — | `Nakhon Phanom` | `feasibility` |
-| `nakhon-pathom-house` | `nakhon-pathom-house` | Nakhon Pathom House | `active` | `Por` | — | `Nakhon Pathom` | `schematic-design` |
-| `pattanakarn-house` | `pattanakarn-house` | Pattanakarn House | `active` | `Por` | — | `Bangkok` | `concept-design` |
+| id | slug | name | status | owner | client | location | phase | timelineStatus | operationalNotes |
+|---|---|---|---|---|---|---|---|---|---|
+| `karun-phuket-old-town` | `karun-phuket-old-town` | Karun Phuket Old Town | `active` | `Por` | `Karun Hospitality` | `Phuket` | `site-handoff` | `steady` | |
+| `karun-central-khonkaen` | `karun-central-khonkaen` | Karun Central Khon Kaen | `active` | `Por` | `Karun Hospitality` | `Khon Kaen` | `construction` | `watch` | `receive space: 1 Jun 13:30 / target opening: 1 Jul / mall requested decorative column +50 cm / counter setback 60 cm / bench privacy / low planting concern` |
+| `karun-central-rama9` | `karun-central-rama9` | Karun Central Rama 9 | `active` | `Por` | `Karun Hospitality` | `Bangkok` | `concept-design` | `steady` | |
+| `nakhon-phanom-hotel` | `nakhon-phanom-hotel` | Nakhon Phanom Hotel | `active` | `Por` | — | `Nakhon Phanom` | `feasibility` | `steady` | |
+| `nakhon-pathom-house` | `nakhon-pathom-house` | Nakhon Pathom House | `active` | `Por` | — | `Nakhon Pathom` | `schematic-design` | `steady` | |
+| `pattanakarn-house` | `pattanakarn-house` | Pattanakarn House | `active` | `Por` | — | `Bangkok` | `concept-design` | `steady` | |
 
 **Source:** Karun Hospitality portfolio (3 active projects) + Be Blank Studio residential pipeline (3 projects).
 
 **Status rationale:**
 - Karun Phuket Old Town: furthest along, known site-handoff phase
-- Karun Central Khon Kaen: design-review phase per existing data
+- Karun Central Khon Kaen: construction phase, watch status — signage approval pending, furniture PO not confirmed
 - Karun Central Rama 9: earlier stage, concept-design
 - Nakhon Phanom Hotel: feasibility stage (early)
 - Nakhon Pathom House: schematic-design
 - Pattanakarn House: concept-design (early residential)
+
+---
+
+## TimelineItems
+
+Operational timeline items for active projects. Maps to the `timeline` resource in the sheet bridge.
+
+| id | projectId | label | dueDate | state |
+|---|---|---|---|---|
+| `tl-kk-mockup` | `karun-central-khonkaen` | Mockup inspection | `2026-06-12` | `planned` |
+| `tl-kk-signage` | `karun-central-khonkaen` | Signage approval | `2026-06-20` | `at-risk` |
+| `tl-kk-furniture` | `karun-central-khonkaen` | Furniture PO confirmation | `2026-06-18` | `at-risk` |
+| `tl-kk-payment` | `karun-central-khonkaen` | Contractor payment | `2026-06-15` | `planned` |
+| `tl-phuket-handover` | `karun-phuket-old-town` | Site handover walkthrough | `2026-06-10` | `planned` |
+| `tl-phuket-closeout` | `karun-phuket-old-town` | Project closeout documentation | `2026-07-01` | `planned` |
+
+At-risk items drive the Critical Path Engine (PR15D). Projects with at-risk timeline items show `risk` severity.
+
+---
+
+## StudioTimelinePhases
+
+Project phase intervals for timeline visualization and opening pressure detection.
+
+| id | projectId | phase | startDate | endDate | status | risk |
+|---|---|---|---|---|---|---|
+| `ph-kk-con` | `karun-central-khonkaen` | `construction` | `2026-05-15` | `2026-06-30` | `active` | `medium` |
+| `ph-kk-handover` | `karun-central-khonkaen` | `handover` | `2026-07-01` | `2026-07-07` | `planned` | `medium` |
+| `ph-pt-ho` | `karun-phuket-old-town` | `handover` | `2026-06-01` | `2026-06-15` | `active` | `low` |
+| `ph-pt-ops` | `karun-phuket-old-town` | `opening` | `2026-06-16` | `2026-07-01` | `planned` | `low` |
+
+The Khon Kaen handover phase (endDate 2026-07-01) drives the 23-day opening countdown and triggers `watch` severity in the operational timeline.
 
 ---
 
@@ -94,10 +126,12 @@
 | Tab | Rows | Type |
 |---|---|---|
 | StudioProjects | 6 | Real projects (3 Karun Hospitality + 3 Be Blank Studio) |
+| TimelineItems | 6 | Operational timeline items with due dates and risk states |
+| StudioTimelinePhases | 4 | Phase intervals with start/end dates, status, and risk |
 | Holdings | 7 | Starter rows with target allocations only (zero quantities) |
 | CapitalRecords | 3 | Category placeholders (zero amounts) |
 | AIContexts | 4 | Context descriptions for AI module |
-| **Total** | **20** | |
+| **Total** | **30** | |
 
 **All rows are safe to append:**
 - ✅ No invented financial balances

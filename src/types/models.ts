@@ -606,6 +606,17 @@ export interface PaperTradeRecord {
   tags: string[]
 }
 
+export interface ApprovalRecord {
+  id: string
+  projectId: string
+  title: string
+  status: 'draft' | 'submitted' | 'waiting' | 'approved' | 'rejected' | 'cancelled'
+  owner: string
+  dueDate: string
+  requestedBy: string
+  notes: string
+}
+
 export interface OsData {
   projects: Project[]
   tasks: Task[]
@@ -646,5 +657,6 @@ export interface OsData {
   syncQueue: SyncQueueItem[]
   bridgeContracts: BridgeContract[]
   marketDataSymbols: MarketDataSymbol[]
+  approvals: ApprovalRecord[]
 }
 

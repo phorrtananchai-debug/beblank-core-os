@@ -3,6 +3,11 @@ import { InvestmentActionButton } from '../../components/investments/InvestmentA
 import { InvestmentInputDialog, type DialogMode } from '../../components/investments/InvestmentInputDialog'
 import { PortfolioBucketView } from '../../components/investments/PortfolioBucketView'
 import { PortfolioDecisionStrip } from '../../components/investments/PortfolioDecisionStrip'
+import { InvestmentRhythm } from '../../components/investments/InvestmentRhythm'
+import { InvestmentCriticalPath } from '../../components/investments/InvestmentCriticalPath'
+import { FxRateControl } from '../../components/investments/FxRateControl'
+import { TransactionForm } from '../../components/investments/TransactionForm'
+import { normalizePortfolioValues, computeDynamicAllocation, loadFxRate } from '../../components/investments/fxEngine'
 import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
@@ -15,7 +20,7 @@ import { AllocationComparison } from '../../components/investments/AllocationCom
 import { RebalancePreview } from '../../components/investments/RebalancePreview'
 import { computePostureBuckets, computeRebalanceSuggestions } from '../../core/investments/allocationUtils'
 import { generateId } from '../../app/utils'
-import { getSupportedFinnhubSymbols } from '../../core/connectors'
+import { getSupportedFinnhubSymbols, isFinnhubConfigured } from '../../core/connectors'
 import { useOs } from '../../core/os/OsContext'
 import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, ThaiNavAsset } from '../../types/models'
 
@@ -30,15 +35,15 @@ const statusClass = (status: string) => {
 type InvestmentsTab = 'overview' | 'portfolio' | 'holdings' | 'allocation' | 'transactions' | 'dca' | 'dividends' | 'watchlist' | 'research' | 'ai'
 
 const tabs: Array<{ key: InvestmentsTab; label: string }> = [
-  { key: 'overview', label: 'ภาพรวม' },
-  { key: 'portfolio', label: 'พอร์ต' },
-  { key: 'holdings', label: 'กองทุน' },
-  { key: 'allocation', label: 'จัดสรร' },
-  { key: 'transactions', label: 'ธุรกรรม' },
+  { key: 'overview', label: 'Overview' },
+  { key: 'portfolio', label: 'Portfolio' },
+  { key: 'holdings', label: 'Funds' },
+  { key: 'allocation', label: 'Allocation' },
+  { key: 'transactions', label: 'Transactions' },
   { key: 'dca', label: 'DCA' },
-  { key: 'dividends', label: 'ปันผล' },
-  { key: 'watchlist', label: 'ติดตาม' },
-  { key: 'research', label: 'วิจัย' },
+  { key: 'dividends', label: 'Dividends' },
+  { key: 'watchlist', label: 'Watchlist' },
+  { key: 'research', label: 'Research' },
   { key: 'ai', label: 'AI' },
 ]
 
@@ -123,9 +128,13 @@ export const InvestmentsPage = () => {
     basePayload: Record<string, unknown>
   } | null>(null)
 
+  const [fxRate, setFxRate] = useState(loadFxRate().rate)
+  const normalized = useMemo(() => normalizePortfolioValues(data.holdings, fxRate), [data.holdings, fxRate])
+  const normalizedHoldings = useMemo(() => computeDynamicAllocation(normalized), [normalized])
+
   const hasInvestments = data.holdings.length > 0 || data.financeAssets.length > 0
-  const totalValue = data.holdings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
-  const driftHoldings = data.holdings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
+  const totalValue = normalizedHoldings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
+  const driftHoldings = normalizedHoldings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
   const dcaQueue = data.dcaRecords.filter((record) => record.status === 'planned' || record.status === 'review')
   const expectedDividends = data.dividendRecords.reduce((sum, record) => sum + record.expectedAmountTHB, 0)
   const monthlyDcaTarget = data.dcaRecords.reduce((sum, record) => sum + (record.status === 'planned' ? record.plannedAmountTHB : 0), 0)
@@ -138,8 +147,8 @@ export const InvestmentsPage = () => {
   const isThaiAsset = manualAssetDraft.assetType.startsWith('thai')
   const helperSource = isThaiAsset ? (helperNavRow?.helperSource ?? 'manual-nav') : supportedMarketSymbols.includes(normalizedDraftSymbol) ? 'finnhub' : 'none'
 
-  const cashPosture = data.holdings.filter((holding) => data.financeAssets.find((asset) => asset.id === holding.assetId)?.category === 'cash').reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
-  const riskPosture = data.holdings.filter((holding) => holding.risk === 'high').length
+  const cashPosture = normalizedHoldings.filter((holding) => data.financeAssets.find((asset) => asset.id === holding.assetId)?.category === 'cash').reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
+  const riskPosture = normalizedHoldings.filter((holding) => holding.risk === 'high').length
   const dcaImpactPreview = dcaQueue[0] ? ((dcaQueue[0].plannedAmountTHB / Math.max(totalValue, 1)) * 100).toFixed(2) : '0.00'
   const assetName = (assetId: string) => data.financeAssets.find((asset) => asset.id === assetId)?.symbol ?? assetId
 
@@ -203,7 +212,7 @@ export const InvestmentsPage = () => {
   }, [helperMarketRow, helperNavRow, isThaiAsset, manualAssetDraft, totalValue])
 
   const holdingsByCategory = data.financeAssets.reduce<Record<string, number>>((acc, asset) => {
-    const value = data.holdings.filter((holding) => holding.assetId === asset.id).reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
+    const value = normalizedHoldings.filter((holding) => holding.assetId === asset.id).reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
     acc[asset.category] = (acc[asset.category] ?? 0) + value
     return acc
   }, {})
@@ -274,6 +283,15 @@ export const InvestmentsPage = () => {
       actionType: 'finance.resolveAllocationDrift',
       description: `Resolve allocation drift review for ${assetName(holding.assetId)}`,
       payload: { holdingId: holding.id },
+    })
+  }
+
+  const handleTransaction = (data: { assetId: string; transactionType: string; amountTHB: number; quantity: number; notes: string }) => {
+    createActionRequest({
+      module: 'finance',
+      actionType: 'finance.addTransaction',
+      description: `${data.transactionType} ${data.assetId} ${Math.round(data.amountTHB).toLocaleString()} THB`,
+      payload: { ...data, occurredAt: new Date().toISOString().slice(0, 10) },
     })
   }
 
@@ -416,6 +434,39 @@ export const InvestmentsPage = () => {
         </div>
       ) : null}
 
+      {/* PRICE SOURCE STATUS */}
+      <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--bb-text-muted)]">
+        <span className={`inline-block h-1.5 w-1.5 rounded-full ${isFinnhubConfigured ? 'bg-[var(--bb-green)]' : 'bg-[var(--bb-amber)]'}`} />
+        <span className="font-mono font-semibold uppercase tracking-[0.08em]">
+          {isFinnhubConfigured ? 'Finnhub Active' : 'Finnhub Key Missing'}
+        </span>
+        <span className="text-[var(--bb-text-faint)]">·</span>
+        <span className="text-[var(--bb-text-faint)]">
+          {isFinnhubConfigured
+            ? `${supportedMarketSymbols.length} symbols supported`
+            : 'Prices use manual cost basis / fallback'}
+        </span>
+        <span className="text-[var(--bb-text-faint)]">·</span>
+        <FxRateControl onRateChange={setFxRate} />
+      </div>
+
+      {/* INVESTMENT OPERATING SYSTEM */}
+      <InvestmentRhythm holdings={normalizedHoldings} dcaRecords={data.dcaRecords} dividendRecords={data.dividendRecords} tradingWatchlist={data.tradingWatchlist} />
+      <InvestmentCriticalPath holdings={normalizedHoldings} dcaRecords={data.dcaRecords} />
+
+      {/* TRANSACTION FORM */}
+      {data.holdings.length > 0 && (
+        <div className="rounded-xl border border-black/[0.04] bg-white/60 p-3">
+          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">Record Transaction</p>
+          <div className="mt-2">
+            <TransactionForm
+              holdings={data.holdings.map((h) => ({ assetId: h.assetId }))}
+              onCreateTransaction={handleTransaction}
+            />
+          </div>
+        </div>
+      )}
+
       <nav className="flex flex-wrap gap-2" role="tablist">
         {tabs.map((tab) => (
           <button
@@ -462,7 +513,7 @@ export const InvestmentsPage = () => {
       {activeTab === 'holdings' ? (
         <HoldingsTab
           financeAssets={data.financeAssets}
-          holdings={data.holdings}
+          holdings={normalizedHoldings}
           navDrafts={navDrafts}
           dcaRecords={data.dcaRecords}
           dividendRecords={data.dividendRecords}
@@ -480,7 +531,7 @@ export const InvestmentsPage = () => {
         <AllocationTab
           createActionRequest={createActionRequest}
           financeAssets={data.financeAssets}
-          holdings={data.holdings}
+          holdings={normalizedHoldings}
           totalValue={totalValue}
         />
       ) : null}

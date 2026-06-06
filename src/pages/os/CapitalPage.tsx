@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { CapitalAnalyticsCards } from '../../components/capital/CapitalAnalyticsCards'
 import { CapitalCategoryBreakdown } from '../../components/capital/CapitalCategoryBreakdown'
+import { CapitalRhythm } from '../../components/capital/CapitalRhythm'
+import { CapitalCriticalPath } from '../../components/capital/CapitalCriticalPath'
 import { DeleteLedgerDialog } from '../../components/capital/DeleteLedgerDialog'
 import { LedgerForm } from '../../components/capital/LedgerForm'
 import type { LedgerFormData } from '../../components/capital/LedgerForm'
@@ -119,6 +121,10 @@ export const CapitalPage = () => {
           </div>
         )}
       </header>
+
+      {/* CAPITAL OPERATING SYSTEM */}
+      <CapitalRhythm reserveRows={data.reserveRows} familyFinanceRecords={data.familyFinanceRecords} financeLedgerRows={data.financeLedgerRows} />
+      <CapitalCriticalPath reserveRows={data.reserveRows} familyFinanceRecords={data.familyFinanceRecords} financeLedgerRows={data.financeLedgerRows} />
 
       <div className="flex gap-2 border-b border-black/[0.06] pb-3">
         {tabs.map((tab) => (

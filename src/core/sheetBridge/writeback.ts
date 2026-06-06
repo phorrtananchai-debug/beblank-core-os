@@ -158,6 +158,27 @@ export function buildAIContextRow(fields: {
   }
 }
 
+export function buildTransactionRow(fields: {
+  assetId: string
+  transactionType: string
+  quantity: number
+  amountTHB: number
+  pricePerUnitTHB?: number
+  notes?: string
+}): Record<string, unknown> {
+  return {
+    id: generateId('txn'),
+    assetId: fields.assetId,
+    description: `${fields.transactionType} ${fields.assetId}`,
+    amountTHB: fields.amountTHB,
+    type: fields.transactionType === 'dividend' ? 'income' : fields.transactionType === 'deposit' ? 'income' : 'expense',
+    quantity: fields.quantity,
+    pricePerUnitTHB: fields.pricePerUnitTHB ?? 0,
+    occurredAt: new Date().toISOString().slice(0, 10),
+    notes: fields.notes ?? '',
+  }
+}
+
 export function buildRowForResource(
   resource: SheetResourceDef,
   fields: Record<string, unknown>,

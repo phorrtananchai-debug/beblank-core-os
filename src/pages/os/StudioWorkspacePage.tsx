@@ -5,10 +5,16 @@ import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImp
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { StudioTimelineBoard } from '../../components/studio/StudioTimelineBoard'
+import { ProjectContextDrawer } from '../../components/studio/ProjectContextDrawer'
+import { ExecutiveDashboard } from '../../components/studio/ExecutiveDashboard'
+import { OperatingRhythm } from '../../components/studio/OperatingRhythm'
+import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { useOs } from '../../core/os/OsContext'
 import type {
+  ActionRequest,
+  ApprovalRecord,
   ArtworkRecord,
   CreativeBrief,
   DocumentRecord,
@@ -66,21 +72,9 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
   const pendingStudioReviews = data.studioReviews.filter((review) => review.status === 'pending')
   const activeScope = data.workScopeSections.filter((scope) => scope.operationalStatus !== 'complete')
   const openSiteWatch = data.siteWatchUpdates.filter((update) => update.status !== 'resolved')
-  const reviewDocument = data.documents.find((document) => document.approvalState === 'review') ?? data.documents[0]
-  const reviewScope = data.workScopeSections.find((scope) => scope.reviewStatus === 'needs-review') ?? data.workScopeSections[0]
-  const reviewSite = data.siteWatchUpdates.find((update) => update.status !== 'resolved') ?? data.siteWatchUpdates[0]
   const upcomingOpenings = data.studioTimelinePhases.filter((p) => p.phase === 'handover' || p.phase === 'opening')
   const atRiskProjectIds = new Set(data.timeline.filter((t) => t.state === 'at-risk').map((t) => t.projectId))
   const atRiskProjects = data.projects.filter((p) => atRiskProjectIds.has(p.id) || p.timelineStatus === 'at-risk' || p.timelineStatus === 'watch' || data.studioTimelinePhases.some((ph) => ph.projectId === p.id && (ph.status === 'blocked' || ph.risk === 'high')))
-
-  const queueScopeApproval = (scope: WorkScopeSection) => {
-    createActionRequest({
-      module: 'studio',
-      actionType: 'studio.approveWorkScopeRevision',
-      description: `Approve ${scope.code} WorkScope revision`,
-      payload: { scopeId: scope.id },
-    })
-  }
 
   const queueDocumentIssue = (document: DocumentRecord) => {
     createActionRequest({
@@ -208,6 +202,8 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           activeScope={activeScope}
           openSiteWatch={openSiteWatch}
           pendingStudioReviews={pendingStudioReviews}
+          pendingApprovals={pendingApprovals}
+          projectApprovals={data.approvals}
           projects={data.projects}
           phases={data.studioTimelinePhases}
           timeline={data.timeline}
@@ -219,12 +215,6 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           workScope={data.workScopeSections}
           upcomingOpenings={upcomingOpenings}
           atRiskProjects={atRiskProjects}
-          reviewDocument={reviewDocument}
-          reviewScope={reviewScope}
-          reviewSite={reviewSite}
-          onDocumentIssue={queueDocumentIssue}
-          onScopeApproval={queueScopeApproval}
-          onSiteResolution={queueSiteResolution}
         />
       ) : null}
 
@@ -295,6 +285,8 @@ const Overview = ({
   activeScope,
   openSiteWatch,
   pendingStudioReviews,
+  pendingApprovals,
+  projectApprovals,
   projects,
   phases,
   timeline,
@@ -306,16 +298,12 @@ const Overview = ({
   workScope,
   upcomingOpenings,
   atRiskProjects,
-  reviewDocument,
-  reviewScope,
-  reviewSite,
-  onDocumentIssue,
-  onScopeApproval,
-  onSiteResolution,
 }: {
   activeScope: WorkScopeSection[]
   openSiteWatch: SiteWatchUpdate[]
   pendingStudioReviews: StudioReview[]
+  pendingApprovals: ActionRequest[]
+  projectApprovals: ApprovalRecord[]
   projects: Project[]
   phases: StudioTimelinePhase[]
   timeline: TimelineItem[]
@@ -327,12 +315,6 @@ const Overview = ({
   workScope: WorkScopeSection[]
   upcomingOpenings: StudioTimelinePhase[]
   atRiskProjects: Project[]
-  reviewDocument?: DocumentRecord
-  reviewScope?: WorkScopeSection
-  reviewSite?: SiteWatchUpdate
-  onDocumentIssue: (document: DocumentRecord) => void
-  onScopeApproval: (scope: WorkScopeSection) => void
-  onSiteResolution: (siteUpdate: SiteWatchUpdate) => void
 }) => {
   const sortedEvents = [...timeline, ...siteWatch.map((sw) => ({ id: sw.id, projectId: sw.projectId, label: sw.title, dueDate: sw.observedAt.slice(0, 10), state: sw.status }))]
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
@@ -345,15 +327,31 @@ const Overview = ({
 
   const taskCount = tasks.length
 
+  const [contextProject, setContextProject] = useState<Project | null>(null)
+
   return (
     <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
       <main className="space-y-5">
-        {/* L1: Active Projects */}
+        {/* OPERATING RHYTHM — daily executive brief */}
+        <OperatingRhythm projects={projects} phases={phases} timeline={timeline} pendingApprovals={pendingApprovals} projectApprovals={projectApprovals} />
+
+        {/* EXECUTIVE DASHBOARD */}
+        <ExecutiveDashboard projects={projects} phases={phases} timeline={timeline} pendingApprovals={pendingApprovals} projectApprovals={projectApprovals} />
+
+        {/* STUDIO TIMELINE BOARD */}
+        <StudioTimelineBoard projects={projects} phases={phases} timeline={timeline} projectApprovals={projectApprovals} onProjectClick={setContextProject} />
+
+        <WorkspaceDrawer open={contextProject !== null} onClose={() => setContextProject(null)} title={contextProject?.name ?? 'Project'}>
+          <ProjectContextDrawer project={contextProject} phases={phases} timeline={timeline} tasks={tasks} projectApprovals={projectApprovals} onClose={() => setContextProject(null)} />
+        </WorkspaceDrawer>
+
+        {/* L1: Active Projects — detailed project inventory */}
         <section className="os-card-primary">
           <div className="panel-header">
             <div>
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Studio Portfolio</p>
               <h3>Active Projects</h3>
+              <p className="text-xs text-[var(--bb-text-soft)]">Project inventory with scope, documents, artwork, and site watch counts.</p>
             </div>
             <span className="pill">{projects.length} projects</span>
           </div>
@@ -417,9 +415,6 @@ const Overview = ({
             })}
           </div>
         </section>
-
-        {/* STUDIO TIMELINE BOARD */}
-        <StudioTimelineBoard projects={projects} phases={phases} timeline={timeline} />
 
         {/* L2: Studio Master Timeline + Upcoming Openings */}
         <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
@@ -507,75 +502,6 @@ const Overview = ({
           </div>
         </section>
 
-        {/* L3: At-Risk Projects + Operational Actions */}
-        <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="panel panel-float">
-            <div className="panel-header">
-              <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Risk</p>
-                <h3>At-Risk Projects</h3>
-              </div>
-              <span className="pill">{atRiskProjects.length}</span>
-            </div>
-            <div className="space-y-3">
-              {atRiskProjects.length === 0 ? (
-                <p className="text-sm text-[var(--bb-text-muted)]">??????????????????????????</p>
-              ) : (
-                atRiskProjects.map((project) => {
-                  const projectRisks = timeline.filter((t) => t.projectId === project.id && t.state === 'at-risk')
-                  const blockedPhases = phases.filter((p) => p.projectId === project.id && (p.status === 'blocked' || p.risk === 'high'))
-                  return (
-                    <div key={project.id} className="os-list-row border-[#ead7c3] bg-[#fffaf4]">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">{project.name}</p>
-                          <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">{project.client} / {project.location}</p>
-                        </div>
-                        <span className="font-mono text-[9px] font-semibold uppercase text-[var(--bb-red)]">{project.timelineStatus}</span>
-                      </div>
-                      {projectRisks.length > 0 && (
-                        <div className="mt-2 space-y-0.5">
-                          {projectRisks.map((risk) => (
-                            <p key={risk.id} className="flex items-center gap-1.5 text-xs text-[var(--bb-red)]">
-                              <span className="os-severity-dot os-severity-dot-red" />
-                              {risk.label}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                      {blockedPhases.length > 0 && (
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {blockedPhases.map((p) => (
-                            <span key={p.id} className="rounded-full bg-[#fdeae7] px-2 py-0.5 font-mono text-[9px] font-semibold uppercase text-[var(--bb-red)]">
-                              {p.phase}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-
-          <div className="panel panel-float">
-            <div className="panel-header">
-              <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Actions</p>
-                <h3>Pending Approvals</h3>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {reviewScope ? <ActionCard label="Approve WorkScope revision" detail={`${reviewScope.code} / ${reviewScope.title}`} onClick={() => onScopeApproval(reviewScope)} /> : null}
-              {reviewDocument ? <ActionCard label="Issue document package" detail={`${reviewDocument.title} / ${reviewDocument.version}`} onClick={() => onDocumentIssue(reviewDocument)} /> : null}
-              {reviewSite ? <ActionCard label="Resolve site watch item" detail={reviewSite.title} onClick={() => onSiteResolution(reviewSite)} /> : null}
-              {!reviewScope && !reviewDocument && !reviewSite ? (
-                <p className="text-sm text-[var(--bb-text-muted)]">????????????????????</p>
-              ) : null}
-            </div>
-          </div>
-        </section>
       </main>
 
       <aside className="intelligence-rail space-y-4">
@@ -1189,16 +1115,6 @@ const ReviewsView = ({
     </div>
     <PendingApprovalPanel items={pendingApprovals} onApprove={onApprove} onReject={onReject} />
   </section>
-)
-
-const ActionCard = ({ detail, label, onClick }: { detail: string; label: string; onClick: () => void }) => (
-  <div className="rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
-    <p className="text-sm font-semibold">{label}</p>
-    <p className="mt-2 text-xs leading-5 text-[var(--bb-text-soft)]">{detail}</p>
-    <button className="btn-primary mt-4" type="button" onClick={onClick}>
-      Queue Action
-    </button>
-  </div>
 )
 
 const PreviewBlock = ({ label, value }: { label: string; value: string }) => (
