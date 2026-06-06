@@ -1,6 +1,78 @@
 import { generateId } from '../../app/utils'
 import type { SheetResourceDef } from './types'
 
+export interface WriteHistoryRecord {
+  id: string
+  resourceId: string
+  resourceName: string
+  recordId: string
+  status: 'success' | 'failed'
+  endpointLabel: string
+  payloadSummary: string
+  writtenAt: string
+  errorMessage?: string
+  errorCode?: string
+}
+
+const HISTORY_STORAGE_KEY = 'beblank_os_bridge_write_history_v1'
+const STATUS_STORAGE_KEY = 'beblank_os_bridge_write_status_v1'
+
+export interface WriteStatusSummary {
+  pending: number
+  approved: number
+  failed: number
+  updatedAt: string
+}
+
+export function loadWriteStatusSummary(): WriteStatusSummary {
+  try {
+    const stored = localStorage.getItem(STATUS_STORAGE_KEY)
+    if (stored) return JSON.parse(stored) as WriteStatusSummary
+  } catch { /* ignore */ }
+  return { pending: 0, approved: 0, failed: 0, updatedAt: new Date().toISOString() }
+}
+
+export function saveWriteStatusSummary(summary: WriteStatusSummary): void {
+  try {
+    localStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(summary))
+  } catch { /* ignore */ }
+}
+
+export function computeWriteStatusSummary(pendingWrites: PendingWriteRow[]): WriteStatusSummary {
+  return {
+    pending: pendingWrites.filter((w) => w.status === 'draft').length,
+    approved: pendingWrites.filter((w) => w.status === 'approved').length,
+    failed: pendingWrites.filter((w) => w.status === 'failed').length,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function loadWriteHistory(): WriteHistoryRecord[] {
+  try {
+    const stored = localStorage.getItem(HISTORY_STORAGE_KEY)
+    if (stored) return JSON.parse(stored) as WriteHistoryRecord[]
+  } catch { /* ignore */ }
+  return []
+}
+
+export function saveWriteHistory(history: WriteHistoryRecord[]): void {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history))
+  } catch { /* ignore */ }
+}
+
+export function appendWriteHistory(record: WriteHistoryRecord): WriteHistoryRecord[] {
+  const current = loadWriteHistory()
+  const updated = [record, ...current]
+  saveWriteHistory(updated)
+  return updated
+}
+
+export function buildPayloadSummary(row: Record<string, unknown>): string {
+  const name = (row as Record<string, unknown>).name ?? (row as Record<string, unknown>).label ?? (row as Record<string, unknown>).title ?? (row as Record<string, unknown>).assetId ?? ''
+  return String(name).slice(0, 60)
+}
+
 export interface PendingWriteRow {
   id: string
   resourceId: string
@@ -83,6 +155,27 @@ export function buildAIContextRow(fields: {
     title: fields.title,
     body: fields.body ?? '',
     createdAt: new Date().toISOString(),
+  }
+}
+
+export function buildTransactionRow(fields: {
+  assetId: string
+  transactionType: string
+  quantity: number
+  amountTHB: number
+  pricePerUnitTHB?: number
+  notes?: string
+}): Record<string, unknown> {
+  return {
+    id: generateId('txn'),
+    assetId: fields.assetId,
+    description: `${fields.transactionType} ${fields.assetId}`,
+    amountTHB: fields.amountTHB,
+    type: fields.transactionType === 'dividend' ? 'income' : fields.transactionType === 'deposit' ? 'income' : 'expense',
+    quantity: fields.quantity,
+    pricePerUnitTHB: fields.pricePerUnitTHB ?? 0,
+    occurredAt: new Date().toISOString().slice(0, 10),
+    notes: fields.notes ?? '',
   }
 }
 

@@ -1,4 +1,6 @@
-﻿import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
+import { useState } from 'react'
+import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
+import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
@@ -21,6 +23,8 @@ export const FamilyOfficePage = () => {
     rejectActionRequest,
     queueSuggestionImport,
   } = useOs()
+  const [showAiDrawer, setShowAiDrawer] = useState(false)
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false)
 
   const inflow = data.financeLedgerRows.filter((row) => row.direction === 'inflow').reduce((sum, row) => sum + row.amountTHB, 0)
   const outflow = data.financeLedgerRows.filter((row) => row.direction === 'outflow').reduce((sum, row) => sum + row.amountTHB, 0)
@@ -29,26 +33,26 @@ export const FamilyOfficePage = () => {
   const runwayMonths = Math.round((reserveTotal / monthlyBurn) * 10) / 10
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
-            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ครอบครัว / วินัยการเงิน</p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] md:text-7xl">การเงินส่วนตัวของสตูดิโอ ไม่มี ERP</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--bb-text-soft)]">เงินสำรอง ภาระผูกพัน รายรับจากโปรเจค หนี้สิน ค่าใช้จ่าย สภาพคล่อง และรายการเดินบัญชี สำหรับควบคุมการเงินแบบไม่ซับซ้อน</p>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">???????? / ????????????</p>
+            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] md:text-7xl">???????????????????????? ????? ERP</h2>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--bb-text-soft)]">????????? ?????????? ??????????????? ??????? ?????????? ????????? ?????????????????? ????????????????????????????????</p>
           </div>
           <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ความเสี่ยงเงินสำรอง</p>
-            <p className="mt-4 text-xl font-semibold leading-snug">เงินสำรองสตูดิโออยู่ในระดับเฝ้าระวัง</p>
-            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">สภาพคล่องโดยรวมยังดี แต่อุปกรณ์ควรชะลอจนกว่าเงินโปรเจคจะชำระ</p>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">???????????????????</p>
+            <p className="mt-4 text-xl font-semibold leading-snug">????????????????????????????????????</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">???????????????????? ???????????????????????????????????????</p>
           </div>
         </div>
         <div className="mt-6 grid gap-3 md:grid-cols-5">
           <SourceStatusBadge status={sourceStatuses.familyOffice} />
-          <Metric label="รายรับ/เดือน" value={thb(inflow)} />
-          <Metric label="รายจ่าย/เดือน" value={thb(outflow)} />
-          <Metric label="เงินสำรอง" value={thb(reserveTotal)} />
-          <Metric label="สภาพคล่อง" value={`${runwayMonths} เดือน`} />
+          <Metric label="??????/?????" value={thb(inflow)} />
+          <Metric label="???????/?????" value={thb(outflow)} />
+          <Metric label="?????????" value={thb(reserveTotal)} />
+          <Metric label="?????????" value={`${runwayMonths} ?????`} />
         </div>
       </header>
 
@@ -62,8 +66,26 @@ export const FamilyOfficePage = () => {
         </aside>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-2"><AIContextExportPanel contexts={data.aiContexts} /><AISuggestionImportPanel onImport={queueSuggestionImport} /></section>
-      <section className="grid gap-5 xl:grid-cols-2"><ChangeLogList items={changeLogs} /><SnapshotLog items={snapshots} /></section>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowAiDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">AI Workspace</p>
+          <p className="mt-1 text-sm font-semibold">{data.aiContexts.length} contexts</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open AI Workspace →</p>
+        </button>
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowHistoryDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">History</p>
+          <p className="mt-1 text-sm font-semibold">{changeLogs.length} changes</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open History →</p>
+        </button>
+      </div>
+      <WorkspaceDrawer open={showAiDrawer} onClose={() => setShowAiDrawer(false)} title="AI Workspace">
+        <AIContextExportPanel contexts={data.aiContexts} />
+        <AISuggestionImportPanel onImport={queueSuggestionImport} />
+      </WorkspaceDrawer>
+      <WorkspaceDrawer open={showHistoryDrawer} onClose={() => setShowHistoryDrawer(false)} title="System History">
+        <ChangeLogList items={changeLogs} />
+        <SnapshotLog items={snapshots} />
+      </WorkspaceDrawer>
     </section>
   )
 }

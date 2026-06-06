@@ -147,6 +147,7 @@ export const mockOsData: OsData = {
   syncQueue: [],
   bridgeContracts: [],
   marketDataSymbols: [],
+  approvals: [],
 }
 
 export const futureConnectors = [

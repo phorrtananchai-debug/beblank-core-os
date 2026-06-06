@@ -1,0 +1,6 @@
+id,projectId,title,status,owner,dueDate,requestedBy,notes
+app-kk-signage,karun-central-khonkaen,Approve signage design,waiting,Por,2026-06-20,Karun Hospitality,Signage approval pending with mall management
+app-kk-furniture,karun-central-khonkaen,Confirm furniture PO,waiting,Por,2026-06-18,Studio,"Furniture PO not yet confirmed with supplier"
+app-kk-payment,karun-central-khonkaen,Approve contractor payment,submitted,Por,2026-06-15,Finance,Contractor payment approval for construction phase
+app-kk-column,karun-central-khonkaen,Approve decorative column change,waiting,Por,2026-07-01,Karun Hospitality,"Mall requested +50 cm column — cost impact TBD"
+app-phuket-handover,karun-phuket-old-town,Approve site handover checklist,draft,Por,2026-06-10,Studio,Final walkthrough checklist pending

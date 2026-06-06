@@ -4,6 +4,7 @@ import { SHEET_RESOURCES } from '../../core/sheetBridge/resources'
 import { useSheetBridge } from '../../hooks/useSheetBridge'
 import { useOs } from '../../core/os/OsContext'
 import { loadBackup, removeBackup } from '../../core/sheetBridge/backup'
+import { SourceHealthMonitorFull } from '../../components/shared/SourceHealthMonitor'
 
 const ResourceCard = ({
   resource,
@@ -101,6 +102,7 @@ export const BridgeSettingsPage = () => {
     removePendingWrite,
     exportPendingWrite,
     writePendingWrite,
+    writeHistory,
   } = useSheetBridge()
 
   const [importResult, setImportResult] = useState<{ resourceName: string; appended: number; updated: number; skipped: number } | null>(null)
@@ -253,7 +255,7 @@ export const BridgeSettingsPage = () => {
           : { status: 'ready' as const, label: 'Ready to connect — Click Test', color: 'bg-black/[0.12]' as const }
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">Google Sheet Bridge</p>
         <h2 className="mt-2 text-2xl font-extrabold">Bridge Settings</h2>
@@ -659,6 +661,68 @@ export const BridgeSettingsPage = () => {
             )
           })}
         </div>
+      </section>
+
+      {/* SOURCE HEALTH FULL */}
+      <SourceHealthMonitorFull />
+
+      {/* WRITE-BACK HISTORY */}
+      <section className="os-card-primary">
+        <div className="panel-header">
+          <div>
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">WRITE-BACK HISTORY</p>
+            <h3>Sheet Write Audit Log</h3>
+          </div>
+          <div className="flex gap-2">
+            <span className="pill">{writeHistory.length} writes</span>
+            {writeHistory.length > 0 && (
+              <button
+                className="btn-secondary"
+                type="button"
+                onClick={() => {
+                  const json = JSON.stringify(writeHistory, null, 2)
+                  navigator.clipboard.writeText(json)
+                  const blob = new Blob([json], { type: 'application/json' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `bridge-write-history-${new Date().toISOString().slice(0, 10)}.json`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                }}
+              >
+                Export History JSON
+              </button>
+            )}
+          </div>
+        </div>
+        {writeHistory.length === 0 ? (
+          <p className="text-sm text-[var(--bb-text-muted)]">No write-back history yet. Create, approve, and write a row to see history here.</p>
+        ) : (
+          <div className="space-y-2">
+            {writeHistory.map((entry) => (
+              <div key={entry.id} className="os-list-row">
+                <div className="flex flex-1 items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold">{entry.resourceName}</p>
+                    <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">Record: {entry.recordId} — {entry.payloadSummary}</p>
+                    <p className="text-[10px] text-[var(--bb-text-faint)]">{new Date(entry.writtenAt).toLocaleString()}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className={`pill ${entry.status === 'success' ? 'text-[var(--bb-green)]' : 'text-red bg-red/5'}`}>{entry.status}</span>
+                    {entry.status === 'failed' && entry.errorMessage && (
+                      <p className="mt-1 max-w-48 text-right text-[10px] leading-tight text-red/80">{entry.errorMessage}</p>
+                    )}
+                    {entry.status === 'failed' && entry.errorCode && (
+                      <p className="text-[9px] font-mono uppercase tracking-[0.08em] text-[var(--bb-text-faint)]">{entry.errorCode}</p>
+                    )}
+                    <p className="mt-1 text-[10px] text-[var(--bb-text-faint)]">{entry.endpointLabel}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* SAFETY SECTION */}

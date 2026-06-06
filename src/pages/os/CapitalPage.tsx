@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { CapitalAnalyticsCards } from '../../components/capital/CapitalAnalyticsCards'
 import { CapitalCategoryBreakdown } from '../../components/capital/CapitalCategoryBreakdown'
+import { CapitalRhythm } from '../../components/capital/CapitalRhythm'
+import { CapitalCriticalPath } from '../../components/capital/CapitalCriticalPath'
 import { DeleteLedgerDialog } from '../../components/capital/DeleteLedgerDialog'
 import { LedgerForm } from '../../components/capital/LedgerForm'
 import type { LedgerFormData } from '../../components/capital/LedgerForm'
@@ -63,9 +66,11 @@ export const CapitalPage = () => {
   const runwayMonths = Math.round((reserveTotal / monthlyBurn) * 10) / 10
   const hasFinanceData = data.financeLedgerRows.length > 0 || data.reserveRows.length > 0 || data.familyFinanceRecords.length > 0
   const navigate = useNavigate()
+  const [showAiDrawer, setShowAiDrawer] = useState(false)
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false)
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">Capital / financial discipline</p>
         <h2 className="mt-2 text-2xl font-extrabold">เงินทุน / วินัยการเงิน</h2>
@@ -117,6 +122,10 @@ export const CapitalPage = () => {
         )}
       </header>
 
+      {/* CAPITAL OPERATING SYSTEM */}
+      <CapitalRhythm reserveRows={data.reserveRows} familyFinanceRecords={data.familyFinanceRecords} financeLedgerRows={data.financeLedgerRows} />
+      <CapitalCriticalPath reserveRows={data.reserveRows} familyFinanceRecords={data.familyFinanceRecords} financeLedgerRows={data.financeLedgerRows} />
+
       <div className="flex gap-2 border-b border-black/[0.06] pb-3">
         {tabs.map((tab) => (
           <button
@@ -146,14 +155,26 @@ export const CapitalPage = () => {
         </aside>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowAiDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">AI Workspace</p>
+          <p className="mt-1 text-sm font-semibold">{data.aiContexts.length} contexts</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open AI Workspace →</p>
+        </button>
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowHistoryDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">History</p>
+          <p className="mt-1 text-sm font-semibold">{changeLogs.length} changes</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open History →</p>
+        </button>
+      </div>
+      <WorkspaceDrawer open={showAiDrawer} onClose={() => setShowAiDrawer(false)} title="AI Workspace">
         <AIContextExportPanel contexts={data.aiContexts} />
         <AISuggestionImportPanel onImport={queueSuggestionImport} />
-      </section>
-      <section className="grid gap-5 xl:grid-cols-2">
+      </WorkspaceDrawer>
+      <WorkspaceDrawer open={showHistoryDrawer} onClose={() => setShowHistoryDrawer(false)} title="System History">
         <ChangeLogList items={changeLogs} />
         <SnapshotLog items={snapshots} />
-      </section>
+      </WorkspaceDrawer>
     </section>
   )
 }

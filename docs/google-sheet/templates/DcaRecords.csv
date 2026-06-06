@@ -1,0 +1,6 @@
+id,assetId,cadence,plannedAmountTHB,status,nextRunDate,notes
+dca-voo,VOO,monthly,10000,planned,2026-07-01,Long-term wealth accumulation
+dca-schd,SCHD,monthly,4000,planned,2026-07-01,Dividend growth engine
+dca-msft,MSFT,monthly,3000,planned,2026-07-01,AI + cloud compounder
+dca-pltr,PLTR,monthly,2000,planned,2026-07-01,Speculative AI growth
+dca-jepq,JEPQ,monthly,1000,planned,2026-07-01,Premium income layer

@@ -150,7 +150,7 @@ export const StudioProjectDetailPage = () => {
   const inspectionTotal = pendingReviewCount + openSiteIssueCount
 
   return (
-    <section className="studio-project-detail space-y-7">
+    <section className="studio-project-detail space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <Link
           className="inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)] transition hover:bg-black/[0.05] hover:text-[var(--bb-text)]"

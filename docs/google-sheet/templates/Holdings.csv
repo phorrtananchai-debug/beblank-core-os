@@ -1,6 +1,25 @@
-id,assetId,quantity,averageCost,allocationPercent,targetAllocationPercent,currentPosture
-hold-voo,VOO,0,0,0,40,core
-hold-schd,SCHD,0,0,0,15,income
-hold-msft,MSFT,0,0,0,15,growth
-hold-jepq,JEPQ,0,0,0,10,income
-hold-cash,CASH,0,0,0,20,reserve
+id,assetId,quantity,averageCostUSD,currentPriceUSD,marketValueUSD,costBasisUSD,currencyMode,dataQuality,targetAllocationPercent,currentPosture,risk,marketValueTHB,notes
+hold-voo,VOO,5,460,483,2415,2300,multi,estimated,35,core,,73500,S&P 500 anchor — Dime
+hold-msft,MSFT,2,300,383,766,600,multi,estimated,7,growth,,28000,AI + cloud compounder — Dime
+hold-schd,SCHD,10,95,123,1230,950,multi,estimated,6,income,,45000,Dividend growth — Dime
+hold-googl,GOOGL,1,175,219,219,175,multi,estimated,3,growth,,8000,Tech exposure — Dime
+hold-amzn,AMZN,1,150,205,205,150,multi,estimated,3,growth,,7500,E-commerce + cloud — Dime
+hold-meta,META,1,100,137,137,100,multi,estimated,3,growth,,5000,Social + AI infrastructure — Dime
+hold-nflx,NFLX,1,240,247,247,240,multi,estimated,0,watch,,9000,Streaming — hold existing — Dime
+hold-pg,PG,1,85,110,110,85,multi,estimated,0,watch,,4000,Consumer staples — hold existing — Dime
+hold-abbv,ABBV,2,100,150,300,200,multi,estimated,1,income,,11000,Income stability — Dime
+hold-jepq,JEPQ,3,70,119,357,210,multi,estimated,5,income,,13000,Premium income — Dime
+hold-jepi,JEPI,2,50,75,150,100,multi,estimated,1,income,,5500,Downside protection — Dime
+hold-qyld,QYLD,5,40,47,235,200,multi,estimated,1,income,,8500,Covered call income — Dime
+hold-main,MAIN,1,85,96,96,85,multi,estimated,1,income,,3500,BDC income diversifier — Dime
+hold-rbrk,RBRK,2,20,27,54,40,multi,estimated,3,watch,high,,2000,Sandbox experiment — Dime
+hold-intc,INTC,3,55,50,150,165,multi,estimated,0,watch,high,,5500,Hold only — Dime
+hold-pltr,PLTR,0,0,0,0,0,multi,estimated,5,growth,high,,,Speculative AI — target only
+hold-avgo,AVGO,0,0,0,0,0,multi,estimated,2,growth,,,Semiconductor — target only
+hold-anet,ANET,0,0,0,0,0,multi,estimated,1,growth,,,Networking — target only
+hold-nvda,NVDA,0,0,0,0,0,multi,estimated,1,growth,high,,,High-growth semi — target only
+hold-ddog,DDOG,0,0,0,0,0,multi,estimated,2,watch,high,,,Sandbox +50% TP / -15% SL — target only
+hold-kus500x-a,K-US500X-A(A),25,,,,,legacy,statement,10,core,,6000,Thai US Equity feeder — manual
+hold-kus500xrmf,K-US500XRMF,0,,,,,legacy,estimated,5,core,,,Thai RMF wrapper — target only
+hold-scbndq,SCBNDQ(A),15,,,,,legacy,statement,0,watch,,3000,Thai bond fund — hold existing — manual
+hold-cash,CASH,,,,,,legacy,statement,5,reserve,,14500,Dry powder / opportunity reserve
