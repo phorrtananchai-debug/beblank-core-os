@@ -1,4 +1,6 @@
-﻿import { useNavigate } from 'react-router-dom'
+﻿import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
@@ -24,6 +26,8 @@ const severityDot = (level: string) => {
 
 export const TradingLabPage = () => {
   const navigate = useNavigate()
+  const [showAiDrawer, setShowAiDrawer] = useState(false)
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false)
   const {
     data,
     sourceStatuses,
@@ -307,8 +311,26 @@ export const TradingLabPage = () => {
         </aside>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-2"><AIContextExportPanel contexts={data.aiContexts} /><AISuggestionImportPanel onImport={queueSuggestionImport} /></section>
-      <section className="grid gap-5 xl:grid-cols-2"><ChangeLogList items={changeLogs} /><SnapshotLog items={snapshots} /></section>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowAiDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">AI Workspace</p>
+          <p className="mt-1 text-sm font-semibold">{data.aiContexts.length} contexts</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open AI Workspace →</p>
+        </button>
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowHistoryDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">History</p>
+          <p className="mt-1 text-sm font-semibold">{changeLogs.length} changes</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open History →</p>
+        </button>
+      </div>
+      <WorkspaceDrawer open={showAiDrawer} onClose={() => setShowAiDrawer(false)} title="AI Workspace">
+        <AIContextExportPanel contexts={data.aiContexts} />
+        <AISuggestionImportPanel onImport={queueSuggestionImport} />
+      </WorkspaceDrawer>
+      <WorkspaceDrawer open={showHistoryDrawer} onClose={() => setShowHistoryDrawer(false)} title="System History">
+        <ChangeLogList items={changeLogs} />
+        <SnapshotLog items={snapshots} />
+      </WorkspaceDrawer>
     </section>
   )
 }

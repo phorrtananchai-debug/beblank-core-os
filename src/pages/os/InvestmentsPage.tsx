@@ -3,6 +3,7 @@ import { InvestmentActionButton } from '../../components/investments/InvestmentA
 import { InvestmentInputDialog, type DialogMode } from '../../components/investments/InvestmentInputDialog'
 import { PortfolioBucketView } from '../../components/investments/PortfolioBucketView'
 import { PortfolioDecisionStrip } from '../../components/investments/PortfolioDecisionStrip'
+import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
@@ -112,6 +113,8 @@ export const InvestmentsPage = () => {
   const [showAssetModal, setShowAssetModal] = useState(false)
   const [showAssetSuggestions, setShowAssetSuggestions] = useState(false)
   const [navDrafts, setNavDrafts] = useState<Record<string, string>>({})
+  const [showAiDrawer, setShowAiDrawer] = useState(false)
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false)
   const [dialogState, setDialogState] = useState<{
     mode: DialogMode
     initial: Record<string, unknown>
@@ -529,14 +532,14 @@ export const InvestmentsPage = () => {
             <section className="panel panel-float">
               <div className="panel-header">
                 <div>
-                  <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">แหล่งข้อมูลหลัก</p>
-                  <h3>เพิ่มสินทรัพย์ในสมุด Aequitas</h3>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Add Asset</p>
+                  <h3>Aequitas Portfolio</h3>
                 </div>
-                <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>Open Asset Modal</button>
+                <button className="btn-primary" type="button" onClick={() => setShowAssetModal(true)}>+ New</button>
               </div>
-              <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-                {renderAssetInputs()}
-                {renderApprovalPreview()}
+              <div className="rounded-2xl border border-dashed border-black/[0.08] bg-white/50 p-5 text-center">
+                <p className="text-sm font-semibold text-[var(--bb-text-muted)]">Add assets from the + New button</p>
+                <p className="mt-1 text-xs text-[var(--bb-text-faint)]">Opens a workspace drawer for asset input and approval.</p>
               </div>
             </section>
           </main>
@@ -547,23 +550,12 @@ export const InvestmentsPage = () => {
         </section>
       ) : null}
 
-      {showAssetModal ? (
-        <div className="modal-scrim">
-          <div className="modal-panel">
-            <div className="panel-header">
-              <div>
-                <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">เพิ่มสินทรัพย์</p>
-                <h3>ตรวจสอบก่อนอนุมัติ</h3>
-              </div>
-              <button className="btn-secondary" type="button" onClick={() => setShowAssetModal(false)}>ปิด</button>
-            </div>
-            <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
-              {renderAssetInputs(true)}
-              {renderApprovalPreview(true)}
-            </div>
-          </div>
+      <WorkspaceDrawer open={showAssetModal} onClose={() => setShowAssetModal(false)} title="Add Asset">
+        <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
+          {renderAssetInputs(true)}
+          {renderApprovalPreview(true)}
         </div>
-      ) : null}
+      </WorkspaceDrawer>
 
       {dialogState ? (
         <InvestmentInputDialog
@@ -574,14 +566,30 @@ export const InvestmentsPage = () => {
         />
       ) : null}
 
-      <section className="grid gap-5 xl:grid-cols-2">
-        <AIContextExportPanel contexts={data.aiContexts} />
-        <AISuggestionImportPanel onImport={queueSuggestionImport} />
-      </section>
-      <section className="grid gap-5 xl:grid-cols-2">
-        <ChangeLogList items={changeLogs} />
-        <SnapshotLog items={snapshots} />
-      </section>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowAiDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">AI Workspace</p>
+          <p className="mt-1 text-sm font-semibold">{data.aiContexts.length} contexts · {data.aiSuggestions.length} suggestions</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open AI Workspace →</p>
+        </button>
+        <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowHistoryDrawer(true)}>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">History</p>
+          <p className="mt-1 text-sm font-semibold">{changeLogs.length} changes · {snapshots.length} snapshots</p>
+          <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open History →</p>
+        </button>
+      </div>
+      <WorkspaceDrawer open={showAiDrawer} onClose={() => setShowAiDrawer(false)} title="AI Workspace">
+        <div className="space-y-5">
+          <AIContextExportPanel contexts={data.aiContexts} />
+          <AISuggestionImportPanel onImport={queueSuggestionImport} />
+        </div>
+      </WorkspaceDrawer>
+      <WorkspaceDrawer open={showHistoryDrawer} onClose={() => setShowHistoryDrawer(false)} title="System History">
+        <div className="space-y-5">
+          <ChangeLogList items={changeLogs} />
+          <SnapshotLog items={snapshots} />
+        </div>
+      </WorkspaceDrawer>
     </section>
   )
 }
