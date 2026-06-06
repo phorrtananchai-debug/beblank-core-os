@@ -7,6 +7,7 @@ const DEFAULTS: ProfileData = {
   role: 'Director',
   workspace: 'Be Blank OS',
   avatarInitial: 'P',
+  avatarUrl: '',
 }
 
 export interface ProfileData {
@@ -14,6 +15,7 @@ export interface ProfileData {
   role: string
   workspace: string
   avatarInitial: string
+  avatarUrl: string
 }
 
 function loadProfile(): ProfileData {

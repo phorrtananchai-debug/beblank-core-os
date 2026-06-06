@@ -389,7 +389,7 @@ export const InvestmentsPage = () => {
   )
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
         <h2 className="mt-4 text-2xl font-extrabold leading-[0.92]">การลงทุน / หุ้น</h2>

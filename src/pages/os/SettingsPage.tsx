@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { MockSheetSyncStatus } from '../../components/shared/MockSheetSyncStatus'
@@ -75,9 +75,9 @@ export const SettingsPage = () => {
   }
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">การตั้งค่าระบบ</p>
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">??????????????</p>
         <h2 className="mt-2 text-2xl font-extrabold">Settings</h2>
         <p className="mt-1 text-sm leading-6 text-[var(--bb-text-soft)]">Profile, workspace preferences, appearance, and system configuration</p>
       </header>
@@ -95,12 +95,30 @@ export const SettingsPage = () => {
           </div>
         </div>
         <div className="flex items-start gap-5">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[var(--bb-accent)] text-2xl font-bold text-white">{edit.avatarInitial || profile.avatarInitial}</div>
+          <div className="relative shrink-0">
+            <label className="cursor-pointer">
+              {edit.avatarUrl ? (
+                <img src={edit.avatarUrl} alt="avatar" className="h-16 w-16 rounded-full object-cover ring-2 ring-black/[0.06]" />
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--bb-accent)] text-2xl font-bold text-white ring-2 ring-black/[0.06]">{edit.avatarInitial || profile.avatarInitial}</div>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  const reader = new FileReader()
+                  reader.onload = (ev) => { if (ev.target?.result) updateField('avatarUrl', String(ev.target.result)) }
+                  reader.readAsDataURL(file)
+                }
+              }} />
+              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[var(--bb-accent)] text-[8px] text-white shadow-sm">+</span>
+            </label>
+          </div>
           <div className="min-w-0 flex-1 space-y-3">
-            <EditRow label="ชื่อ" value={edit.displayName} onChange={(v) => updateField('displayName', v)} />
-            <EditRow label="ตำแหน่ง" value={edit.role} onChange={(v) => updateField('role', v)} />
-            <EditRow label="พื้นที่ทำงาน" value={edit.workspace} onChange={(v) => updateField('workspace', v)} />
-            <EditRow label="อักษรย่อ" value={edit.avatarInitial} onChange={(v) => updateField('avatarInitial', v.slice(0, 1))} maxLength={1} />
+            <EditRow label="Name" value={edit.displayName} onChange={(v) => updateField('displayName', v)} />
+            <EditRow label="Role" value={edit.role} onChange={(v) => updateField('role', v)} />
+            <EditRow label="Workspace" value={edit.workspace} onChange={(v) => updateField('workspace', v)} />
+            <EditRow label="Initials" value={edit.avatarInitial} onChange={(v) => updateField('avatarInitial', v.slice(0, 1))} maxLength={1} />
+            {edit.avatarUrl && <button className="btn-secondary text-xs" type="button" onClick={() => updateField('avatarUrl', '')}>Remove image</button>}
           </div>
         </div>
       </section>

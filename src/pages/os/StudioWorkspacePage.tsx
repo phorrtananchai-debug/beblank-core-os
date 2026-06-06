@@ -1,9 +1,10 @@
-﻿import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { EmptyState } from '../../components/shared/EmptyState'
+import { StudioTimelineBoard } from '../../components/studio/StudioTimelineBoard'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { useOs } from '../../core/os/OsContext'
@@ -118,7 +119,7 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
   }
 
   return (
-    <section className="studio-workspace-space space-y-7">
+    <section className="studio-workspace-space space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="flex items-start justify-between gap-6">
           <div>
@@ -140,7 +141,7 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="os-hero-metric os-hero-metric-neutral">
             <div className="flex items-center gap-3">
-              <span className="os-icon-badge os-icon-badge-neutral">◇</span>
+              <span className="os-icon-badge os-icon-badge-neutral">?</span>
               <div className="min-w-0 flex-1">
                 <p className="os-hero-value">{data.projects.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Active Projects</p>
@@ -150,7 +151,7 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           </div>
           <div className="os-hero-metric os-hero-metric-purple">
             <div className="flex items-center gap-3">
-              <span className="os-icon-badge os-icon-badge-purple">▶</span>
+              <span className="os-icon-badge os-icon-badge-purple">?</span>
               <div className="min-w-0 flex-1">
                 <p className="os-hero-value">{upcomingOpenings.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Upcoming Openings</p>
@@ -170,7 +171,7 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
           </div>
           <div className="os-hero-metric os-hero-metric-green">
             <div className="flex items-center gap-3">
-              <span className="os-icon-badge os-icon-badge-green">≡</span>
+              <span className="os-icon-badge os-icon-badge-green">=</span>
               <div className="min-w-0 flex-1">
                 <p className="os-hero-value">{activeScope.length + openSiteWatch.length + pendingStudioReviews.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Resource Load</p>
@@ -346,7 +347,7 @@ const Overview = ({
 
   return (
     <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <main className="space-y-7">
+      <main className="space-y-5">
         {/* L1: Active Projects */}
         <section className="os-card-primary">
           <div className="panel-header">
@@ -417,6 +418,9 @@ const Overview = ({
           </div>
         </section>
 
+        {/* STUDIO TIMELINE BOARD */}
+        <StudioTimelineBoard projects={projects} phases={phases} timeline={timeline} />
+
         {/* L2: Studio Master Timeline + Upcoming Openings */}
         <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="panel panel-float">
@@ -439,7 +443,7 @@ const Overview = ({
                 </div>
               ))}
               {sortedEvents.length === 0 && (
-                <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีเหตุการณ์ในไทม์ไลน์</p>
+                <p className="text-sm text-[var(--bb-text-muted)]">????????????????????????</p>
               )}
             </div>
           </div>
@@ -455,7 +459,7 @@ const Overview = ({
               </div>
               <div className="space-y-3">
                 {openingsSorted.length === 0 ? (
-                  <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีกำหนดการเปิดในขณะนี้</p>
+                  <p className="text-sm text-[var(--bb-text-muted)]">?????????????????????????</p>
                 ) : (
                   openingsSorted.map((phase) => (
                     <div key={phase.id} className="os-list-row">
@@ -515,7 +519,7 @@ const Overview = ({
             </div>
             <div className="space-y-3">
               {atRiskProjects.length === 0 ? (
-                <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีโปรเจคที่มีความเสี่ยง</p>
+                <p className="text-sm text-[var(--bb-text-muted)]">??????????????????????????</p>
               ) : (
                 atRiskProjects.map((project) => {
                   const projectRisks = timeline.filter((t) => t.projectId === project.id && t.state === 'at-risk')
@@ -567,7 +571,7 @@ const Overview = ({
               {reviewDocument ? <ActionCard label="Issue document package" detail={`${reviewDocument.title} / ${reviewDocument.version}`} onClick={() => onDocumentIssue(reviewDocument)} /> : null}
               {reviewSite ? <ActionCard label="Resolve site watch item" detail={reviewSite.title} onClick={() => onSiteResolution(reviewSite)} /> : null}
               {!reviewScope && !reviewDocument && !reviewSite ? (
-                <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีรายการรออนุมัติ</p>
+                <p className="text-sm text-[var(--bb-text-muted)]">????????????????????</p>
               ) : null}
             </div>
           </div>
@@ -583,7 +587,7 @@ const Overview = ({
           <ReviewCard key={review.id} review={review} projectName={projectName(projects, review.projectId)} />
         ))}
         {pendingStudioReviews.length === 0 && (
-          <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีรีวิวที่รอการตรวจสอบ</p>
+          <p className="text-sm text-[var(--bb-text-muted)]">?????????????????????????</p>
         )}
       </aside>
     </div>

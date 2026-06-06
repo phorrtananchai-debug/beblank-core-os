@@ -79,7 +79,7 @@ export const TradingLabPage = () => {
   }
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>

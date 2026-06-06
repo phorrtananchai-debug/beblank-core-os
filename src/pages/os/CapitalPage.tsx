@@ -65,7 +65,7 @@ export const CapitalPage = () => {
   const navigate = useNavigate()
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">Capital / financial discipline</p>
         <h2 className="mt-2 text-2xl font-extrabold">เงินทุน / วินัยการเงิน</h2>

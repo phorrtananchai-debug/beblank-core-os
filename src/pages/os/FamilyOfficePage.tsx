@@ -1,4 +1,4 @@
-﻿import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
+import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
 import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
@@ -29,26 +29,26 @@ export const FamilyOfficePage = () => {
   const runwayMonths = Math.round((reserveTotal / monthlyBurn) * 10) / 10
 
   return (
-    <section className="space-y-7">
+    <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
           <div>
-            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ครอบครัว / วินัยการเงิน</p>
-            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] md:text-7xl">การเงินส่วนตัวของสตูดิโอ ไม่มี ERP</h2>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--bb-text-soft)]">เงินสำรอง ภาระผูกพัน รายรับจากโปรเจค หนี้สิน ค่าใช้จ่าย สภาพคล่อง และรายการเดินบัญชี สำหรับควบคุมการเงินแบบไม่ซับซ้อน</p>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">???????? / ????????????</p>
+            <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] md:text-7xl">???????????????????????? ????? ERP</h2>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--bb-text-soft)]">????????? ?????????? ??????????????? ??????? ?????????? ????????? ?????????????????? ????????????????????????????????</p>
           </div>
           <div className="intelligence-card rounded-[30px] border border-black/[0.06] bg-white/92 p-5">
-            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">ความเสี่ยงเงินสำรอง</p>
-            <p className="mt-4 text-xl font-semibold leading-snug">เงินสำรองสตูดิโออยู่ในระดับเฝ้าระวัง</p>
-            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">สภาพคล่องโดยรวมยังดี แต่อุปกรณ์ควรชะลอจนกว่าเงินโปรเจคจะชำระ</p>
+            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">???????????????????</p>
+            <p className="mt-4 text-xl font-semibold leading-snug">????????????????????????????????????</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">???????????????????? ???????????????????????????????????????</p>
           </div>
         </div>
         <div className="mt-6 grid gap-3 md:grid-cols-5">
           <SourceStatusBadge status={sourceStatuses.familyOffice} />
-          <Metric label="รายรับ/เดือน" value={thb(inflow)} />
-          <Metric label="รายจ่าย/เดือน" value={thb(outflow)} />
-          <Metric label="เงินสำรอง" value={thb(reserveTotal)} />
-          <Metric label="สภาพคล่อง" value={`${runwayMonths} เดือน`} />
+          <Metric label="??????/?????" value={thb(inflow)} />
+          <Metric label="???????/?????" value={thb(outflow)} />
+          <Metric label="?????????" value={thb(reserveTotal)} />
+          <Metric label="?????????" value={`${runwayMonths} ?????`} />
         </div>
       </header>
 

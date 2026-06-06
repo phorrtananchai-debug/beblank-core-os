@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { SHEET_RESOURCES } from '../core/sheetBridge/resources'
 import type { ExportPreview } from '../core/sheetBridge/types'
 import type { ImportPreview, SheetBridgeConfig } from '../core/sheetBridge/types'
-import type { PendingWriteRow } from '../core/sheetBridge/writeback'
-import { buildRowForResource } from '../core/sheetBridge/writeback'
+import type { PendingWriteRow, WriteHistoryRecord } from '../core/sheetBridge/writeback'
+import { buildRowForResource, loadWriteHistory, appendWriteHistory, buildPayloadSummary, computeWriteStatusSummary, saveWriteStatusSummary } from '../core/sheetBridge/writeback'
 import { normalizeRows } from '../core/sheetBridge/adapters'
 import { createBackup, loadBackup, removeBackup } from '../core/sheetBridge/backup'
 
@@ -48,6 +48,11 @@ export function useSheetBridge() {
   const [fetchingResource, setFetchingResource] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [pendingWrites, setPendingWrites] = useState<PendingWriteRow[]>([])
+  const [writeHistory, setWriteHistory] = useState<WriteHistoryRecord[]>(() => loadWriteHistory())
+
+  useEffect(() => {
+    saveWriteStatusSummary(computeWriteStatusSummary(pendingWrites))
+  }, [pendingWrites])
 
   const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
   const envEndpointStatus = !envEndpoint ? 'missing' : envEndpoint.startsWith('https://') ? 'configured' : 'invalid'
@@ -356,19 +361,46 @@ export function useSheetBridge() {
         throw new Error(parsed.error ? String(parsed.error) : 'Sheet write failed.')
       }
 
+      const now = new Date().toISOString()
       setPendingWrites((current) =>
         current.map((w) =>
-          w.id === writeId ? { ...w, status: 'written' as const, writtenAt: new Date().toISOString(), writeError: null } : w,
+          w.id === writeId ? { ...w, status: 'written' as const, writtenAt: now, writeError: null } : w,
         ),
       )
+      const historyRecord: WriteHistoryRecord = {
+        id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        resourceId: write.resourceId,
+        resourceName: write.resourceName,
+        recordId: String(write.row.id ?? ''),
+        status: 'success',
+        endpointLabel: activeEndpointUrl ? activeEndpointUrl.slice(0, 50) + '...' : 'unknown',
+        payloadSummary: buildPayloadSummary(write.row),
+        writtenAt: now,
+      }
+      setWriteHistory(appendWriteHistory(historyRecord))
       return true
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Write to sheet failed.'
+      const errorCode = err instanceof TypeError ? 'NETWORK_ERROR' : err instanceof DOMException && err.name === 'AbortError' ? 'TIMEOUT' : 'UNKNOWN'
       setPendingWrites((current) =>
         current.map((w) =>
           w.id === writeId ? { ...w, status: 'failed' as const, writeError: message } : w,
         ),
       )
+      const now = new Date().toISOString()
+      const failedRecord: WriteHistoryRecord = {
+        id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        resourceId: write.resourceId,
+        resourceName: write.resourceName,
+        recordId: String(write.row.id ?? ''),
+        status: 'failed',
+        endpointLabel: activeEndpointUrl ? activeEndpointUrl.slice(0, 50) + '...' : 'unknown',
+        payloadSummary: buildPayloadSummary(write.row),
+        writtenAt: now,
+        errorMessage: message,
+        errorCode,
+      }
+      setWriteHistory(appendWriteHistory(failedRecord))
       return false
     }
   }, [activeEndpointUrl, pendingWrites])
@@ -401,5 +433,6 @@ export function useSheetBridge() {
     removePendingWrite,
     exportPendingWrite,
     writePendingWrite,
+    writeHistory,
   }
 }
