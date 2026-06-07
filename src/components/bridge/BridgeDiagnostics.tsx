@@ -1,4 +1,8 @@
 import type { OsData } from '../../types/models'
+import type { BridgeBootstrapDiagnostic } from '../../core/os/osContextObject'
+import { SHEET_RESOURCES } from '../../core/sheetBridge/resources'
+import { OperationalStatusChip } from '../shared/OperationalStatusChip'
+import type { OperationalStatus } from '../../core/status/status'
 
 interface Props {
   data: OsData
@@ -6,9 +10,18 @@ interface Props {
   activeEndpointSource: string
   lastSyncStatus: string
   lastSyncAt: string | null
+  bootstrapDiagnostics: BridgeBootstrapDiagnostic[]
 }
 
-export const BridgeDiagnostics = ({ data, activeEndpointUrl, activeEndpointSource, lastSyncStatus, lastSyncAt }: Props) => {
+type BootstrapStatus = BridgeBootstrapDiagnostic['status'] | 'waiting'
+
+const toOperationalStatus = (status: BootstrapStatus): OperationalStatus =>
+  status === 'imported' ? 'healthy' :
+  status === 'empty' ? 'complete' :
+  status === 'failed' ? 'atRisk' :
+  'watch'
+
+export const BridgeDiagnostics = ({ data, activeEndpointUrl, activeEndpointSource, lastSyncStatus, lastSyncAt, bootstrapDiagnostics }: Props) => {
   const resources = [
     { label: 'Projects', count: data.projects.length, field: 'projects' },
     { label: 'Holdings', count: data.holdings.length, field: 'holdings' },
@@ -21,6 +34,21 @@ export const BridgeDiagnostics = ({ data, activeEndpointUrl, activeEndpointSourc
   ]
 
   const totalRows = resources.reduce((s, r) => s + r.count, 0)
+
+  const bootstrapRows = SHEET_RESOURCES.map((resource) => {
+    const match = bootstrapDiagnostics.find((entry) => entry.resourceId === resource.id)
+    const status: BootstrapStatus = match?.status ?? 'waiting'
+
+    return {
+      resourceId: resource.id,
+      resourceName: resource.name,
+      status,
+      chipStatus: toOperationalStatus(status),
+      rowCount: match?.rowCount ?? 0,
+      invalidCount: match?.invalidCount ?? 0,
+      error: match?.error ?? null,
+    }
+  })
 
   return (
     <section className="os-card-primary">
@@ -76,6 +104,29 @@ export const BridgeDiagnostics = ({ data, activeEndpointUrl, activeEndpointSourc
                 <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${r.count > 0 ? 'bg-[var(--bb-green)]' : 'bg-black/[0.12]'}`} />
                 <span className="font-medium">{r.label}:</span>
                 <span className={r.count > 0 ? '' : 'text-[var(--bb-text-muted)]'}>{r.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-black/[0.04] bg-white/60 p-3">
+          <p className="font-mono text-[9px] font-semibold uppercase text-[var(--bb-text-muted)]">Bootstrap Diagnostics</p>
+          <div className="mt-2 space-y-2">
+            {bootstrapRows.map((entry) => (
+              <div key={entry.resourceId} className="rounded-lg border border-black/[0.04] bg-white/70 px-2.5 py-2 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold">{entry.resourceName}</span>
+                  <OperationalStatusChip
+                    status={entry.chipStatus}
+                    label={entry.status}
+                    size="sm"
+                  />
+                </div>
+                <div className="mt-1 grid gap-1 text-[10px] text-[var(--bb-text-faint)] sm:grid-cols-3">
+                  <p>Rows Imported: {entry.rowCount}</p>
+                  <p>Invalid Rows: {entry.invalidCount}</p>
+                  <p className="truncate">Error: {entry.error ?? '—'}</p>
+                </div>
               </div>
             ))}
           </div>
