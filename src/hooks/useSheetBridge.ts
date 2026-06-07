@@ -242,7 +242,7 @@ export function useSheetBridge() {
       return false
     }
 
-    if (!resource?.importEnabled) {
+    if (resource?.importEnabled === false) {
       setImportError(`"${resource?.name ?? resourceId}" import is not enabled. Preview/export only.`)
       return false
     }
