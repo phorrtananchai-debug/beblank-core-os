@@ -5,6 +5,7 @@ import { useSheetBridge } from '../../hooks/useSheetBridge'
 import { useOs } from '../../core/os/OsContext'
 import { loadBackup, removeBackup } from '../../core/sheetBridge/backup'
 import { SourceHealthMonitorFull } from '../../components/shared/SourceHealthMonitor'
+import { BridgeDiagnostics } from '../../components/bridge/BridgeDiagnostics'
 
 const ResourceCard = ({
   resource,
@@ -349,6 +350,29 @@ export const BridgeSettingsPage = () => {
               {sourceBadge.label}
             </span>
           </div>
+
+          {/* BULK IMPORT ACTION */}
+          {hasLiveEndpoint && (
+            <div className="flex items-center gap-3 rounded-xl border border-dashed border-black/[0.06] bg-white/50 p-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-[var(--bb-text-muted)]">Bulk Import All Resources</p>
+                <p className="text-[10px] text-[var(--bb-text-faint)]">Fetch, preview, and confirm each resource from the endpoint.</p>
+              </div>
+              <button
+                className="btn-primary shrink-0 text-xs"
+                type="button"
+                onClick={async () => {
+                  const importable = SHEET_RESOURCES.filter((r) => r.importEnabled !== false && r.id !== 'allocation-buckets')
+                  for (const resource of importable) {
+                    await handleFetchFromEndpoint(resource.id)
+                    await new Promise((r) => setTimeout(r, 500))
+                  }
+                }}
+              >
+                Fetch All ({SHEET_RESOURCES.filter((r) => r.importEnabled !== false && r.id !== 'allocation-buckets').length} resources)
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -665,6 +689,15 @@ export const BridgeSettingsPage = () => {
 
       {/* SOURCE HEALTH FULL */}
       <SourceHealthMonitorFull />
+
+      {/* BRIDGE DIAGNOSTICS */}
+      <BridgeDiagnostics
+        data={data}
+        activeEndpointUrl={activeEndpointUrl}
+        activeEndpointSource={activeEndpointSource}
+        lastSyncStatus={config.lastSyncStatus}
+        lastSyncAt={config.lastSyncAt}
+      />
 
       {/* WRITE-BACK HISTORY */}
       <section className="os-card-primary">
