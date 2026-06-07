@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 

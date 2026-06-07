@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAuth } from '../core/auth/AuthContext'
+import { useAuth } from '../core/auth/useAuth'
 import { useProfile } from '../hooks/useProfile'
 
 const groups = [
@@ -75,12 +75,20 @@ export const OSLayout = () => {
                         }
                       >
                         <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs transition-all duration-200 ${
-                          (() => { switch(link.to) {
-                            case '/os': case '/os/studio': return 'bg-black/[0.04] text-[var(--bb-text-muted)]';
-                            case '/os/finance': case '/os/finance/investments': case '/os/capital': return 'bg-[var(--bb-amber)]/10 text-[var(--bb-amber)]';
-                            case '/os/finance/trading-lab': return 'bg-black/[0.04] text-[var(--bb-text-muted)]';
-                            case '/os/ai': return 'bg-black/[0.04] text-[var(--bb-text-muted)]';
-                            default: return 'bg-black/[0.04] text-[var(--bb-text-faint)]';
+                          (() => { switch (link.to) {
+                            case '/os':
+                            case '/os/studio':
+                              return 'bg-black/[0.04] text-[var(--bb-text-muted)]'
+                            case '/os/finance':
+                            case '/os/finance/investments':
+                            case '/os/capital':
+                              return 'bg-[var(--bb-amber)]/10 text-[var(--bb-amber)]'
+                            case '/os/finance/trading-lab':
+                              return 'bg-black/[0.04] text-[var(--bb-text-muted)]'
+                            case '/os/ai':
+                              return 'bg-black/[0.04] text-[var(--bb-text-muted)]'
+                            default:
+                              return 'bg-black/[0.04] text-[var(--bb-text-faint)]'
                           } })()
                         }`}>{link.icon}</span>
                         {link.label}
@@ -111,11 +119,11 @@ export const OSLayout = () => {
           </div>
         </aside>
 
-          <div className="min-w-0 flex-1 space-y-5">
-            <div className="os-workspace-panel break-words rounded-[34px] border border-[var(--bb-border)] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
-              <Outlet />
-            </div>
+        <div className="min-w-0 flex-1 space-y-5">
+          <div className="os-workspace-panel break-words rounded-[34px] border border-[var(--bb-border)] bg-white/92 p-4 shadow-[0_24px_80px_-62px_rgba(0,0,0,0.38)] md:p-7">
+            <Outlet />
           </div>
+        </div>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@
 import { EmptyState } from '../../components/shared/EmptyState'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
 

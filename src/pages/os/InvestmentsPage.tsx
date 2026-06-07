@@ -21,7 +21,7 @@ import { RebalancePreview } from '../../components/investments/RebalancePreview'
 import { computePostureBuckets, computeRebalanceSuggestions } from '../../core/investments/allocationUtils'
 import { generateId } from '../../app/utils'
 import { getSupportedFinnhubSymbols, isFinnhubConfigured } from '../../core/connectors'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, ThaiNavAsset } from '../../types/models'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`

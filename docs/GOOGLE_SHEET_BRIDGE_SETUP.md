@@ -68,25 +68,48 @@ Your Apps Script endpoint must return JSON with this shape:
 
 ```javascript
 function doGet(e) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('projects');
-  const rows = sheet.getDataRange().getValues();
-  const headers = rows[0];
-  const data = rows.slice(1).map(row => {
+  const resource = e && e.parameter ? e.parameter.resource : '';
+  const config = RESOURCE_MAP[resource];
+
+  if (!resource || !config) {
+    return jsonResponse({
+      ok: false,
+      resource: resource || '',
+      rows: [],
+      error: !resource
+        ? 'No resource parameter provided. Use ?resource=studio-projects'
+        : 'Unknown resource: "' + resource + '"',
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.sheetName);
+  const values = sheet.getDataRange().getValues();
+  const headers = values.length > 0 ? values[0].map(String) : [];
+  const rows = values.slice(1).map((row) => {
     const obj = {};
     headers.forEach((header, i) => { obj[header] = row[i]; });
     return obj;
   });
-  
-  return ContentService
-    .createTextOutput(JSON.stringify({
-      ok: true,
-      resource: 'studio-projects',
-      rows: data,
-      updatedAt: new Date().toISOString()
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
+
+  return jsonResponse({
+    ok: true,
+    resource: config.id,
+    rows,
+    updatedAt: new Date().toISOString(),
+  });
 }
 ```
+
+Use `docs/google-sheet/AppsScriptWebApp.gs` as the full canonical Apps Script template. Supported resource IDs:
+- `studio-projects`
+- `approvals`
+- `capital-records`
+- `investment-holdings`
+- `dca-records`
+- `dividend-records`
+- `allocation-buckets`
+- `ai-context-logs`
 
 ---
 

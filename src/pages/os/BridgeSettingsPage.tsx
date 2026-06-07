@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { ImportPreviewPanel } from '../../components/shared/ImportPreviewPanel'
 import { SHEET_RESOURCES } from '../../core/sheetBridge/resources'
 import { useSheetBridge } from '../../hooks/useSheetBridge'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import { loadBackup, removeBackup } from '../../core/sheetBridge/backup'
 import { SourceHealthMonitorFull } from '../../components/shared/SourceHealthMonitor'
 import { BridgeDiagnostics } from '../../components/bridge/BridgeDiagnostics'
@@ -130,6 +130,15 @@ export const BridgeSettingsPage = () => {
   const handleFetchFromEndpoint = async (resourceId: string) => {
     setImportResult(null)
     await fetchFromEndpoint(resourceId)
+  }
+
+  const handlePreviewAll = async () => {
+    setImportResult(null)
+    const importable = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false)
+    for (const resource of importable) {
+      await fetchFromEndpoint(resource.id)
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    }
   }
 
   const handleConfirmImport = () => {
@@ -355,21 +364,15 @@ export const BridgeSettingsPage = () => {
           {hasLiveEndpoint && (
             <div className="flex items-center gap-3 rounded-xl border border-dashed border-black/[0.06] bg-white/50 p-3">
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-[var(--bb-text-muted)]">Bulk Import All Resources</p>
-                <p className="text-[10px] text-[var(--bb-text-faint)]">Fetch, preview, and confirm each resource from the endpoint.</p>
+                <p className="text-xs font-semibold text-[var(--bb-text-muted)]">Preview All Resources</p>
+                <p className="text-[10px] text-[var(--bb-text-faint)]">Preview each importable resource from the endpoint. The last preview remains open for manual confirm.</p>
               </div>
               <button
                 className="btn-primary shrink-0 text-xs"
                 type="button"
-                onClick={async () => {
-                  const importable = SHEET_RESOURCES.filter((r) => r.importEnabled !== false && r.id !== 'allocation-buckets')
-                  for (const resource of importable) {
-                    await handleFetchFromEndpoint(resource.id)
-                    await new Promise((r) => setTimeout(r, 500))
-                  }
-                }}
+                onClick={handlePreviewAll}
               >
-                Fetch All ({SHEET_RESOURCES.filter((r) => r.importEnabled !== false && r.id !== 'allocation-buckets').length} resources)
+                Preview All ({SHEET_RESOURCES.filter((r) => r.importEnabled !== false).length} resources)
               </button>
             </div>
           )}

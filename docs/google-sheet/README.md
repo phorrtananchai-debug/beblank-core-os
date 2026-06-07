@@ -28,6 +28,7 @@ This folder contains CSV templates for bootstrapping the Be Blank OS Google Shee
 - The `AllocationBuckets.csv` columns differ from the bridge's `allocation-buckets` resource definition (`id, name, targetPercent, toleranceBand` vs `id, bucket, targetPercent, currentPercent, posture`). Adjust the sheet columns to match when import is enabled.
 - Example rows use zero quantities and placeholder values. Replace with real data before importing.
 - After importing CSVs, deploy the Apps Script Web App. See `docs/GOOGLE_SHEET_PRODUCTION_BOOTSTRAP.md` for the full guide.
+- The Apps Script bridge template that supports `?resource=<resourceId>` lives at `docs/google-sheet/AppsScriptWebApp.gs`.
 
 ## Related Documentation
 

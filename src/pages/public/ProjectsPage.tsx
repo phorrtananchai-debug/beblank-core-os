@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 
 export const ProjectsPage = () => {
   const { data } = useOs()

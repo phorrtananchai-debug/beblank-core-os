@@ -8,7 +8,7 @@ import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPan
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
 import { SourceStatusBadge } from '../../components/shared/SourceStatusBadge'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
 

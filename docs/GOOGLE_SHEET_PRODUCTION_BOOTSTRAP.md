@@ -183,7 +183,7 @@ Every endpoint response must match this shape:
 
 ### 2.3 Apps Script Source Code
 
-Create a new Apps Script project attached to your Google Sheet and paste the following code:
+Create a new Apps Script project attached to your Google Sheet and paste the template from `docs/google-sheet/AppsScriptWebApp.gs`.
 
 ```javascript
 /**
@@ -192,16 +192,22 @@ Create a new Apps Script project attached to your Google Sheet and paste the fol
  * Deploy as Web App → Execute as: Me → Access: Anyone
  * 
  * GET ?resource=studio-projects
+ * GET ?resource=approvals
  * GET ?resource=capital-records
  * GET ?resource=investment-holdings
+ * GET ?resource=dca-records
+ * GET ?resource=dividend-records
  * GET ?resource=ai-context-logs
  * GET ?resource=allocation-buckets
  */
 
 const RESOURCE_MAP = {
   'studio-projects': { sheetName: 'StudioProjects', id: 'studio-projects' },
+  'approvals': { sheetName: 'Approvals', id: 'approvals' },
   'capital-records': { sheetName: 'CapitalRecords', id: 'capital-records' },
   'investment-holdings': { sheetName: 'Holdings', id: 'investment-holdings' },
+  'dca-records': { sheetName: 'DCARecords', id: 'dca-records' },
+  'dividend-records': { sheetName: 'DividendRecords', id: 'dividend-records' },
   'ai-context-logs': { sheetName: 'AIContexts', id: 'ai-context-logs' },
   'allocation-buckets': { sheetName: 'AllocationBuckets', id: 'allocation-buckets' },
 }
@@ -333,15 +339,21 @@ function jsonResponse(data) {
 }
 ```
 
+The canonical copy of this Apps Script template lives at `docs/google-sheet/AppsScriptWebApp.gs`.
+
 ### 2.4 Apps Script Tests
 
 After deploying, verify each endpoint returns the expected shape. Example test URLs:
 
 ```
 https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=studio-projects
+https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=approvals
 https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=capital-records
 https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=investment-holdings
+https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=dca-records
+https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=dividend-records
 https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=ai-context-logs
+https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=allocation-buckets
 ```
 
 Each should return `{ "ok": true, "resource": "...", "rows": [...] }`.

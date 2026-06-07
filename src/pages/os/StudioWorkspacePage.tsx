@@ -11,7 +11,7 @@ import { OperatingRhythm } from '../../components/studio/OperatingRhythm'
 import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import type {
   ActionRequest,
   ApprovalRecord,

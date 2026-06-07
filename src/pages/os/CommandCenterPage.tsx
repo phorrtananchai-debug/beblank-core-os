@@ -15,7 +15,7 @@ import { useProfile } from '../../hooks/useProfile'
 import { CapitalHealthCard } from '../../components/dashboard/CapitalHealthCard'
 import { InvestmentHealthCard } from '../../components/dashboard/InvestmentHealthCard'
 import { DailyFocusCard } from '../../components/dashboard/DailyFocusCard'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import { loadWriteHistory, loadWriteStatusSummary } from '../../core/sheetBridge/writeback'
 import type { SiteIssue, Task, TimelineItem } from '../../types/models'
 

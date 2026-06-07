@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { type ReactNode } from 'react'
 import { EmptyState } from '../../components/shared/EmptyState'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import type {
   ArtworkRecord,
   CreativeBrief,

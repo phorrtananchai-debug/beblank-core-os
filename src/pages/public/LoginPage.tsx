@@ -1,5 +1,5 @@
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../core/auth/AuthContext'
+import { useAuth } from '../../core/auth/useAuth'
 
 interface LocationState {
   from?: string

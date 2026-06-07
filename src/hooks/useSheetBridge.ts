@@ -1,13 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
 import { SHEET_RESOURCES } from '../core/sheetBridge/resources'
+import { getActiveAppsScriptEndpoint, getEnvAppsScriptEndpoint, STORAGE_KEY } from '../core/sheetBridge/config'
 import type { ExportPreview } from '../core/sheetBridge/types'
 import type { ImportPreview, SheetBridgeConfig } from '../core/sheetBridge/types'
 import type { PendingWriteRow, WriteHistoryRecord } from '../core/sheetBridge/writeback'
 import { buildRowForResource, loadWriteHistory, appendWriteHistory, buildPayloadSummary, computeWriteStatusSummary, saveWriteStatusSummary } from '../core/sheetBridge/writeback'
 import { normalizeRows } from '../core/sheetBridge/adapters'
 import { createBackup, loadBackup, removeBackup } from '../core/sheetBridge/backup'
-
-const STORAGE_KEY = 'beblank_os_bridge_config_v1'
 
 const DEFAULT_CONFIG: SheetBridgeConfig = {
   sheetUrl: '',
@@ -24,16 +23,16 @@ function loadConfig(): SheetBridgeConfig {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       const parsed = JSON.parse(stored) as SheetBridgeConfig
-      const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
-      if (!parsed.appsScriptEndpoint && envEndpoint?.startsWith('https://')) {
+      const envEndpoint = getEnvAppsScriptEndpoint()
+      if (!parsed.appsScriptEndpoint && envEndpoint) {
         parsed.appsScriptEndpoint = envEndpoint
         parsed.isEnvDefault = true
       }
       return { ...DEFAULT_CONFIG, ...parsed }
     }
   } catch { /* ignore */ }
-  const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
-  if (envEndpoint?.startsWith('https://')) {
+  const envEndpoint = getEnvAppsScriptEndpoint()
+  if (envEndpoint) {
     return { ...DEFAULT_CONFIG, appsScriptEndpoint: envEndpoint, isEnvDefault: true }
   }
   return { ...DEFAULT_CONFIG }
@@ -54,14 +53,11 @@ export function useSheetBridge() {
     saveWriteStatusSummary(computeWriteStatusSummary(pendingWrites))
   }, [pendingWrites])
 
-  const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
+  const envEndpoint = getEnvAppsScriptEndpoint()
   const envEndpointStatus = !envEndpoint ? 'missing' : envEndpoint.startsWith('https://') ? 'configured' : 'invalid'
-  const activeEndpointUrl = config.appsScriptEndpoint || envEndpoint || ''
-  const activeEndpointSource: 'manual' | 'env' | 'none' = config.appsScriptEndpoint && !config.isEnvDefault
-    ? 'manual'
-    : config.appsScriptEndpoint || envEndpoint
-      ? 'env'
-      : 'none'
+  const activeEndpoint = getActiveAppsScriptEndpoint()
+  const activeEndpointUrl = activeEndpoint.url
+  const activeEndpointSource: 'manual' | 'env' | 'none' = activeEndpoint.source
 
   const persistConfig = useCallback((next: SheetBridgeConfig) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
@@ -148,7 +144,10 @@ export function useSheetBridge() {
     setImportError(null)
 
     try {
-      const response = await fetch(endpoint, {
+      const resourceUrl = new URL(endpoint)
+      resourceUrl.searchParams.set('resource', resourceId)
+
+      const response = await fetch(resourceUrl.toString(), {
         method: 'GET',
         signal: AbortSignal.timeout(15000),
         headers: { 'Accept': 'application/json' },
@@ -172,6 +171,10 @@ export function useSheetBridge() {
 
       if (!Array.isArray(parsed.rows)) {
         throw new Error('Response is missing "rows" array.')
+      }
+
+      if (typeof parsed.resource === 'string' && parsed.resource && parsed.resource !== resourceId) {
+        throw new Error(`Endpoint returned resource "${parsed.resource}" while "${resourceId}" was requested.`)
       }
 
       const { rows, errors } = normalizeRows(parsed.rows as Record<string, unknown>[], resource)

@@ -1,35 +1,15 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { isFinnhubConfigured, isKarunBridgeConfigured, readKarunPhuketBridge } from '../connectors'
 import { createInitialOsDataFromProviders } from '../data/providers'
+import { normalizeRows } from '../sheetBridge/adapters'
+import { getActiveAppsScriptEndpoint } from '../sheetBridge/config'
+import { SHEET_RESOURCES } from '../sheetBridge/resources'
+import { OsContext, type OsContextValue } from './osContextObject'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
-import type {
-  ActionRequest,
-  ChangeLogRecord,
-  DataProviderStatus,
-  OsData,
-  SnapshotRecord,
-  SourceStatus,
-} from '../../types/models'
+import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
 
-interface OsContextValue {
-  data: OsData
-  sourceStatuses: Record<string, SourceStatus>
-  providerStatuses: Record<string, DataProviderStatus>
-  refreshKarunBridge: () => Promise<void>
-  pendingApprovals: ActionRequest[]
-  changeLogs: ChangeLogRecord[]
-  snapshots: SnapshotRecord[]
-  createActionRequest: (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
-  approveActionRequest: (requestId: string) => void
-  rejectActionRequest: (requestId: string) => void
-  queueSuggestionImport: (module: string, title: string, recommendation: string, riskNotes: string) => void
-  bulkMergeData: (field: string, rows: unknown[]) => { appended: number; updated: number; skipped: number }
-  restoreField: (field: string, rows: unknown[]) => void
-}
+const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRows', 'holdings', 'dcaRecords', 'dividendRecords', 'aiContexts'])
 
-const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'financeLedgerRows', 'holdings', 'aiContexts'])
-
-const OsContext = createContext<OsContextValue | undefined>(undefined)
 const initialProviderState = createInitialOsDataFromProviders()
 
 export const OsProvider = ({ children }: { children: React.ReactNode }) => {
@@ -61,60 +41,50 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     rejectActionRequest,
     queueSuggestionImport,
   } = useApprovalWorkflow(data, setData, sourceStatuses, setSourceStatuses, setFinnhubStatus)
+  const hasBootstrappedRef = useRef(false)
 
   const bulkMergeData = useCallback((field: string, rows: unknown[]): { appended: number; updated: number; skipped: number } => {
     if (!ALLOWED_BRIDGE_FIELDS.has(field)) {
       return { appended: 0, updated: 0, skipped: rows.length }
     }
-
-    const currentArray = (data as unknown as Record<string, unknown>)[field]
-    if (!Array.isArray(currentArray)) {
-      return { appended: 0, updated: 0, skipped: rows.length }
-    }
-
-    const currentIds = new Set(currentArray.map((item) => (item as Record<string, unknown>)?.id))
-    let appended = 0
-    let updated = 0
-
-    for (const row of rows) {
-      const id = (row as Record<string, unknown>)?.id
-      if (id === undefined || id === null) {
-        appended++
-      } else if (currentIds.has(id)) {
-        updated++
-      } else {
-        appended++
-        currentIds.add(id)
-      }
-    }
+    let result = { appended: 0, updated: 0, skipped: rows.length }
 
     setData((current) => {
       const arr = (current as unknown as Record<string, unknown>)[field]
       if (!Array.isArray(arr)) return current
 
+      const currentIds = new Set(arr.map((item) => (item as Record<string, unknown>)?.id))
+      let appended = 0
+      let updated = 0
       const ids = new Set(arr.map((item) => (item as Record<string, unknown>)?.id))
       const merged = [...arr]
 
       for (const row of rows) {
         const id = (row as Record<string, unknown>)?.id
         if (id === undefined || id === null) {
+          appended++
           merged.push(row)
         } else if (ids.has(id)) {
+          if (currentIds.has(id)) {
+            updated++
+          }
           const index = merged.findIndex((item) => (item as Record<string, unknown>)?.id === id)
           if (index !== -1) {
             merged[index] = { ...(merged[index] as Record<string, unknown>), ...(row as Record<string, unknown>) }
           }
         } else {
+          appended++
           merged.push(row)
           ids.add(id)
         }
       }
 
+      result = { appended, updated, skipped: rows.length - appended - updated }
       return { ...current, [field]: merged }
     })
 
-    return { appended, updated, skipped: rows.length - appended - updated }
-  }, [data])
+    return result
+  }, [])
 
   const restoreField = useCallback((field: string, rows: unknown[]) => {
     setData((current) => ({ ...current, [field]: rows }))
@@ -188,6 +158,72 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     })
   }
 
+  useEffect(() => {
+    if (hasBootstrappedRef.current) return
+    hasBootstrappedRef.current = true
+
+    if (data.projects.length > 0 || data.holdings.length > 0) {
+      return
+    }
+
+    const { url } = getActiveAppsScriptEndpoint()
+    if (!url) {
+      return
+    }
+
+    const hydrate = async () => {
+      let hydratedAny = false
+      const importableResources = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
+
+      for (const resource of importableResources) {
+        try {
+          const resourceUrl = new URL(url)
+          resourceUrl.searchParams.set('resource', resource.id)
+
+          const response = await fetch(resourceUrl.toString(), {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+            signal: AbortSignal.timeout(15000),
+          })
+
+          if (!response.ok) continue
+
+          const parsed = await response.json() as Record<string, unknown>
+          if (parsed.ok !== true || !Array.isArray(parsed.rows)) continue
+          if (typeof parsed.resource === 'string' && parsed.resource && parsed.resource !== resource.id) continue
+
+          const { rows } = normalizeRows(parsed.rows as Record<string, unknown>[], resource)
+          if (!rows.length) continue
+
+          const mergeResult = bulkMergeData(resource.osField, rows)
+          if (mergeResult.appended > 0 || mergeResult.updated > 0) {
+            hydratedAny = true
+          }
+        } catch {
+          // Safe bootstrap preserves current state on any read failure.
+        }
+      }
+
+      if (hydratedAny) {
+        const now = new Date().toISOString()
+        setSourceStatuses((current) => ({
+          ...current,
+          appsScriptBridge: {
+            ...current.appsScriptBridge,
+            lastSyncedAt: now,
+            isStale: false,
+            mode: 'live',
+            health: 'healthy',
+            syncState: 'idle',
+            bridgeWarning: undefined,
+          },
+        }))
+      }
+    }
+
+    void hydrate()
+  }, [bulkMergeData, data.holdings.length, data.projects.length])
+
   const value = useMemo<OsContextValue>(
     () => ({
       data,
@@ -208,13 +244,5 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>
-}
-
-export const useOs = () => {
-  const context = useContext(OsContext)
-  if (!context) {
-    throw new Error('useOs must be used within OsProvider')
-  }
-  return context
 }
 

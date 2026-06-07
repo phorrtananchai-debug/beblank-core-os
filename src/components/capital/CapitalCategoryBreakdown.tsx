@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
 

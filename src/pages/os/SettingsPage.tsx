@@ -4,7 +4,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { MockSheetSyncStatus } from '../../components/shared/MockSheetSyncStatus'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import { useProfile } from '../../hooks/useProfile'
 import type { SyncQueueItem } from '../../types/models'
 

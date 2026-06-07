@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 
 export const ProjectDetailPage = () => {
   const { slug } = useParams()

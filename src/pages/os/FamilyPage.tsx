@@ -4,7 +4,7 @@ import { LedgerForm } from '../../components/capital/LedgerForm'
 import type { LedgerFormData } from '../../components/capital/LedgerForm'
 import { LedgerTable } from '../../components/capital/LedgerTable'
 import type { LedgerTableCallbacks } from '../../components/capital/LedgerTable'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import type { FinanceLedgerRow } from '../../types/models'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`

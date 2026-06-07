@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { EmptyState } from '../../components/shared/EmptyState'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 
 export const StudioPage = () => {
   const navigate = useNavigate()

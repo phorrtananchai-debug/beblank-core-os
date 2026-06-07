@@ -16,7 +16,7 @@ import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { ModuleAISummaryPanel } from '../../components/shared/ModuleAISummaryPanel'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import type { FinanceLedgerRow } from '../../types/models'
 import { FamilyPage } from './FamilyPage'
 

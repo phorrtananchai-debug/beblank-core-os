@@ -4,7 +4,7 @@ import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
-import { useOs } from '../../core/os/OsContext'
+import { useOs } from '../../core/os/useOs'
 import type { AIDigestRecord, AIExportRecord, AIImportRecord, AIMemoryRecord, AIObservationRecord } from '../../types/models'
 
 export type AIWorkflowView = 'overview' | 'context' | 'reviews' | 'memory' | 'exports' | 'imports'
