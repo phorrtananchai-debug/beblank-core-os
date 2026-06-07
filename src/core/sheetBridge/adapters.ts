@@ -1,5 +1,32 @@
 import type { SheetResourceDef, RowValidationError } from './types'
-import { parseMediaImageUrls } from '../studio/projectMedia'
+
+function parseInlineMediaImageUrls(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean)
+  }
+
+  if (typeof value !== 'string') {
+    return []
+  }
+
+  const raw = value.trim()
+  if (!raw) {
+    return []
+  }
+
+  if (raw.startsWith('[') && raw.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item).trim()).filter(Boolean)
+      }
+    } catch {
+      return []
+    }
+  }
+
+  return raw.split(',').map((item) => item.trim()).filter(Boolean)
+}
 
 function coerceValue(value: unknown, type: 'string' | 'number' | 'date' | 'boolean'): unknown {
   if (value === undefined || value === null || value === '') return undefined
@@ -56,7 +83,7 @@ export function normalizeRow(
 
     if (coerced !== undefined) {
       row[col.key] = resource.id === 'studio-projects' && col.key === 'mediaImageUrls'
-        ? parseMediaImageUrls(coerced)
+        ? parseInlineMediaImageUrls(coerced)
         : coerced
     }
   }
