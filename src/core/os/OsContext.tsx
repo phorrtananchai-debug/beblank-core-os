@@ -11,6 +11,35 @@ import type { DataProviderStatus, OsData, SourceStatus } from '../../types/model
 const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRows', 'holdings', 'dcaRecords', 'dividendRecords', 'aiContexts'])
 
 const initialProviderState = createInitialOsDataFromProviders()
+const IMPORTABLE_BRIDGE_RESOURCES = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
+
+interface BridgeBootstrapDiagnostic {
+  resourceId: string
+  resourceName: string
+  status: 'imported' | 'empty' | 'failed'
+  rowCount: number
+  invalidCount: number
+  error?: string
+}
+
+const synthesizeBootstrapDiagnosticsFromData = (data: OsData): BridgeBootstrapDiagnostic[] => {
+  return IMPORTABLE_BRIDGE_RESOURCES.flatMap((resource) => {
+    const value = (data as unknown as Record<string, unknown>)[resource.osField]
+    const rowCount = Array.isArray(value) ? value.length : 0
+
+    if (rowCount <= 0) {
+      return []
+    }
+
+    return [{
+      resourceId: resource.id,
+      resourceName: resource.name,
+      status: 'imported' as const,
+      rowCount,
+      invalidCount: 0,
+    }]
+  })
+}
 
 if (typeof window !== 'undefined') {
   const resources = [
@@ -32,6 +61,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<OsData>(initialProviderState.data)
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(initialProviderState.sourceStatuses)
   const [providerStatuses] = useState<Record<string, DataProviderStatus>>(initialProviderState.providerStatuses)
+  const [, setBootstrapDiagnostics] = useState<BridgeBootstrapDiagnostic[]>(() => synthesizeBootstrapDiagnosticsFromData(initialProviderState.data))
   const [karunBridgeStatus, setKarunBridgeStatus] = useState<DataProviderStatus>({
     source: 'Karun Phuket Apps Script Read Bridge',
     mode: isKarunBridgeConfigured ? 'live' : 'fallback',
@@ -189,9 +219,9 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
 
     const hydrate = async () => {
       let hydratedAny = false
-      const importableResources = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
+      const diagnostics: BridgeBootstrapDiagnostic[] = []
 
-      for (const resource of importableResources) {
+      for (const resource of IMPORTABLE_BRIDGE_RESOURCES) {
         try {
           const resourceUrl = new URL(url)
           resourceUrl.searchParams.set('resource', resource.id)
@@ -202,23 +232,79 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
             signal: AbortSignal.timeout(15000),
           })
 
-          if (!response.ok) continue
+          if (!response.ok) {
+            diagnostics.push({
+              resourceId: resource.id,
+              resourceName: resource.name,
+              status: 'failed',
+              rowCount: 0,
+              invalidCount: 0,
+              error: `HTTP ${response.status}: ${response.statusText}`,
+            })
+            continue
+          }
 
           const parsed = await response.json() as Record<string, unknown>
-          if (parsed.ok !== true || !Array.isArray(parsed.rows)) continue
-          if (typeof parsed.resource === 'string' && parsed.resource && parsed.resource !== resource.id) continue
+          if (parsed.ok !== true || !Array.isArray(parsed.rows)) {
+            diagnostics.push({
+              resourceId: resource.id,
+              resourceName: resource.name,
+              status: 'failed',
+              rowCount: 0,
+              invalidCount: 0,
+              error: typeof parsed.error === 'string' ? parsed.error : 'Response payload is invalid.',
+            })
+            continue
+          }
+          if (typeof parsed.resource === 'string' && parsed.resource && parsed.resource !== resource.id) {
+            diagnostics.push({
+              resourceId: resource.id,
+              resourceName: resource.name,
+              status: 'failed',
+              rowCount: 0,
+              invalidCount: 0,
+              error: `Endpoint returned resource "${parsed.resource}" while "${resource.id}" was requested.`,
+            })
+            continue
+          }
 
-          const { rows } = normalizeRows(parsed.rows as Record<string, unknown>[], resource)
-          if (!rows.length) continue
+          const { rows, errors } = normalizeRows(parsed.rows as Record<string, unknown>[], resource)
+          if (!rows.length) {
+            diagnostics.push({
+              resourceId: resource.id,
+              resourceName: resource.name,
+              status: errors.length > 0 ? 'failed' : 'empty',
+              rowCount: 0,
+              invalidCount: errors.length,
+              error: errors.length > 0 ? 'All fetched rows were invalid for this resource.' : undefined,
+            })
+            continue
+          }
 
           const mergeResult = bulkMergeData(resource.osField, rows)
+          diagnostics.push({
+            resourceId: resource.id,
+            resourceName: resource.name,
+            status: 'imported',
+            rowCount: mergeResult.appended + mergeResult.updated,
+            invalidCount: errors.length,
+          })
           if (mergeResult.appended > 0 || mergeResult.updated > 0) {
             hydratedAny = true
           }
-        } catch {
-          // Safe bootstrap preserves current state on any read failure.
+        } catch (error) {
+          diagnostics.push({
+            resourceId: resource.id,
+            resourceName: resource.name,
+            status: 'failed',
+            rowCount: 0,
+            invalidCount: 0,
+            error: error instanceof Error ? error.message : 'Unknown bootstrap failure.',
+          })
         }
       }
+
+      setBootstrapDiagnostics(diagnostics)
 
       if (hydratedAny) {
         const now = new Date().toISOString()
