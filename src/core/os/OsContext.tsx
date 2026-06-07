@@ -81,11 +81,11 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   } = useApprovalWorkflow(data, setData, sourceStatuses, setSourceStatuses, setFinnhubStatus)
   const hasBootstrappedRef = useRef(false)
 
-  const bulkMergeData = useCallback((field: string, rows: unknown[]): { appended: number; updated: number; skipped: number } => {
+  const bulkMergeData = useCallback((field: string, rows: unknown[]): { appended: number; updated: number; skipped: number; total: number } => {
     if (!ALLOWED_BRIDGE_FIELDS.has(field)) {
-      return { appended: 0, updated: 0, skipped: rows.length }
+      return { appended: 0, updated: 0, skipped: rows.length, total: 0 }
     }
-    let result = { appended: 0, updated: 0, skipped: rows.length }
+    let result = { appended: 0, updated: 0, skipped: rows.length, total: 0 }
 
     setData((current) => {
       const arr = (current as unknown as Record<string, unknown>)[field]
@@ -117,7 +117,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      result = { appended, updated, skipped: rows.length - appended - updated }
+      result = { appended, updated, skipped: rows.length - appended - updated, total: merged.length }
       return { ...current, [field]: merged }
     })
 
@@ -297,7 +297,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
             resourceId: resource.id,
             resourceName: resource.name,
             status: 'imported',
-            rowCount: mergeResult.appended + mergeResult.updated,
+            rowCount: mergeResult.total,
             invalidCount: errors.length,
             updatedAt: new Date().toISOString(),
           })

@@ -31,7 +31,7 @@ export interface OsContextValue {
   approveActionRequest: (requestId: string) => void
   rejectActionRequest: (requestId: string) => void
   queueSuggestionImport: (module: string, title: string, recommendation: string, riskNotes: string) => void
-  bulkMergeData: (field: string, rows: unknown[]) => { appended: number; updated: number; skipped: number }
+  bulkMergeData: (field: string, rows: unknown[]) => { appended: number; updated: number; skipped: number; total: number }
   restoreField: (field: string, rows: unknown[]) => void
   updateBridgeDiagnostic: (diagnostic: BridgeBootstrapDiagnostic) => void
 }

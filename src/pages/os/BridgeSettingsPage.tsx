@@ -155,12 +155,11 @@ export const BridgeSettingsPage = () => {
       importPreview.rows,
       () => {
         const result = bulkMergeData(resource.osField, importPreview.rows)
-        const importedCount = result.appended + result.updated
         updateBridgeDiagnostic({
           resourceId: resource.id,
           resourceName: resource.name,
-          status: importedCount > 0 ? 'imported' : 'empty',
-          rowCount: importedCount,
+          status: result.total > 0 ? 'imported' : 'empty',
+          rowCount: result.total,
           invalidCount: importPreview.invalidCount,
           updatedAt: new Date().toISOString(),
         })
