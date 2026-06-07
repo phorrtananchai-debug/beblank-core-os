@@ -28,6 +28,7 @@ const synthesizeBootstrapDiagnosticsFromData = (data: OsData): BridgeBootstrapDi
       status: 'imported' as const,
       rowCount,
       invalidCount: 0,
+      updatedAt: new Date().toISOString(),
     }]
   })
 }
@@ -127,6 +128,21 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     setData((current) => ({ ...current, [field]: rows }))
   }, [])
 
+  const updateBridgeDiagnostic = useCallback((diagnostic: BridgeBootstrapDiagnostic) => {
+    setBootstrapDiagnostics((current) => {
+      const next = [...current]
+      const existingIndex = next.findIndex((entry) => entry.resourceId === diagnostic.resourceId)
+
+      if (existingIndex >= 0) {
+        next[existingIndex] = diagnostic
+      } else {
+        next.push(diagnostic)
+      }
+
+      return next
+    })
+  }, [])
+
   const refreshKarunBridge = async () => {
     setKarunBridgeStatus((current) => ({ ...current, mode: isKarunBridgeConfigured ? 'live' : 'fallback', stale: true }))
     const response = await readKarunPhuketBridge()
@@ -224,40 +240,43 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
           })
 
           if (!response.ok) {
-            diagnostics.push({
-              resourceId: resource.id,
-              resourceName: resource.name,
-              status: 'failed',
-              rowCount: 0,
-              invalidCount: 0,
-              error: `HTTP ${response.status}: ${response.statusText}`,
-            })
-            continue
-          }
+          diagnostics.push({
+            resourceId: resource.id,
+            resourceName: resource.name,
+            status: 'failed',
+            rowCount: 0,
+            invalidCount: 0,
+            error: `HTTP ${response.status}: ${response.statusText}`,
+            updatedAt: new Date().toISOString(),
+          })
+          continue
+        }
 
           const parsed = await response.json() as Record<string, unknown>
           if (parsed.ok !== true || !Array.isArray(parsed.rows)) {
             diagnostics.push({
               resourceId: resource.id,
               resourceName: resource.name,
-              status: 'failed',
-              rowCount: 0,
-              invalidCount: 0,
-              error: typeof parsed.error === 'string' ? parsed.error : 'Response payload is invalid.',
-            })
-            continue
-          }
+            status: 'failed',
+            rowCount: 0,
+            invalidCount: 0,
+            error: typeof parsed.error === 'string' ? parsed.error : 'Response payload is invalid.',
+            updatedAt: new Date().toISOString(),
+          })
+          continue
+        }
           if (typeof parsed.resource === 'string' && parsed.resource && parsed.resource !== resource.id) {
             diagnostics.push({
               resourceId: resource.id,
               resourceName: resource.name,
-              status: 'failed',
-              rowCount: 0,
-              invalidCount: 0,
-              error: `Endpoint returned resource "${parsed.resource}" while "${resource.id}" was requested.`,
-            })
-            continue
-          }
+            status: 'failed',
+            rowCount: 0,
+            invalidCount: 0,
+            error: `Endpoint returned resource "${parsed.resource}" while "${resource.id}" was requested.`,
+            updatedAt: new Date().toISOString(),
+          })
+          continue
+        }
 
           const { rows, errors } = normalizeRows(parsed.rows as Record<string, unknown>[], resource)
           if (!rows.length) {
@@ -268,6 +287,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
               rowCount: 0,
               invalidCount: errors.length,
               error: errors.length > 0 ? 'All fetched rows were invalid for this resource.' : undefined,
+              updatedAt: new Date().toISOString(),
             })
             continue
           }
@@ -279,6 +299,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
             status: 'imported',
             rowCount: mergeResult.appended + mergeResult.updated,
             invalidCount: errors.length,
+            updatedAt: new Date().toISOString(),
           })
           if (mergeResult.appended > 0 || mergeResult.updated > 0) {
             hydratedAny = true
@@ -291,6 +312,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
             rowCount: 0,
             invalidCount: 0,
             error: error instanceof Error ? error.message : 'Unknown bootstrap failure.',
+            updatedAt: new Date().toISOString(),
           })
         }
       }
@@ -333,8 +355,9 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       queueSuggestionImport,
       bulkMergeData,
       restoreField,
+      updateBridgeDiagnostic,
     }),
-    [data, sourceStatuses, providerStatuses, bootstrapDiagnostics, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots, bulkMergeData, restoreField, createActionRequest, approveActionRequest, rejectActionRequest, queueSuggestionImport],
+    [data, sourceStatuses, providerStatuses, bootstrapDiagnostics, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots, bulkMergeData, restoreField, updateBridgeDiagnostic, createActionRequest, approveActionRequest, rejectActionRequest, queueSuggestionImport],
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>

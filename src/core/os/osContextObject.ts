@@ -15,6 +15,7 @@ export interface BridgeBootstrapDiagnostic {
   rowCount: number
   invalidCount: number
   error?: string
+  updatedAt?: string
 }
 
 export interface OsContextValue {
@@ -32,6 +33,7 @@ export interface OsContextValue {
   queueSuggestionImport: (module: string, title: string, recommendation: string, riskNotes: string) => void
   bulkMergeData: (field: string, rows: unknown[]) => { appended: number; updated: number; skipped: number }
   restoreField: (field: string, rows: unknown[]) => void
+  updateBridgeDiagnostic: (diagnostic: BridgeBootstrapDiagnostic) => void
 }
 
 export const OsContext = createContext<OsContextValue | undefined>(undefined)

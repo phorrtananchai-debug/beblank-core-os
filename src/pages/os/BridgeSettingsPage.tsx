@@ -76,7 +76,7 @@ const DummyRawRows: Record<string, Record<string, unknown>[]> = {
 }
 
 export const BridgeSettingsPage = () => {
-  const { data, bulkMergeData, restoreField, createActionRequest, bootstrapDiagnostics } = useOs()
+  const { data, bulkMergeData, restoreField, createActionRequest, bootstrapDiagnostics, updateBridgeDiagnostic } = useOs()
   const {
     config,
     importPreview,
@@ -155,6 +155,15 @@ export const BridgeSettingsPage = () => {
       importPreview.rows,
       () => {
         const result = bulkMergeData(resource.osField, importPreview.rows)
+        const importedCount = result.appended + result.updated
+        updateBridgeDiagnostic({
+          resourceId: resource.id,
+          resourceName: resource.name,
+          status: importedCount > 0 ? 'imported' : 'empty',
+          rowCount: importedCount,
+          invalidCount: importPreview.invalidCount,
+          updatedAt: new Date().toISOString(),
+        })
         setImportResult({
           resourceName: resource.name,
           appended: result.appended,
