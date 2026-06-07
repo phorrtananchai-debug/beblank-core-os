@@ -25,6 +25,7 @@ import { useOs } from '../../core/os/useOs'
 import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, ThaiNavAsset } from '../../types/models'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
+const usd = (value = 0) => `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
 const usdToThb = 36.5
 const statusClass = (status: string) => {
   if (['blocked', 'high', 'at-risk', 'open', 'failed'].includes(status)) return 'text-[var(--bb-red)]'
@@ -136,7 +137,7 @@ export const InvestmentsPage = () => {
   const totalValue = normalizedHoldings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
   const driftHoldings = normalizedHoldings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
   const dcaQueue = data.dcaRecords.filter((record) => record.status === 'planned' || record.status === 'review')
-  const expectedDividends = data.dividendRecords.reduce((sum, record) => sum + record.expectedAmountTHB, 0)
+  const expectedDividends = data.dividendRecords.reduce((sum, record) => sum + (record.expectedAmountTHB ?? 0), 0)
   const monthlyDcaTarget = data.dcaRecords.reduce((sum, record) => sum + (record.status === 'planned' ? record.plannedAmountTHB : 0), 0)
   const finnhubProvider = providerStatuses.finnhub
   const marketSymbols = data.marketDataSymbols
@@ -555,9 +556,7 @@ export const InvestmentsPage = () => {
       {activeTab === 'dividends' ? (
         <DividendsTab
           assetName={assetName}
-          createActionRequest={createActionRequest}
           dividendRecords={data.dividendRecords}
-          expectedDividends={expectedDividends}
         />
       ) : null}
 
@@ -1155,67 +1154,80 @@ const DcaTab = ({
 
 const DividendsTab = ({
   assetName,
-  createActionRequest,
   dividendRecords,
-  expectedDividends,
 }: {
   assetName: (id: string) => string
-  createActionRequest: (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
-  dividendRecords: Array<{ id: string; assetId: string; expectedAmountTHB: number; payDate: string; status: string }>
-  expectedDividends: number
-}) => (
-  <div className="space-y-5">
-    <SectionPanel label="ปันผล" title="สรุปชั้นรายได้" endSlot={<span className="pill">{thb(expectedDividends)} ประมาณการ</span>}>
-      {dividendRecords.length === 0 ? (
-        <p className="text-sm text-[var(--bb-text-muted)]">ยังไม่มีข้อมูลปันผล</p>
-      ) : (
-        <div className="space-y-3">
-          {dividendRecords.map((record) => (
-            <div key={record.id} className="os-list-row">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold">{assetName(record.assetId)}</p>
-                  <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{thb(record.expectedAmountTHB)} / pay {record.payDate}</p>
-                </div>
-                <span className="font-mono text-[10px] font-semibold uppercase text-[var(--bb-amber)]">{record.status}</span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <InvestmentActionButton
-                  actionType="finance.markDividendReceived"
-                  description={`Mark dividend received for ${assetName(record.assetId)}`}
-                  payload={{ dividendId: record.id, amountTHB: record.expectedAmountTHB }}
-                  createActionRequest={createActionRequest}
-                  label="รับแล้ว"
-                />
-                <InvestmentActionButton
-                  actionType="finance.reviewDividendEstimate"
-                  description={`Review dividend estimate for ${assetName(record.assetId)}`}
-                  payload={{ dividendId: record.id }}
-                  createActionRequest={createActionRequest}
-                  label="รีวิว"
-                />
-                <InvestmentActionButton
-                  actionType="finance.archiveDividendRow"
-                  description={`Archive dividend row for ${assetName(record.assetId)}`}
-                  payload={{ dividendId: record.id }}
-                  createActionRequest={createActionRequest}
-                  label="เก็บ"
-                />
-              </div>
+  dividendRecords: DividendRecord[]
+}) => {
+  const sortedRecords = [...dividendRecords].sort((a, b) => b.payDate.localeCompare(a.payDate))
+  const today = new Date()
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+  const yearStart = new Date(today.getFullYear(), 0, 1)
+  const trailing12Start = new Date(today)
+  trailing12Start.setMonth(trailing12Start.getMonth() - 12)
+
+  const sumNet = (records: DividendRecord[]) => records.reduce((sum, record) => sum + record.netAmount, 0)
+  const inRange = (start: Date) => sortedRecords.filter((record) => new Date(record.payDate) >= start)
+  const thisMonthTotal = sumNet(inRange(monthStart))
+  const thisYearTotal = sumNet(inRange(yearStart))
+  const trailing12Total = sumNet(inRange(trailing12Start))
+  const bestPaying = Object.entries(
+    sortedRecords.reduce<Record<string, number>>((acc, record) => {
+      const symbol = record.symbol || assetName(record.assetId)
+      acc[symbol] = (acc[symbol] ?? 0) + record.netAmount
+      return acc
+    }, {}),
+  ).sort((a, b) => b[1] - a[1])[0] ?? null
+
+  return (
+    <div className="space-y-5">
+      <SectionPanel label="Dividend Ledger" title="Real dividend history" endSlot={<span className="pill">{sortedRecords.length} records</span>}>
+        {sortedRecords.length === 0 ? (
+          <p className="text-sm text-[var(--bb-text-muted)]">No dividend ledger records yet</p>
+        ) : (
+          <>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <Mini label="This Month" value={usd(thisMonthTotal)} />
+              <Mini label="This Year" value={usd(thisYearTotal)} />
+              <Mini label="Trailing 12M" value={usd(trailing12Total)} />
+              <Mini label="Best Paying Symbol" value={bestPaying ? `${bestPaying[0]} · ${usd(bestPaying[1])}` : '—'} />
             </div>
-          ))}
-        </div>
-      )}
-    </SectionPanel>
-    <SectionPanel label="ประมาณการรายได้" title="ประมาณการรายเดือน/รายปี">
-      <div className="grid gap-3 md:grid-cols-2">
-        <Mini label="ประมาณการต่อเดือน" value={thb(Math.round(expectedDividends / 12))} />
-        <Mini label="ประมาณการต่อปี" value={thb(expectedDividends)} />
-      </div>
-      <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">ประมาณจากรายการปันผลที่คาดไว้ วันที่และจำนวนเงินจริงขึ้นอยู่กับการตรวจสอบใบแจ้งยอด</p>
-    </SectionPanel>
-  </div>
-)
+            <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-black/[0.03] text-[10px] uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">
+                  <tr>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Symbol</th>
+                    <th className="px-4 py-3">Gross</th>
+                    <th className="px-4 py-3">Tax</th>
+                    <th className="px-4 py-3">Net</th>
+                    <th className="px-4 py-3">Currency</th>
+                    <th className="px-4 py-3">Source</th>
+                    <th className="px-4 py-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRecords.map((record) => (
+                    <tr key={record.id} className="border-t border-black/[0.05]">
+                      <td className="px-4 py-3">{record.payDate.slice(0, 10)}</td>
+                      <td className="px-4 py-3 font-semibold">{record.symbol || assetName(record.assetId)}</td>
+                      <td className="px-4 py-3">{record.currency === 'USD' ? usd(record.grossAmount) : `${record.grossAmount.toFixed(2)} ${record.currency}`}</td>
+                      <td className="px-4 py-3">{record.currency === 'USD' ? usd(record.taxAmount) : `${record.taxAmount.toFixed(2)} ${record.currency}`}</td>
+                      <td className="px-4 py-3 font-semibold">{record.currency === 'USD' ? usd(record.netAmount) : `${record.netAmount.toFixed(2)} ${record.currency}`}</td>
+                      <td className="px-4 py-3">{record.currency}</td>
+                      <td className="px-4 py-3 text-xs text-[var(--bb-text-muted)]">{record.source}</td>
+                      <td className="px-4 py-3"><span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(record.status)}`}>{record.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </SectionPanel>
+    </div>
+  )
+}
 
 const WatchlistTab = ({
   createActionRequest,

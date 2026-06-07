@@ -22,7 +22,7 @@ export const InvestmentRhythm = ({ holdings, dcaRecords, dividendRecords, tradin
   const driftCount = holdings.filter((h) => Math.abs((h.allocationPercent ?? 0) - (h.targetAllocationPercent ?? 0)) >= 2).length
   const dcaDue = dcaRecords.filter((r) => r.status === 'planned' || r.status === 'review').length
   const watchlistCount = tradingWatchlist.length
-  const expectedDividends = dividendRecords.reduce((s, r) => s + r.expectedAmountTHB, 0)
+  const expectedDividends = dividendRecords.reduce((s, r) => s + (r.expectedAmountTHB ?? 0), 0)
   const highRisk = holdings.filter((h) => h.risk === 'high').length
   const hasData = holdings.length > 0 || dcaRecords.length > 0
 

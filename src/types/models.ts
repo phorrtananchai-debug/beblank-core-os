@@ -274,6 +274,8 @@ export interface Project {
   phase?: string
   timelineStatus?: 'steady' | 'watch' | 'at-risk'
   operationalNotes?: string
+  coverImageUrl?: string
+  mediaImageUrls?: string[]
 }
 
 export interface Task {
@@ -510,9 +512,16 @@ export interface DividendRecord {
   id: string
   accountId: string
   assetId: string
+  symbol: string
   expectedAmountTHB: number
   payDate: string
+  grossAmount: number
+  taxAmount: number
+  netAmount: number
+  currency: 'USD' | 'THB'
+  source: string
   status: 'expected' | 'received' | 'review'
+  note: string
   sourceStatus: SourceStatus
   lastUpdated: string
   notes: string
