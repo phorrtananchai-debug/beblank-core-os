@@ -4,7 +4,7 @@ import { createInitialOsDataFromProviders } from '../data/providers'
 import { normalizeRows } from '../sheetBridge/adapters'
 import { getActiveAppsScriptEndpoint } from '../sheetBridge/config'
 import { SHEET_RESOURCES } from '../sheetBridge/resources'
-import { OsContext, type OsContextValue } from './osContextObject'
+import { OsContext, type BridgeBootstrapDiagnostic, type OsContextValue } from './osContextObject'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
 
@@ -12,15 +12,6 @@ const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRo
 
 const initialProviderState = createInitialOsDataFromProviders()
 const IMPORTABLE_BRIDGE_RESOURCES = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
-
-interface BridgeBootstrapDiagnostic {
-  resourceId: string
-  resourceName: string
-  status: 'imported' | 'empty' | 'failed'
-  rowCount: number
-  invalidCount: number
-  error?: string
-}
 
 const synthesizeBootstrapDiagnosticsFromData = (data: OsData): BridgeBootstrapDiagnostic[] => {
   return IMPORTABLE_BRIDGE_RESOURCES.flatMap((resource) => {
@@ -61,7 +52,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<OsData>(initialProviderState.data)
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(initialProviderState.sourceStatuses)
   const [providerStatuses] = useState<Record<string, DataProviderStatus>>(initialProviderState.providerStatuses)
-  const [, setBootstrapDiagnostics] = useState<BridgeBootstrapDiagnostic[]>(() => synthesizeBootstrapDiagnosticsFromData(initialProviderState.data))
+  const [bootstrapDiagnostics, setBootstrapDiagnostics] = useState<BridgeBootstrapDiagnostic[]>(() => synthesizeBootstrapDiagnosticsFromData(initialProviderState.data))
   const [karunBridgeStatus, setKarunBridgeStatus] = useState<DataProviderStatus>({
     source: 'Karun Phuket Apps Script Read Bridge',
     mode: isKarunBridgeConfigured ? 'live' : 'fallback',
@@ -331,6 +322,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       data,
       sourceStatuses,
       providerStatuses: { ...providerStatuses, karunBridge: karunBridgeStatus, finnhub: finnhubStatus },
+      bootstrapDiagnostics,
       refreshKarunBridge,
       pendingApprovals,
       changeLogs,
@@ -342,7 +334,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       bulkMergeData,
       restoreField,
     }),
-    [data, sourceStatuses, providerStatuses, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots, bulkMergeData, restoreField, createActionRequest, approveActionRequest, rejectActionRequest, queueSuggestionImport],
+    [data, sourceStatuses, providerStatuses, bootstrapDiagnostics, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots, bulkMergeData, restoreField, createActionRequest, approveActionRequest, rejectActionRequest, queueSuggestionImport],
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>

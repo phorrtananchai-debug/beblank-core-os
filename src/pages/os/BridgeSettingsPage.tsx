@@ -76,7 +76,7 @@ const DummyRawRows: Record<string, Record<string, unknown>[]> = {
 }
 
 export const BridgeSettingsPage = () => {
-  const { data, bulkMergeData, restoreField, createActionRequest } = useOs()
+  const { data, bulkMergeData, restoreField, createActionRequest, bootstrapDiagnostics } = useOs()
   const {
     config,
     importPreview,
@@ -700,6 +700,7 @@ export const BridgeSettingsPage = () => {
         activeEndpointSource={activeEndpointSource}
         lastSyncStatus={config.lastSyncStatus}
         lastSyncAt={config.lastSyncAt}
+        bootstrapDiagnostics={bootstrapDiagnostics}
       />
 
       {/* WRITE-BACK HISTORY */}

@@ -8,10 +8,20 @@ import type {
   SourceStatus,
 } from '../../types/models'
 
+export interface BridgeBootstrapDiagnostic {
+  resourceId: string
+  resourceName: string
+  status: 'imported' | 'empty' | 'failed'
+  rowCount: number
+  invalidCount: number
+  error?: string
+}
+
 export interface OsContextValue {
   data: OsData
   sourceStatuses: Record<string, SourceStatus>
   providerStatuses: Record<string, DataProviderStatus>
+  bootstrapDiagnostics: BridgeBootstrapDiagnostic[]
   refreshKarunBridge: () => Promise<void>
   pendingApprovals: ActionRequest[]
   changeLogs: ChangeLogRecord[]
