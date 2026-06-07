@@ -5,7 +5,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'studio-projects',
     name: 'Studio Projects',
     label: 'Projects',
-    description: 'Project registry — name, status, owner, phase, timeline',
+    description: 'Project registry - name, status, owner, phase, timeline',
     osField: 'projects',
     columns: [
       { key: 'id', label: 'ID', type: 'string', required: true },
@@ -24,7 +24,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'approvals',
     name: 'Approvals',
     label: 'Approvals',
-    description: 'Approval workflow — track pending, approved, and rejected decisions',
+    description: 'Approval workflow - track pending, approved, and rejected decisions',
     osField: 'approvals',
     columns: [
       { key: 'id', label: 'ID', type: 'string', required: true },
@@ -41,7 +41,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'capital-records',
     name: 'Capital Records',
     label: 'Capital Records',
-    description: 'Finance ledger entries — income, expense, transfers',
+    description: 'Finance ledger entries - income, expense, transfers',
     osField: 'financeLedgerRows',
     columns: [
       { key: 'id', label: 'ID', type: 'string', required: true },
@@ -57,7 +57,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'investment-holdings',
     name: 'Investment Holdings',
     label: 'Holdings',
-    description: 'Portfolio holdings — asset, quantity, cost, allocation',
+    description: 'Portfolio holdings - asset, quantity, cost, allocation',
     osField: 'holdings',
     columns: [
       { key: 'id', label: 'ID', type: 'string', required: true },
@@ -79,7 +79,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'dca-records',
     name: 'DCA Records',
     label: 'DCA Plans',
-    description: 'Recurring buy plans — asset, amount, cadence, status',
+    description: 'Recurring buy plans - asset, amount, cadence, status',
     osField: 'dcaRecords',
     columns: [
       { key: 'id', label: 'ID', type: 'string', required: true },
@@ -95,7 +95,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'dividend-records',
     name: 'Dividend Records',
     label: 'Dividends',
-    description: 'Expected dividend payouts — asset, amount, date, status',
+    description: 'Expected dividend payouts - asset, amount, date, status',
     osField: 'dividendRecords',
     columns: [
       { key: 'id', label: 'ID', type: 'string', required: true },
@@ -110,7 +110,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'allocation-buckets',
     name: 'Allocation Buckets',
     label: 'Allocation',
-    description: 'Target allocation buckets � asset class, target %, current %',
+    description: 'Target allocation buckets - asset class, target %, current %',
     osField: 'allocationBuckets',
     importEnabled: false,
     columns: [
@@ -125,7 +125,7 @@ export const SHEET_RESOURCES: SheetResourceDef[] = [
     id: 'ai-context-logs',
     name: 'AI Context Logs',
     label: 'AI Contexts',
-    description: 'AI context export log � module, title, summary, tags',
+    description: 'AI context export log - module, title, summary, tags',
     osField: 'aiContexts',
     columns: [
       { key: 'id', label: 'ID', type: 'string', required: true },
