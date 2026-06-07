@@ -89,7 +89,8 @@ export function useSheetBridge() {
         throw new Error('Endpoint must be an HTTPS URL.')
       }
 
-      const response = await fetch(endpoint, {
+      const probeUrl = endpoint.includes('?') ? `${endpoint}&resource=studio-projects` : `${endpoint}?resource=studio-projects`
+      const response = await fetch(probeUrl, {
         method: 'GET',
         signal: AbortSignal.timeout(8000),
         headers: { 'Accept': 'application/json' },

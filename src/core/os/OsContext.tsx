@@ -12,6 +12,22 @@ const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRo
 
 const initialProviderState = createInitialOsDataFromProviders()
 
+if (typeof window !== 'undefined') {
+  const resources = [
+    { label: 'Projects', count: initialProviderState.data.projects.length },
+    { label: 'Holdings', count: initialProviderState.data.holdings.length },
+    { label: 'DCA Plans', count: initialProviderState.data.dcaRecords.length },
+    { label: 'Dividends', count: initialProviderState.data.dividendRecords.length },
+    { label: 'Approvals', count: initialProviderState.data.approvals.length },
+    { label: 'Capital Records', count: initialProviderState.data.financeLedgerRows.length },
+    { label: 'AI Contexts', count: initialProviderState.data.aiContexts.length },
+  ]
+  console.group('[OsProvider] Startup Hydration')
+  console.log('Provider statuses:', initialProviderState.providerStatuses)
+  resources.forEach((r) => console.log(`${r.label}: ${r.count} rows`))
+  console.groupEnd()
+}
+
 export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<OsData>(initialProviderState.data)
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(initialProviderState.sourceStatuses)

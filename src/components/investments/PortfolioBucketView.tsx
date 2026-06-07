@@ -319,7 +319,7 @@ const AssetRow = ({
       <div className="md:hidden">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold break-words">{holding.asset?.symbol ?? 'Unknown'}</p>
+            <p className="text-sm font-semibold break-words">{holding.asset?.symbol ?? holding.assetId}</p>
             <p className="text-xs text-[#777777] truncate">{holding.asset?.name ?? ''}</p>
           </div>
           <div className="shrink-0 text-right">
@@ -339,7 +339,7 @@ const AssetRow = ({
 
       {/* Desktop: table row */}
       <div className="hidden min-w-0 md:block">
-        <p className="text-sm font-semibold truncate">{holding.asset?.symbol ?? 'Unknown'}</p>
+        <p className="text-sm font-semibold truncate">{holding.asset?.symbol ?? holding.assetId}</p>
         <p className="text-xs text-[#777777] truncate">{holding.asset?.name ?? ''}</p>
       </div>
       <p className="hidden text-right text-sm font-semibold md:block">{thb(holding.marketValueTHB)}</p>

@@ -20,8 +20,19 @@ interface ResourceHealth {
 function loadBridgeConfig(): { appsScriptEndpoint?: string } {
   try {
     const stored = localStorage.getItem(CONFIG_KEY)
-    if (stored) return JSON.parse(stored)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
+      if (!parsed.appsScriptEndpoint && envEndpoint?.startsWith('https://')) {
+        parsed.appsScriptEndpoint = envEndpoint
+      }
+      return parsed
+    }
   } catch { /* ignore */ }
+  const envEndpoint = import.meta.env?.VITE_APPS_SCRIPT_KARUN_ENDPOINT as string | undefined
+  if (envEndpoint?.startsWith('https://')) {
+    return { appsScriptEndpoint: envEndpoint }
+  }
   return {}
 }
 

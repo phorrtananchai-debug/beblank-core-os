@@ -438,7 +438,7 @@ const Overview = ({
                 </div>
               ))}
               {sortedEvents.length === 0 && (
-                <p className="text-sm text-[var(--bb-text-muted)]">????????????????????????</p>
+                <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีเหตุการณ์ในช่วงนี้</p>
               )}
             </div>
           </div>
@@ -453,8 +453,8 @@ const Overview = ({
                 <span className="pill">{openingsSorted.length}</span>
               </div>
               <div className="space-y-3">
-                {openingsSorted.length === 0 ? (
-                  <p className="text-sm text-[var(--bb-text-muted)]">?????????????????????????</p>
+                  {openingsSorted.length === 0 ? (
+                  <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีการเปิดงานที่รออยู่</p>
                 ) : (
                   openingsSorted.map((phase) => (
                     <div key={phase.id} className="os-list-row">
@@ -513,7 +513,7 @@ const Overview = ({
           <ReviewCard key={review.id} review={review} projectName={projectName(projects, review.projectId)} />
         ))}
         {pendingStudioReviews.length === 0 && (
-          <p className="text-sm text-[var(--bb-text-muted)]">?????????????????????????</p>
+          <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีรีวิวที่รอดำเนินการ</p>
         )}
       </aside>
     </div>

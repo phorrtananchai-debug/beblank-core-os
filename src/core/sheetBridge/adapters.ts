@@ -58,7 +58,7 @@ export function normalizeRows(
 
   rawRows.forEach((raw, index) => {
     const { row, errors: rowErrors } = normalizeRow(raw, resource)
-    if (Object.keys(row).length > 0) {
+    if (Object.keys(row).length > 0 && rowErrors.length === 0) {
       rows.push(row)
     }
     rowErrors.forEach((e) => {
