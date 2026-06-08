@@ -26,3 +26,6 @@ dist-ssr
 
 # Aider
 .aider*
+
+# Impeccable skill files.agents/
+skills-lock.json
