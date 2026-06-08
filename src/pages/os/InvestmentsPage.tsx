@@ -37,7 +37,7 @@ type InvestmentsTab = 'overview' | 'portfolio' | 'holdings' | 'allocation' | 'tr
 const tabs: Array<{ key: InvestmentsTab; label: string }> = [
   { key: 'overview', label: 'Overview' },
   { key: 'portfolio', label: 'Portfolio' },
-  { key: 'holdings', label: 'Funds' },
+  { key: 'holdings', label: 'Thai Funds' },
   { key: 'allocation', label: 'Allocation' },
   { key: 'transactions', label: 'Transactions' },
   { key: 'dca', label: 'DCA' },
@@ -449,27 +449,25 @@ export const InvestmentsPage = () => {
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
         <h2 className="mt-4 text-2xl font-extrabold leading-[0.92]">การลงทุน / หุ้น</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
-          <OsHeroMetric icon="◆" value={hasInvestments ? `$${Math.round(offshoreSecuritiesUSD).toLocaleString()}` : '—'} label="Offshore Securities" helper={hasInvestments ? `${thb(offshoreSecuritiesTHB)}` : 'ยังไม่มีข้อมูล'} color="neutral" progress={100} />
-          <OsHeroMetric icon="○" value={hasInvestments ? `$${cashUSD.toFixed(2)}` : '—'} label="Cash / Dry Powder" helper={hasInvestments ? `${thb(cashTHB)}` : 'ยังไม่มีข้อมูล'} color="blue" progress={totalInclCashTHB > 0 ? (cashTHB / totalInclCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="▣" value={hasInvestments ? thb(thaiFundsTHB) : '—'} label="Thai Funds" helper={hasInvestments ? 'THB' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalInclCashTHB > 0 ? (thaiFundsTHB / totalInclCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="◈" value={hasInvestments ? thb(investedExCashTHB) : '—'} label="Invested ex Cash" helper={hasInvestments ? 'Offshore + Thai Funds' : 'ยังไม่มีข้อมูล'} color="green" progress={totalInclCashTHB > 0 ? (investedExCashTHB / totalInclCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="◆" value={hasInvestments ? thb(totalInclCashTHB) : '—'} label="Total incl Cash" helper={hasInvestments ? 'รวมทุกประเภท' : 'ยังไม่มีข้อมูล'} color="neutral" progress={100} />
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <OsHeroMetric icon="◆" value={hasInvestments ? `$${Math.round(offshoreSecuritiesUSD).toLocaleString()}` : '—'} label="Offshore Securities" helper={hasInvestments ? `${thb(offshoreSecuritiesTHB)}` : ''} color="neutral" progress={totalInclCashTHB > 0 ? (offshoreSecuritiesTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="○" value={hasInvestments ? `$${cashUSD.toFixed(2)}` : '—'} label="Cash / Dry Powder" helper={hasInvestments ? `${thb(cashTHB)}` : ''} color="blue" progress={totalInclCashTHB > 0 ? (cashTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="▣" value={hasInvestments ? thb(thaiFundsTHB) : '—'} label="Thai Funds" helper={hasInvestments ? `${(thaiFundsTHB / Math.max(totalInclCashTHB, 1) * 100).toFixed(1)}%` : ''} color="purple" progress={totalInclCashTHB > 0 ? (thaiFundsTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="◈" value={hasInvestments ? `${thb(investedExCashTHB)}` : '—'} label="Invested (ex Cash)" helper={hasInvestments ? `${(investedExCashTHB / Math.max(totalInclCashTHB, 1) * 100).toFixed(1)}%` : ''} color="green" progress={totalInclCashTHB > 0 ? (investedExCashTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="◆" value={hasInvestments ? `${thb(totalInclCashTHB)}` : '—'} label="Total Portfolio" helper={hasInvestments ? `@ ${fxRate.toFixed(2)} THB/USD` : ''} color="neutral" progress={100} />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
-          <OsHeroMetric icon="±" value={hasInvestments ? `${totalGainLossUSD >= 0 ? '+' : ''}$${Math.round(totalGainLossUSD).toLocaleString()}` : '—'} label="Gain/Loss (Securities)" helper={hasInvestments ? `${totalGainLossPct >= 0 ? '+' : ''}${totalGainLossPct.toFixed(1)}%` : '—'} color={totalGainLossUSD >= 0 ? 'green' : 'red'} progress={Math.min(Math.abs(totalGainLossPct) * 2, 100)} />
-          <OsHeroMetric icon="☆" value={forwardDividendRunRateUSD > 0 ? `$${forwardDividendRunRateUSD.toFixed(0)}` : '—'} label="Forward Div Run Rate" helper={forwardDividendRunRateUSD > 0 ? 'USD / ปี' : 'ยังไม่มีข้อมูล'} color="purple" progress={offshoreSecuritiesUSD > 0 ? Math.min((forwardDividendRunRateUSD / offshoreSecuritiesUSD) * 100, 100) : 0} />
-          <OsHeroMetric icon="◈" value={forwardMonthlyPassiveUSD > 0 ? `$${forwardMonthlyPassiveUSD.toFixed(1)}` : '—'} label="Monthly Passive" helper={forwardMonthlyPassiveUSD > 0 ? 'USD / เดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(forwardMonthlyPassiveUSD * 10, 100)} />
-          <OsHeroMetric icon="‰" value={forwardYieldPct > 0 ? `${forwardYieldPct.toFixed(1)}%` : '—'} label="Forward Yield" helper={forwardYieldPct > 0 ? 'ต่อปี (securities)' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(forwardYieldPct * 5, 100)} />
-          <OsHeroMetric icon="↓" value={monthlyDcaTarget > 0 ? thb(monthlyDcaTarget) : '—'} label="แผน DCA เดือนนี้" helper={monthlyDcaTarget > 0 ? 'เป้าหมายรายเดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={investedExCashTHB > 0 ? (monthlyDcaTarget / investedExCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="△" value={driftHoldings.length > 0 ? `${driftHoldings.length} รายการ` : '—'} label="ความคลาดเคลื่อน" helper={driftHoldings.length > 0 ? 'สัดส่วนที่ดริฟท์' : 'ไม่มีรายการ'} color={driftHoldings.length > 0 ? 'amber' : 'green'} progress={Math.min(driftHoldings.length * 10, 100)} />
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 rounded-2xl border border-black/[0.04] bg-white/60 px-4 py-2 text-[11px]">
+          <span className="font-semibold text-[var(--bb-text-muted)]">Income &amp; Risk</span>
+          <span>{totalGainLossUSD >= 0 ? '▲' : '▼'} Gain/Loss: <strong className={totalGainLossUSD >= 0 ? 'text-[#16a36a]' : 'text-[#c2410c]'}>${Math.round(totalGainLossUSD).toLocaleString()} ({totalGainLossPct >= 0 ? '+' : ''}{totalGainLossPct.toFixed(1)}%)</strong></span>
+          <span>Received Div: <strong>${receivedDividendsUSD.toFixed(2)}</strong></span>
+          <span>Forward Run Rate: <strong>$${forwardDividendRunRateUSD.toFixed(0)}/yr</strong></span>
+          <span>Monthly: <strong>$${forwardMonthlyPassiveUSD.toFixed(1)}</strong></span>
+          <span>Yield: <strong>{forwardYieldPct.toFixed(1)}%</strong></span>
+          {driftHoldings.length > 0 && <span>Drift: <strong className="text-[#c2410c]">{driftHoldings.length}</strong></span>}
         </div>
-        {receivedDividendsUSD > 0 && (
+        {monthlyDcaTarget > 0 && (
           <div className="mt-2 flex items-center gap-2 text-[10px] text-[var(--bb-text-faint)]">
-            <span>Received Dividends (ledger): <strong>${receivedDividendsUSD.toFixed(2)} USD</strong></span>
-            <span>{thb(convertUsdToThb(receivedDividendsUSD, fxRate))}</span>
-            <span>·</span>
-            <span>@ <strong>{fxRate.toFixed(2)}</strong> THB/USD</span>
+            <span>DCA Target: <strong>{thb(monthlyDcaTarget)}</strong> / month</span>
           </div>
         )}
       </header>
@@ -965,6 +963,9 @@ const HoldingsTab = ({
   assetName: (id: string) => string
 }) => (
   <div className="space-y-5">
+    <p className="rounded-2xl border border-black/[0.04] bg-[#faf9f8] px-4 py-2 text-xs leading-5 text-[var(--bb-text-soft)]">
+      This tab shows Thai mutual funds, RMFs, and bond funds only. Holdings are grouped by strategy bucket so you can see where money is concentrated.
+    </p>
     <PortfolioDecisionStrip
       holdings={holdings}
       dcaRecords={dcaRecords}
@@ -983,28 +984,48 @@ const HoldingsTab = ({
       createActionRequest={createActionRequest}
     />
 
-    {/* Thai NAV operations (subdued) */}
+    {/* Thai NAV operations table */}
     {thaiNavAssets.length > 0 ? (
-      <section className="rounded-[28px] border border-black/[0.05] bg-white/60">
-        <div className="border-b border-black/[0.05] px-5 py-3">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Thai NAV Helper Operations</p>
-          <p className="mt-0.5 text-xs text-[var(--bb-text-muted)]">NAV values merged into bucket view above. Edit NAV manually below.</p>
+      <section className="rounded-2xl border border-black/[0.05] bg-white/60">
+        <div className="border-b border-black/[0.05] px-4 py-2.5">
+          <p className="text-xs font-semibold text-[var(--bb-text-muted)]">Thai Funds — NAV &amp; Value</p>
         </div>
-        <div className="divide-y divide-black/[0.03]">
-          {thaiNavAssets.map((asset) => {
-            const valueTHB = asset.valueTHB ?? (asset.units ?? 0) * asset.nav
-            return (
-              <div key={asset.id} className="grid gap-3 px-5 py-3 md:grid-cols-[1fr_120px_120px_auto] md:items-center">
-                <div>
-                  <p className="text-sm font-semibold">{asset.symbol}</p>
-                  <p className="text-xs text-[var(--bb-text-muted)]">{asset.displayName ?? ''} / {thb(valueTHB)}</p>
-                </div>
-                <input className="input" inputMode="decimal" value={navDrafts[asset.id] ?? String(asset.nav)} onChange={(event) => setNavDrafts((prev) => ({ ...prev, [asset.id]: event.target.value }))} />
-                <p className="text-xs text-[var(--bb-text-muted)] md:text-right">NAV updated {asset.updatedAt}</p>
-                <button className="btn-secondary text-xs" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Queue NAV Review</button>
-              </div>
-            )
-          })}
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-black/[0.03] text-[10px] uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">
+              <tr>
+                <th className="px-4 py-2.5">Symbol</th>
+                <th className="px-4 py-2.5 text-right">Units</th>
+                <th className="px-4 py-2.5 text-right">NAV</th>
+                <th className="px-4 py-2.5 text-right">Value (THB)</th>
+                <th className="px-4 py-2.5">Last Updated</th>
+                <th className="px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-black/[0.04]">
+              {thaiNavAssets.map((asset) => {
+                const valueTHB = asset.valueTHB ?? (asset.units ?? 0) * asset.nav
+                return (
+                  <tr key={asset.id} className="hover:bg-black/[0.02]">
+                    <td className="px-4 py-2.5">
+                      <p className="font-semibold">{asset.symbol}</p>
+                      <p className="text-xs text-[var(--bb-text-muted)]">{asset.displayName ?? ''}</p>
+                    </td>
+                    <td className="px-4 py-2.5 text-right font-medium">{(asset.units ?? 0).toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-right">{asset.nav.toFixed(2)}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold">{thb(valueTHB)}</td>
+                    <td className="px-4 py-2.5 text-xs text-[var(--bb-text-muted)]">{asset.updatedAt.slice(0, 10)}</td>
+                    <td className="px-4 py-2.5 text-right">
+                      <div className="flex items-center gap-2">
+                        <input className="w-20 rounded-lg border border-black/[0.08] px-2 py-1 text-xs text-right" inputMode="decimal" value={navDrafts[asset.id] ?? String(asset.nav)} onChange={(event) => setNavDrafts((prev) => ({ ...prev, [asset.id]: event.target.value }))} />
+                        <button className="rounded-lg bg-black/[0.05] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--bb-text-muted)] transition hover:bg-black/[0.1]" type="button" onClick={() => queueThaiNavReview(asset.id, asset.nav)}>Review</button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
     ) : null}
@@ -1256,10 +1277,27 @@ const DividendsTab = ({
     trailing12NetThb: 0,
   })
   const estimatedMonthlyNetThb = totals.trailing12NetThb > 0 ? Math.round(totals.trailing12NetThb / 12) : 0
+  const [showFullHistory, setShowFullHistory] = useState(false)
+  const visibleRecords = showFullHistory ? sortedRecords : sortedRecords.slice(0, 10)
+
+  const byAsset = useMemo(() => {
+    const map = new Map<string, { gross: number; net: number; tax: number; count: number; latest: string; status: string }>()
+    for (const r of dividendRecords) {
+      const key = r.symbol || r.assetId
+      const entry = map.get(key) ?? { gross: 0, net: 0, tax: 0, count: 0, latest: '', status: r.status }
+      entry.gross += r.grossAmount
+      entry.net += r.netAmount
+      entry.tax += r.taxAmount
+      entry.count++
+      if (r.payDate > entry.latest) { entry.latest = r.payDate; entry.status = r.status }
+      map.set(key, entry)
+    }
+    return [...map.entries()].sort((a, b) => b[1].gross - a[1].gross)
+  }, [dividendRecords])
 
   return (
     <div className="space-y-5">
-      <SectionPanel label="Dividend Ledger" title="Real dividend history" endSlot={<span className="pill">{sortedRecords.length} records</span>}>
+      <SectionPanel label="Dividend Summary" title="Real dividend history" endSlot={<span className="pill">{sortedRecords.length} records</span>}>
         {sortedRecords.length === 0 ? (
           <p className="text-sm text-[var(--bb-text-muted)]">No dividend ledger records yet</p>
         ) : (
@@ -1273,35 +1311,76 @@ const DividendsTab = ({
               <Mini label="Tax Withheld" value={<><span>{usd(totals.taxUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(totals.taxThb)} · FX estimate</span></>} />
               <Mini label="Estimated Monthly Net" value={<><span>{thb(estimatedMonthlyNetThb)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">Trailing 12M ÷ 12 · FX estimate</span></>} />
             </div>
-            <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-black/[0.03] text-[10px] uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">
-                  <tr>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Symbol</th>
-                    <th className="px-4 py-3">Gross</th>
-                    <th className="px-4 py-3">Tax</th>
-                    <th className="px-4 py-3">Net</th>
-                    <th className="px-4 py-3">Currency</th>
-                    <th className="px-4 py-3">Source</th>
-                    <th className="px-4 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedRecords.map((record) => (
-                    <tr key={record.id} className="border-t border-black/[0.05]">
-                      <td className="px-4 py-3">{record.payDate.slice(0, 10)}</td>
-                      <td className="px-4 py-3 font-semibold">{record.symbol || assetName(record.assetId)}</td>
-                      <td className="px-4 py-3"><DividendAmountCell amount={record.grossAmount} currency={record.currency} fxRate={fxRate} /></td>
-                      <td className="px-4 py-3"><DividendAmountCell amount={record.taxAmount} currency={record.currency} fxRate={fxRate} /></td>
-                      <td className="px-4 py-3"><DividendAmountCell amount={record.netAmount} currency={record.currency} fxRate={fxRate} emphasize /></td>
-                      <td className="px-4 py-3">{record.currency}</td>
-                      <td className="px-4 py-3 text-xs text-[var(--bb-text-muted)]">{record.source}</td>
-                      <td className="px-4 py-3"><span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(record.status)}`}>{record.status}</span></td>
+
+            {/* Dividend by Asset */}
+            <div className="mt-5">
+              <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Dividend by Asset</p>
+              <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-black/[0.03] text-[10px] uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">
+                    <tr>
+                      <th className="px-3 py-2">Symbol</th>
+                      <th className="px-3 py-2 text-right">Records</th>
+                      <th className="px-3 py-2 text-right">Gross USD</th>
+                      <th className="px-3 py-2 text-right">Net USD</th>
+                      <th className="px-3 py-2 text-right">Tax USD</th>
+                      <th className="px-3 py-2">Latest</th>
+                      <th className="px-3 py-2">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-black/[0.04]">
+                    {byAsset.map(([symbol, data]) => (
+                      <tr key={symbol} className="hover:bg-black/[0.02]">
+                        <td className="px-3 py-2 font-semibold">{symbol}</td>
+                        <td className="px-3 py-2 text-right">{data.count}</td>
+                        <td className="px-3 py-2 text-right">{usd(data.gross)}</td>
+                        <td className="px-3 py-2 text-right">{usd(data.net)}</td>
+                        <td className="px-3 py-2 text-right">{usd(data.tax)}</td>
+                        <td className="px-3 py-2 text-xs">{data.latest.slice(0, 10)}</td>
+                        <td className="px-3 py-2"><span className={`font-mono text-[9px] font-semibold uppercase ${statusClass(data.status)}`}>{data.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Dividend History */}
+            <div className="mt-5">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">History</p>
+                <button className="text-[10px] font-semibold text-[var(--bb-accent)] hover:underline" type="button" onClick={() => setShowFullHistory((p) => !p)}>
+                  {showFullHistory ? 'Collapse history' : `Show full history (${sortedRecords.length})`}
+                </button>
+              </div>
+              <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-black/[0.03] text-[10px] uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">
+                    <tr>
+                      <th className="px-3 py-2">Date</th>
+                      <th className="px-3 py-2">Symbol</th>
+                      <th className="px-3 py-2 text-right">Gross</th>
+                      <th className="px-3 py-2 text-right">Tax</th>
+                      <th className="px-3 py-2 text-right">Net</th>
+                      <th className="px-3 py-2">Source</th>
+                      <th className="px-3 py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-black/[0.04]">
+                    {visibleRecords.map((record) => (
+                      <tr key={record.id} className="hover:bg-black/[0.02]">
+                        <td className="px-3 py-1.5 text-xs">{record.payDate.slice(0, 10)}</td>
+                        <td className="px-3 py-1.5 text-xs font-semibold">{record.symbol || assetName(record.assetId)}</td>
+                        <td className="px-3 py-1.5 text-right text-xs"><DividendAmountCell amount={record.grossAmount} currency={record.currency} fxRate={fxRate} /></td>
+                        <td className="px-3 py-1.5 text-right text-xs"><DividendAmountCell amount={record.taxAmount} currency={record.currency} fxRate={fxRate} /></td>
+                        <td className="px-3 py-1.5 text-right text-xs font-semibold"><DividendAmountCell amount={record.netAmount} currency={record.currency} fxRate={fxRate} emphasize /></td>
+                        <td className="px-3 py-1.5 text-[10px] text-[var(--bb-text-muted)]">{record.source}</td>
+                        <td className="px-3 py-1.5"><span className={`font-mono text-[9px] font-semibold uppercase ${statusClass(record.status)}`}>{record.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}
