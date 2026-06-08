@@ -462,7 +462,7 @@ export const InvestmentsPage = () => {
           <span className="font-semibold text-[var(--bb-text-muted)]">Income &amp; Risk</span>
           <span>{totalGainLossUSD >= 0 ? '▲' : '▼'} Gain/Loss: <strong className={totalGainLossUSD >= 0 ? 'text-[#16a36a]' : 'text-[#c2410c]'}>${Math.round(totalGainLossUSD).toLocaleString()} ({totalGainLossPct >= 0 ? '+' : ''}{totalGainLossPct.toFixed(1)}%)</strong></span>
           <span>Received Div: <strong>${receivedDividendsUSD.toFixed(2)}</strong></span>
-          <span>Forward Run Rate: <strong>$${forwardDividendRunRateUSD.toFixed(0)}/yr</strong></span>
+          <span>Passive Income: <strong>${forwardMonthlyPassiveUSD.toFixed(2)}/mo</strong> · ${forwardDividendRunRateUSD.toFixed(0)}/yr</span>
           <span>Monthly: <strong>$${forwardMonthlyPassiveUSD.toFixed(1)}</strong></span>
           <span>Yield: <strong>{forwardYieldPct.toFixed(1)}%</strong></span>
           {driftHoldings.length > 0 && <span>Drift: <strong className="text-[#c2410c]">{driftHoldings.length}</strong></span>}
@@ -609,6 +609,8 @@ export const InvestmentsPage = () => {
           dividendRecords={data.dividendRecords}
           dividendRecordsFullHistory={data.dividendRecordsFullHistory}
           fxRate={fxRate}
+          forwardDividendRunRateUSD={forwardDividendRunRateUSD}
+          forwardMonthlyPassiveUSD={forwardMonthlyPassiveUSD}
         />
       ) : null}
 
@@ -1232,11 +1234,15 @@ const DividendsTab = ({
   dividendRecords,
   dividendRecordsFullHistory,
   fxRate,
+  forwardDividendRunRateUSD,
+  forwardMonthlyPassiveUSD,
 }: {
   assetName: (id: string) => string
   dividendRecords: DividendRecord[]
   dividendRecordsFullHistory: DividendRecord[]
   fxRate: number
+  forwardDividendRunRateUSD: number
+  forwardMonthlyPassiveUSD: number
 }) => {
   const canonicalResult = useMemo(() => buildCanonicalDividends(dividendRecords, dividendRecordsFullHistory), [dividendRecords, dividendRecordsFullHistory])
   const sortedRecords = useMemo(() => [...canonicalResult.canonical].sort((a, b) => b.payDate.localeCompare(a.payDate)), [canonicalResult])
@@ -1278,7 +1284,7 @@ const DividendsTab = ({
               <Mini label="Lifetime Gross" value={<><span>{usd(lifetimeTotals.grossUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.grossUsd, fxRate))}</span></>} />
               <Mini label="Lifetime Net" value={<><span>{usd(lifetimeTotals.netUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.netUsd, fxRate))}</span></>} />
               <Mini label="Lifetime Tax" value={<><span>{usd(lifetimeTotals.taxUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.taxUsd, fxRate))}</span></>} />
-              <Mini label="Forward Run Rate" value="~$80/yr" />
+              <Mini label="Passive Income Estimate" value={<><span>{thb(convertUsdToThb(forwardMonthlyPassiveUSD, fxRate))}/mo</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">${forwardMonthlyPassiveUSD.toFixed(2)} USD/mo · {thb(convertUsdToThb(forwardDividendRunRateUSD, fxRate))}/yr · ${forwardDividendRunRateUSD.toFixed(2)} USD/yr</span></>} />
             </div>
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-[var(--bb-text-faint)]">
               <span>Imported: <strong>{importedCount}</strong></span>
