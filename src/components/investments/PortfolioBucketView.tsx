@@ -54,12 +54,13 @@ const SYMBOL_BUCKET: Record<string, BucketId> = {
 }
 
 const bucketForHolding = (holding: Holding, asset: FinanceAsset | undefined): BucketId => {
+  if ((holding.quantity ?? 0) === 0 && (holding.marketValueTHB ?? 0) === 0) return 'unclassified'
+  if ((holding.marketValueTHB ?? 0) > 0 && (holding.targetAllocationPercent ?? 0) === 0) return 'legacy-review'
   const symbol = asset?.symbol ?? ''
   if (SYMBOL_BUCKET[symbol]) return SYMBOL_BUCKET[symbol]
   if (asset?.category === 'cash') return 'cash-reserve'
   if (asset?.region === 'TH' && asset?.category === 'fund') return 'thai-tax'
   if (asset?.assetType === 'thai-rmf' || asset?.assetType === 'thai-mutual-fund') return 'thai-tax'
-  if ((holding.marketValueTHB ?? 0) > 0 && (holding.targetAllocationPercent ?? 0) === 0) return 'legacy-review'
   if (holding.currentPosture === 'core') return 'core-wealth'
   if (holding.currentPosture === 'growth') return 'growth-engine'
   if (holding.currentPosture === 'income') return 'income-layer'
