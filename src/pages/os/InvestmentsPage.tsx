@@ -159,12 +159,20 @@ export const InvestmentsPage = () => {
     return sum + (mvUSD - cbUSD)
   }, 0)
   const totalGainLossPct = totalValueUSD > 0 ? ((totalGainLossUSD / (totalValueUSD - totalGainLossUSD)) * 100) : 0
-  const dividendRunRateUSD = data.dividendRecords.reduce((sum, r) => {
+  const receivedDividendsUSD = data.dividendRecords.reduce((sum, r) => {
     const gross = (r as unknown as Record<string, unknown>).grossAmount as number | undefined
     return sum + (gross ?? 0)
   }, 0)
-  const annualDividendRunRate = data.dividendRecords.length > 0 ? (dividendRunRateUSD / data.dividendRecords.length) * 12 : 0
-  const estMonthlyIncome = annualDividendRunRate / 12
+  const annualDivPerShare: Record<string, number> = {
+    VOO: 7.50, SCHD: 3.20, JEPQ: 5.20, JEPI: 4.80, ABBV: 6.60,
+    PG: 4.00, MAIN: 3.00, MSFT: 3.32, GOOGL: 0.80,
+  }
+  const forwardDividendRunRateUSD = normalizedHoldings.reduce((sum, h) => {
+    const sym = data.financeAssets.find((a) => a.id === h.assetId)?.symbol
+    const dps = sym ? (annualDivPerShare[sym] ?? 0) : 0
+    return sum + dps * h.quantity
+  }, 0)
+  const forwardMonthlyPassiveUSD = forwardDividendRunRateUSD / 12
 
   const queueDca = () => {
     const record = dcaQueue[0]
@@ -434,10 +442,18 @@ export const InvestmentsPage = () => {
           <OsHeroMetric icon="±" value={hasInvestments ? `${totalGainLossUSD >= 0 ? '+' : ''}$${Math.round(totalGainLossUSD).toLocaleString()}` : '—'} label="Gain/Loss (USD)" helper={hasInvestments ? `${totalGainLossPct >= 0 ? '+' : ''}${totalGainLossPct.toFixed(1)}%` : '—'} color={totalGainLossUSD >= 0 ? 'green' : 'red'} progress={Math.min(Math.abs(totalGainLossPct) * 2, 100)} />
           <OsHeroMetric icon="○" value={cashPosture > 0 ? thb(cashPosture) : '—'} label="เงินสดรอจัดสรร" helper={cashPosture > 0 ? 'สำรอง' : 'ยังไม่มีข้อมูล'} color="blue" progress={totalValue > 0 ? (cashPosture / totalValue) * 100 : 0} />
           <OsHeroMetric icon="↓" value={monthlyDcaTarget > 0 ? thb(monthlyDcaTarget) : '—'} label="แผน DCA เดือนนี้" helper={monthlyDcaTarget > 0 ? 'เป้าหมายรายเดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={totalValue > 0 ? (monthlyDcaTarget / totalValue) * 100 : 0} />
-          <OsHeroMetric icon="☆" value={annualDividendRunRate > 0 ? `$${annualDividendRunRate.toFixed(0)}` : '—'} label="Dividend Run Rate" helper={annualDividendRunRate > 0 ? 'USD / ปี (actual)' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalValueUSD > 0 ? Math.min((annualDividendRunRate / totalValueUSD) * 100, 100) : 0} />
-          <OsHeroMetric icon="◈" value={estMonthlyIncome > 0 ? `$${estMonthlyIncome.toFixed(1)}` : '—'} label="Monthly Passive" helper={estMonthlyIncome > 0 ? 'USD / เดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(estMonthlyIncome * 10, 100)} />
+          <OsHeroMetric icon="☆" value={forwardDividendRunRateUSD > 0 ? `$${forwardDividendRunRateUSD.toFixed(0)}` : '—'} label="Forward Div Run Rate" helper={forwardDividendRunRateUSD > 0 ? 'USD / ปี (จากพอร์ต)' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalValueUSD > 0 ? Math.min((forwardDividendRunRateUSD / totalValueUSD) * 100, 100) : 0} />
+          <OsHeroMetric icon="◈" value={forwardMonthlyPassiveUSD > 0 ? `$${forwardMonthlyPassiveUSD.toFixed(1)}` : '—'} label="Monthly Passive" helper={forwardMonthlyPassiveUSD > 0 ? 'USD / เดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(forwardMonthlyPassiveUSD * 10, 100)} />
+          <span className="sr-only">Received: ${receivedDividendsUSD.toFixed(2)}</span>
           <OsHeroMetric icon="△" value={driftHoldings.length > 0 ? `${driftHoldings.length} รายการ` : '—'} label="ความคลาดเคลื่อน" helper={driftHoldings.length > 0 ? 'สัดส่วนที่ดริฟท์' : 'ไม่มีรายการ'} color={driftHoldings.length > 0 ? 'amber' : 'green'} progress={Math.min(driftHoldings.length * 10, 100)} />
         </div>
+        {receivedDividendsUSD > 0 && (
+          <div className="mt-2 flex items-center gap-2 text-[10px] text-[var(--bb-text-faint)]">
+            <span>Received Dividends (ledger): <strong>${receivedDividendsUSD.toFixed(2)} USD</strong></span>
+            <span>·</span>
+            <span>@ <strong>{fxRate.toFixed(2)}</strong> THB/USD</span>
+          </div>
+        )}
       </header>
 
       {!hasInvestments ? (
