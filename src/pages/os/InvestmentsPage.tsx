@@ -159,16 +159,11 @@ export const InvestmentsPage = () => {
     return sum + (mvUSD - cbUSD)
   }, 0)
   const totalGainLossPct = totalValueUSD > 0 ? ((totalGainLossUSD / (totalValueUSD - totalGainLossUSD)) * 100) : 0
-  const annualDividendRunRate = normalizedHoldings.reduce((sum, h) => {
-    const sym = data.financeAssets.find((a) => a.id === h.assetId)?.symbol ?? ''
-    const estimates: Record<string, number> = {
-      VOO: 2.10 * 4, SCHD: 1.00 * 4, JEPQ: 0.45 * 12, JEPI: 0.40 * 12,
-      QQQI: 0.35 * 12, ABBV: 1.65 * 4, MSFT: 0.83 * 4, PG: 1.00 * 4,
-      MAIN: 0.25 * 12, INTC: 0.13 * 4, META: 0.50 * 4,
-    }
-    const annualPerShare = estimates[sym] ?? 0
-    return sum + annualPerShare * h.quantity
+  const dividendRunRateUSD = data.dividendRecords.reduce((sum, r) => {
+    const gross = (r as unknown as Record<string, unknown>).grossAmount as number | undefined
+    return sum + (gross ?? 0)
   }, 0)
+  const annualDividendRunRate = data.dividendRecords.length > 0 ? (dividendRunRateUSD / data.dividendRecords.length) * 12 : 0
   const estMonthlyIncome = annualDividendRunRate / 12
 
   const queueDca = () => {
@@ -439,8 +434,8 @@ export const InvestmentsPage = () => {
           <OsHeroMetric icon="±" value={hasInvestments ? `${totalGainLossUSD >= 0 ? '+' : ''}$${Math.round(totalGainLossUSD).toLocaleString()}` : '—'} label="Gain/Loss (USD)" helper={hasInvestments ? `${totalGainLossPct >= 0 ? '+' : ''}${totalGainLossPct.toFixed(1)}%` : '—'} color={totalGainLossUSD >= 0 ? 'green' : 'red'} progress={Math.min(Math.abs(totalGainLossPct) * 2, 100)} />
           <OsHeroMetric icon="○" value={cashPosture > 0 ? thb(cashPosture) : '—'} label="เงินสดรอจัดสรร" helper={cashPosture > 0 ? 'สำรอง' : 'ยังไม่มีข้อมูล'} color="blue" progress={totalValue > 0 ? (cashPosture / totalValue) * 100 : 0} />
           <OsHeroMetric icon="↓" value={monthlyDcaTarget > 0 ? thb(monthlyDcaTarget) : '—'} label="แผน DCA เดือนนี้" helper={monthlyDcaTarget > 0 ? 'เป้าหมายรายเดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={totalValue > 0 ? (monthlyDcaTarget / totalValue) * 100 : 0} />
-          <OsHeroMetric icon="☆" value={annualDividendRunRate > 0 ? `$${Math.round(annualDividendRunRate).toLocaleString()}` : '—'} label="ปันผล (Annual)" helper={annualDividendRunRate > 0 ? 'USD ต่อปี' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalValueUSD > 0 ? Math.min((annualDividendRunRate / totalValueUSD) * 100, 100) : 0} />
-          <OsHeroMetric icon="◈" value={estMonthlyIncome > 0 ? `$${Math.round(estMonthlyIncome).toLocaleString()}` : '—'} label="Passive Income" helper={estMonthlyIncome > 0 ? 'USD / เดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(estMonthlyIncome * 2, 100)} />
+          <OsHeroMetric icon="☆" value={annualDividendRunRate > 0 ? `$${annualDividendRunRate.toFixed(0)}` : '—'} label="Dividend Run Rate" helper={annualDividendRunRate > 0 ? 'USD / ปี (actual)' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalValueUSD > 0 ? Math.min((annualDividendRunRate / totalValueUSD) * 100, 100) : 0} />
+          <OsHeroMetric icon="◈" value={estMonthlyIncome > 0 ? `$${estMonthlyIncome.toFixed(1)}` : '—'} label="Monthly Passive" helper={estMonthlyIncome > 0 ? 'USD / เดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(estMonthlyIncome * 10, 100)} />
           <OsHeroMetric icon="△" value={driftHoldings.length > 0 ? `${driftHoldings.length} รายการ` : '—'} label="ความคลาดเคลื่อน" helper={driftHoldings.length > 0 ? 'สัดส่วนที่ดริฟท์' : 'ไม่มีรายการ'} color={driftHoldings.length > 0 ? 'amber' : 'green'} progress={Math.min(driftHoldings.length * 10, 100)} />
         </div>
       </header>
