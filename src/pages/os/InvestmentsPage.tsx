@@ -166,6 +166,7 @@ export const InvestmentsPage = () => {
     const cbUSD = (h as unknown as Record<string, unknown>).costBasisUSD as number ?? 0
     return sum + (mvUSD - cbUSD)
   }, 0)
+  const totalValueUSD = offshoreSecuritiesUSD + cashUSD
   const totalGainLossPct = offshoreSecuritiesUSD > 0 ? ((totalGainLossUSD / (offshoreSecuritiesUSD - totalGainLossUSD)) * 100) : 0
 
   const cashPosture = cashTHB
@@ -187,7 +188,6 @@ export const InvestmentsPage = () => {
     return sum + dps * h.quantity
   }, 0)
   const forwardMonthlyPassiveUSD = forwardDividendRunRateUSD / 12
-  const forwardYieldPct = offshoreSecuritiesUSD > 0 ? (forwardDividendRunRateUSD / offshoreSecuritiesUSD) * 100 : 0
 
   const queueDca = () => {
     const record = dcaQueue[0]
@@ -452,26 +452,12 @@ export const InvestmentsPage = () => {
         <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
         <h2 className="mt-4 text-2xl font-extrabold leading-[0.92]">การลงทุน / หุ้น</h2>
         <div className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          <OsHeroMetric icon="◆" value={hasInvestments ? `$${Math.round(offshoreSecuritiesUSD).toLocaleString()}` : '—'} label="Offshore Securities" helper={hasInvestments ? `${thb(offshoreSecuritiesTHB)}` : ''} color="neutral" progress={totalInclCashTHB > 0 ? (offshoreSecuritiesTHB / totalInclCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="○" value={hasInvestments ? `$${cashUSD.toFixed(2)}` : '—'} label="Cash / Dry Powder" helper={hasInvestments ? `${thb(cashTHB)}` : ''} color="blue" progress={totalInclCashTHB > 0 ? (cashTHB / totalInclCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="▣" value={hasInvestments ? thb(thaiFundsTHB) : '—'} label="Thai Funds" helper={hasInvestments ? `${(thaiFundsTHB / Math.max(totalInclCashTHB, 1) * 100).toFixed(1)}%` : ''} color="purple" progress={totalInclCashTHB > 0 ? (thaiFundsTHB / totalInclCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="◈" value={hasInvestments ? `${thb(investedExCashTHB)}` : '—'} label="Invested (ex Cash)" helper={hasInvestments ? `${(investedExCashTHB / Math.max(totalInclCashTHB, 1) * 100).toFixed(1)}%` : ''} color="green" progress={totalInclCashTHB > 0 ? (investedExCashTHB / totalInclCashTHB) * 100 : 0} />
-          <OsHeroMetric icon="◆" value={hasInvestments ? `${thb(totalInclCashTHB)}` : '—'} label="Total Portfolio" helper={hasInvestments ? `@ ${fxRate.toFixed(2)} THB/USD` : ''} color="neutral" progress={100} />
+          <OsHeroMetric icon="◆" value={hasInvestments ? `${thb(totalInclCashTHB)}` : '—'} label="Total Portfolio" helper={hasInvestments ? `$${Math.round(totalValueUSD).toLocaleString()}` : ''} color="neutral" progress={100} />
+          <OsHeroMetric icon="◈" value={hasInvestments ? `${thb(investedExCashTHB)}` : '—'} label="Invested Capital (ex Cash)" helper={hasInvestments ? `${(investedExCashTHB / Math.max(totalInclCashTHB, 1) * 100).toFixed(1)}%` : ''} color="green" progress={totalInclCashTHB > 0 ? (investedExCashTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="☆" value={hasInvestments ? `${thb(convertUsdToThb(receivedDividendsUSD, fxRate))}` : '—'} label="Lifetime Dividends" helper={hasInvestments ? `$${receivedDividendsUSD.toFixed(2)} USD` : ''} color="purple" progress={totalInclCashTHB > 0 ? Math.min((convertUsdToThb(receivedDividendsUSD, fxRate) / totalInclCashTHB) * 100, 100) : 0} />
+          <OsHeroMetric icon="◈" value={hasInvestments ? `${thb(convertUsdToThb(forwardMonthlyPassiveUSD, fxRate))}/mo` : '—'} label="Passive Income" helper={hasInvestments ? `$${forwardMonthlyPassiveUSD.toFixed(2)}/mo · $${forwardDividendRunRateUSD.toFixed(0)}/yr` : ''} color="green" progress={totalInclCashTHB > 0 ? Math.min((convertUsdToThb(forwardDividendRunRateUSD, fxRate) / totalInclCashTHB) * 100, 10) : 0} />
+          <OsHeroMetric icon="±" value={hasInvestments ? `${totalGainLossPct >= 0 ? '+' : ''}${totalGainLossPct.toFixed(1)}%` : '—'} label="Portfolio Return" helper={hasInvestments ? `${totalGainLossUSD >= 0 ? '+' : ''}$${Math.round(totalGainLossUSD).toLocaleString()} USD` : ''} color={totalGainLossUSD >= 0 ? 'green' : 'red'} progress={Math.min(Math.abs(totalGainLossPct) * 2, 100)} />
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 rounded-2xl border border-black/[0.04] bg-white/60 px-4 py-2 text-[11px]">
-          <span className="font-semibold text-[var(--bb-text-muted)]">Income &amp; Risk</span>
-          <span>{totalGainLossUSD >= 0 ? '▲' : '▼'} Gain/Loss: <strong className={totalGainLossUSD >= 0 ? 'text-[#16a36a]' : 'text-[#c2410c]'}>${Math.round(totalGainLossUSD).toLocaleString()} ({totalGainLossPct >= 0 ? '+' : ''}{totalGainLossPct.toFixed(1)}%)</strong></span>
-          <span>Received Div: <strong>${receivedDividendsUSD.toFixed(2)}</strong></span>
-          <span>Passive Income: <strong>${forwardMonthlyPassiveUSD.toFixed(2)}/mo</strong> · ${forwardDividendRunRateUSD.toFixed(0)}/yr</span>
-          <span>Monthly: <strong>$${forwardMonthlyPassiveUSD.toFixed(1)}</strong></span>
-          <span>Yield: <strong>{forwardYieldPct.toFixed(1)}%</strong></span>
-          {driftHoldings.length > 0 && <span>Drift: <strong className="text-[#c2410c]">{driftHoldings.length}</strong></span>}
-        </div>
-        {monthlyDcaTarget > 0 && (
-          <div className="mt-2 flex items-center gap-2 text-[10px] text-[var(--bb-text-faint)]">
-            <span>DCA Target: <strong>{thb(monthlyDcaTarget)}</strong> / month</span>
-          </div>
-        )}
       </header>
 
       {!hasInvestments ? (
@@ -575,6 +561,7 @@ export const InvestmentsPage = () => {
           thaiNavAssets={data.thaiNavAssets}
           totalValue={totalValue}
           assetName={assetName}
+          cashTHB={cashTHB}
         />
       ) : null}
 
@@ -626,8 +613,12 @@ export const InvestmentsPage = () => {
         <ResearchTab aiImports={data.aiImports} openAddResearchNote={openAddResearchNote} tradingStrategyNotes={data.tradingStrategyNotes} />
       ) : null}
 
-      {activeTab === 'ai' ? (
+      {activeTab === 'ai' && (data.aiContexts.length > 0 || data.aiDigests.length > 0 || data.aiObservations.length > 0) ? (
         <AiTab aiContexts={data.aiContexts} aiDigests={data.aiDigests} aiObservations={data.aiObservations} createActionRequest={createActionRequest} />
+      ) : activeTab === 'ai' ? (
+        <div className="rounded-2xl border border-dashed border-black/[0.08] bg-[#faf9f8] p-6 text-center">
+          <p className="text-sm text-[var(--bb-text-muted)]">No AI data available for this module.</p>
+        </div>
       ) : null}
 
       {['overview', 'holdings', 'allocation'].includes(activeTab) ? (
@@ -670,18 +661,24 @@ export const InvestmentsPage = () => {
         />
       ) : null}
 
+      {(data.aiContexts.length > 0 || data.aiSuggestions.length > 0 || changeLogs.length > 0 || snapshots.length > 0) && (
       <div className="grid gap-4 xl:grid-cols-2">
+        {(data.aiContexts.length > 0 || data.aiSuggestions.length > 0) && (
         <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowAiDrawer(true)}>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">AI Workspace</p>
           <p className="mt-1 text-sm font-semibold">{data.aiContexts.length} contexts · {data.aiSuggestions.length} suggestions</p>
           <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open AI Workspace →</p>
         </button>
+        )}
+        {(changeLogs.length > 0 || snapshots.length > 0) && (
         <button className="rounded-2xl border border-black/[0.05] bg-white/60 p-4 text-left transition hover:bg-black/[0.03]" type="button" onClick={() => setShowHistoryDrawer(true)}>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">History</p>
           <p className="mt-1 text-sm font-semibold">{changeLogs.length} changes · {snapshots.length} snapshots</p>
           <p className="mt-0.5 text-xs text-[var(--bb-text-faint)]">Open History →</p>
         </button>
+        )}
       </div>
+      )}
       <WorkspaceDrawer open={showAiDrawer} onClose={() => setShowAiDrawer(false)} title="AI Workspace">
         <div className="space-y-5">
           <AIContextExportPanel contexts={data.aiContexts} />
@@ -935,6 +932,7 @@ const HoldingsTab = ({
   thaiNavAssets,
   totalValue,
   assetName,
+  cashTHB,
 }: {
   financeAssets: FinanceAsset[]
   holdings: Holding[]
@@ -948,11 +946,22 @@ const HoldingsTab = ({
   thaiNavAssets: ThaiNavAsset[]
   totalValue: number
   assetName: (id: string) => string
-}) => (
+  cashTHB: number
+}) => {
+  const overweight = holdings.filter((h) => (h.allocationPercent ?? 0) - (h.targetAllocationPercent ?? 0) >= 2)
+  const underweight = holdings.filter((h) => (h.targetAllocationPercent ?? 0) - (h.allocationPercent ?? 0) >= 2)
+  const highestRisk = holdings.filter((h) => h.risk === 'high')
+
+  return (
   <div className="space-y-5">
-    <p className="rounded-2xl border border-black/[0.04] bg-[#faf9f8] px-4 py-2 text-xs leading-5 text-[var(--bb-text-soft)]">
-      This tab shows Thai mutual funds, RMFs, and bond funds only. Holdings are grouped by strategy bucket so you can see where money is concentrated.
-    </p>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-black/[0.04] bg-white/70 px-4 py-2.5 text-[11px]">
+      <span className="font-semibold text-[var(--bb-text-muted)]">Decision Summary</span>
+      {overweight.length > 0 && <span>Overweight: <strong className="text-[#c2410c]">{overweight.length}</strong></span>}
+      {underweight.length > 0 && <span>Underweight: <strong className="text-[#16a36a]">{underweight.length}</strong></span>}
+      <span>Cash: <strong>{thb(cashTHB)}</strong></span>
+      {highestRisk.length > 0 && <span>Highest Risk: <strong className="text-[#c2410c]">{highestRisk.length} position(s)</strong></span>}
+      {holdings.length === 0 && <span className="text-[var(--bb-text-muted)]">No holdings to review</span>}
+    </div>
     <PortfolioDecisionStrip
       holdings={holdings}
       dcaRecords={dcaRecords}
@@ -1017,7 +1026,8 @@ const HoldingsTab = ({
       </section>
     ) : null}
   </div>
-)
+  )
+}
 
 const AllocationTab = ({
   createActionRequest,
@@ -1056,31 +1066,55 @@ const AllocationTab = ({
     })
   }
 
+  const [showAllRebalance, setShowAllRebalance] = useState(false)
+  const visibleSuggestions = showAllRebalance ? rebalanceSuggestions : rebalanceSuggestions.slice(0, 5)
+
   return (
     <div className="space-y-5">
-      {/* Donut + Comparison side by side */}
-      <SectionPanel label="จัดสรรพอร์ต" title="Allocation Overview" endSlot={<span className="pill">{driftCount} holdings drifted</span>}>
+      <SectionPanel label="จัดสรรพอร์ต" title="Allocation Overview">
         {holdings.length === 0 ? (
           <p className="text-sm text-[var(--bb-text-muted)]">No holdings yet. Add investments to see allocation.</p>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[auto_1fr]">
-            <AllocationDonut slices={donutSlices} totalValue={totalValue} size={220} strokeWidth={32} />
-            <AllocationComparison buckets={buckets} />
-          </div>
+          <>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-black/[0.04] bg-white/70 px-3 py-2 text-[11px]">
+              <span className="font-semibold text-[var(--bb-text-muted)]">Drift Summary</span>
+              <span>Drifted: <strong className={driftCount > 0 ? 'text-[#c2410c]' : ''}>{driftCount}</strong></span>
+              {buckets.filter((b) => Math.abs(b.drift) >= 2).map((b) => (
+                <span key={b.id}>{b.label}: <strong className="text-[#c2410c]">{b.drift >= 0 ? '+' : ''}{b.drift.toFixed(1)}%</strong></span>
+              ))}
+            </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-[auto_1fr]">
+              <AllocationDonut slices={donutSlices} totalValue={totalValue} size={160} strokeWidth={24} />
+              <AllocationComparison buckets={buckets} />
+            </div>
+          </>
         )}
       </SectionPanel>
 
       {/* Rebalance Preview */}
       <SectionPanel label="ปรับสมดุล" title="Rebalance Preview" endSlot={
-        <span className="pill">{rebalanceSuggestions.length} suggestions</span>
+        <div className="flex items-center gap-2">
+          <span className="pill">{rebalanceSuggestions.length} suggestions</span>
+        </div>
       }>
         {holdings.length === 0 ? (
           <p className="text-sm text-[var(--bb-text-muted)]">No rebalance data available.</p>
         ) : (
-          <RebalancePreview
-            suggestions={rebalanceSuggestions}
-            onQueueRebalance={handleQueueRebalance}
-          />
+          <>
+            <RebalancePreview
+              suggestions={visibleSuggestions}
+              onQueueRebalance={handleQueueRebalance}
+            />
+            {rebalanceSuggestions.length > 5 && (
+              <button
+                className="mt-2 text-[10px] font-semibold text-[var(--bb-accent)] hover:underline"
+                type="button"
+                onClick={() => setShowAllRebalance((p) => !p)}
+              >
+                {showAllRebalance ? 'Collapse' : `View All (${rebalanceSuggestions.length})`}
+              </button>
+            )}
+          </>
         )}
       </SectionPanel>
     </div>
