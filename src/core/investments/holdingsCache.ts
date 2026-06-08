@@ -1,5 +1,4 @@
 import type { Holding } from '../../types/models'
-import { normalizeAssetId } from './assetIdentity'
 
 const HOLDINGS_CACHE_KEY = 'beblank_os_investment_holdings_cache_v1'
 
@@ -27,12 +26,6 @@ const toFiniteNumber = (value: unknown): number | undefined => {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-const normalizeAssetKey = (value: unknown): string | null => {
-  if (typeof value !== 'string') return null
-  const normalized = normalizeAssetId(value)
-  return normalized.length > 0 ? normalized : null
-}
-
 const normalizeCacheEntry = (entry: HoldingsCacheEntry): Holding | null => {
   const id = String(entry.id ?? '').trim()
   const assetId = String(entry.assetId ?? '').trim()
@@ -51,7 +44,7 @@ const normalizeCacheEntry = (entry: HoldingsCacheEntry): Holding | null => {
   return {
     id,
     accountId: entry.accountId === undefined ? undefined : String(entry.accountId),
-    assetId: normalizeAssetId(assetId),
+    assetId,
     units: toFiniteNumber(entry.units),
     quantity,
     averageCost,
@@ -75,39 +68,6 @@ const normalizeCacheEntry = (entry: HoldingsCacheEntry): Holding | null => {
     unrealizedGainTHB: toFiniteNumber(entry.unrealizedGainTHB),
     unrealizedGainPercent: toFiniteNumber(entry.unrealizedGainPercent),
   } as Holding
-}
-
-const mergeHoldingsByAssetId = (baseRecords: Holding[], cacheRecords: Holding[]): Holding[] => {
-  if (cacheRecords.length === 0) return baseRecords
-
-  const merged = [...baseRecords]
-  const indexByAssetId = new Map<string, number>()
-
-  merged.forEach((record, index) => {
-    const key = normalizeAssetKey(record.assetId)
-    if (key && !indexByAssetId.has(key)) {
-      indexByAssetId.set(key, index)
-    }
-  })
-
-  for (const record of cacheRecords) {
-    const key = normalizeAssetKey(record.assetId)
-    if (!key) {
-      merged.push(record)
-      continue
-    }
-
-    const existingIndex = indexByAssetId.get(key)
-    if (existingIndex === undefined) {
-      indexByAssetId.set(key, merged.length)
-      merged.push(record)
-      continue
-    }
-
-    merged[existingIndex] = { ...merged[existingIndex], ...record }
-  }
-
-  return merged
 }
 
 export function loadHoldingsCache(): HoldingsCacheSnapshot {
@@ -159,5 +119,5 @@ export function saveHoldingsCache(records: Array<Record<string, unknown>>): Hold
 }
 
 export function mergeHoldingsCache(baseRecords: Holding[], cacheRecords: Holding[]): Holding[] {
-  return mergeHoldingsByAssetId(baseRecords, cacheRecords)
+  return cacheRecords.length > 0 ? cacheRecords : baseRecords
 }
