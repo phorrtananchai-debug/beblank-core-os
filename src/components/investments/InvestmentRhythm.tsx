@@ -1,5 +1,6 @@
 import type { Holding, DcaRecord, DividendRecord, TradingWatchlistItem } from '../../types/models'
 import { computeInvestmentPulse } from './InvestmentPulse'
+import { loadFxRate } from './fxEngine'
 
 interface Props {
   holdings: Holding[]
@@ -18,7 +19,8 @@ const SectionCard = ({ label, children, color }: { label: string; children: Reac
 export const InvestmentRhythm = ({ holdings, dcaRecords, dividendRecords, tradingWatchlist }: Props) => {
   const pulse = computeInvestmentPulse(holdings, dcaRecords)
   const portfolioValue = holdings.reduce((s, h) => s + (h.marketValueTHB ?? h.quantity * h.averageCost), 0)
-  const portfolioValueUSD = portfolioValue / 36.5
+  const fxRate = loadFxRate().rate
+  const portfolioValueUSD = portfolioValue / fxRate
   const driftCount = holdings.filter((h) => Math.abs((h.allocationPercent ?? 0) - (h.targetAllocationPercent ?? 0)) >= 2).length
   const dcaDue = dcaRecords.filter((r) => r.status === 'planned' || r.status === 'review').length
   const watchlistCount = tradingWatchlist.length
