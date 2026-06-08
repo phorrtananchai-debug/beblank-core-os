@@ -1,4 +1,4 @@
-import type { OsData, SourceStatus } from '../types/models'
+import type { FinanceAsset, Holding, OsData, SourceStatus } from '../types/models'
 
 export const mockSourceStatuses: Record<string, SourceStatus> = {
   commandCenter: {
@@ -107,6 +107,45 @@ export const mockSourceStatuses: Record<string, SourceStatus> = {
   },
 }
 
+export const mockFinanceAssets: FinanceAsset[] = [
+  { id: 'voo', name: 'Vanguard S&P 500 ETF', symbol: 'VOO', currency: 'USD', category: 'etf', region: 'US', assetType: 'us-equity-etf', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'schd', name: 'Schwab US Dividend Equity ETF', symbol: 'SCHD', currency: 'USD', category: 'etf', region: 'US', assetType: 'us-equity-etf', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'jepq', name: 'JPMorgan Nasdaq Equity Premium Income ETF', symbol: 'JEPQ', currency: 'USD', category: 'etf', region: 'US', assetType: 'us-equity-etf', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'jepi', name: 'JPMorgan Equity Premium Income ETF', symbol: 'JEPI', currency: 'USD', category: 'etf', region: 'US', assetType: 'us-equity-etf', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'qqqi', name: 'YieldMax QQQ Option Income Strategy ETF', symbol: 'QQQI', currency: 'USD', category: 'etf', region: 'US', assetType: 'us-equity-etf', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'abbv', name: 'AbbVie Inc.', symbol: 'ABBV', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'msft', name: 'Microsoft Corporation', symbol: 'MSFT', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'googl', name: 'Alphabet Inc.', symbol: 'GOOGL', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'intc', name: 'Intel Corporation', symbol: 'INTC', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'pg', name: 'Procter & Gamble Co.', symbol: 'PG', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'main', name: 'Main Street Capital Corp.', symbol: 'MAIN', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'meta', name: 'Meta Platforms Inc.', symbol: 'META', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'amzn', name: 'Amazon.com Inc.', symbol: 'AMZN', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'nflx', name: 'Netflix Inc.', symbol: 'NFLX', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'rbrk', name: 'Rubrik Inc.', symbol: 'RBRK', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'k-us500x-a', name: 'กองทุนเปิดเค ยูเอส 500 (A)', symbol: 'K-US500X-A(A)', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-mutual-fund', market: 'TH' },
+  { id: 'k-us500xrmf', name: 'กองทุนเปิดเค ยูเอส 500 RMF', symbol: 'K-US500XRMF', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-rmf', market: 'TH' },
+  { id: 'scbndq', name: 'กองทุนเปิดไทยพาณิชย์ SCBNDQ (A)', symbol: 'SCBNDQ(A)', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-mutual-fund', market: 'TH' },
+]
+
+export const mockHoldings = [
+  { id: 'h-voo', assetId: 'voo', quantity: 25, averageCost: 0, currentPosture: 'core', dcaStatus: 'paused', dividendStatus: 'expected', risk: 'low', notes: 'Core S&P 500 exposure', currencyMode: 'multi', averageCostUSD: 495, currentPriceUSD: 530, marketValueUSD: 13250, costBasisUSD: 12375, targetAllocationPercent: 25 },
+  { id: 'h-schd', assetId: 'schd', quantity: 50, averageCost: 0, currentPosture: 'income', dcaStatus: 'active', dividendStatus: 'expected', risk: 'low', notes: 'Dividend growth', currencyMode: 'multi', averageCostUSD: 75, currentPriceUSD: 80, marketValueUSD: 4000, costBasisUSD: 3750, targetAllocationPercent: 10 },
+  { id: 'h-jepq', assetId: 'jepq', quantity: 40, averageCost: 0, currentPosture: 'income', dcaStatus: 'active', dividendStatus: 'expected', risk: 'low', notes: 'Nasdaq covered call income', currencyMode: 'multi', averageCostUSD: 54, currentPriceUSD: 58, marketValueUSD: 2320, costBasisUSD: 2160, targetAllocationPercent: 5 },
+  { id: 'h-jepi', assetId: 'jepi', quantity: 50, averageCost: 0, currentPosture: 'income', dcaStatus: 'paused', dividendStatus: 'expected', risk: 'low', notes: 'S&P 500 covered call income', currencyMode: 'multi', averageCostUSD: 56, currentPriceUSD: 60, marketValueUSD: 3000, costBasisUSD: 2800, targetAllocationPercent: 5 },
+  { id: 'h-qqqi', assetId: 'qqqi', quantity: 30, averageCost: 0, currentPosture: 'income', dcaStatus: 'paused', dividendStatus: 'expected', risk: 'medium', notes: 'QQQ option income strategy', currencyMode: 'multi', averageCostUSD: 39, currentPriceUSD: 42, marketValueUSD: 1260, costBasisUSD: 1170, targetAllocationPercent: 3 },
+  { id: 'h-abbv', assetId: 'abbv', quantity: 20, averageCost: 0, currentPosture: 'growth', dcaStatus: 'paused', dividendStatus: 'received', risk: 'low', notes: 'Pharma dividend growth', currencyMode: 'multi', averageCostUSD: 175, currentPriceUSD: 190, marketValueUSD: 3800, costBasisUSD: 3500, targetAllocationPercent: 5 },
+  { id: 'h-msft', assetId: 'msft', quantity: 12, averageCost: 0, currentPosture: 'growth', dcaStatus: 'paused', dividendStatus: 'expected', risk: 'low', notes: 'Cloud + AI leader', currencyMode: 'multi', averageCostUSD: 390, currentPriceUSD: 420, marketValueUSD: 5040, costBasisUSD: 4680, targetAllocationPercent: 8 },
+  { id: 'h-googl', assetId: 'googl', quantity: 15, averageCost: 0, currentPosture: 'growth', dcaStatus: 'paused', dividendStatus: 'none', risk: 'low', notes: 'Digital advertising dominant', currencyMode: 'multi', averageCostUSD: 160, currentPriceUSD: 175, marketValueUSD: 2625, costBasisUSD: 2400, targetAllocationPercent: 5 },
+  { id: 'h-intc', assetId: 'intc', quantity: 30, averageCost: 0, currentPosture: 'watch', dcaStatus: 'review', dividendStatus: 'review', risk: 'high', notes: 'Turnaround watch — restructuring risk', currencyMode: 'multi', averageCostUSD: 35, currentPriceUSD: 30, marketValueUSD: 900, costBasisUSD: 1050, targetAllocationPercent: 2 },
+  { id: 'h-pg', assetId: 'pg', quantity: 10, averageCost: 0, currentPosture: 'core', dcaStatus: 'paused', dividendStatus: 'received', risk: 'low', notes: 'Consumer staple anchor', currencyMode: 'multi', averageCostUSD: 158, currentPriceUSD: 165, marketValueUSD: 1650, costBasisUSD: 1580, targetAllocationPercent: 3 },
+  { id: 'h-main', assetId: 'main', quantity: 40, averageCost: 0, currentPosture: 'income', dcaStatus: 'paused', dividendStatus: 'received', risk: 'medium', notes: 'BDC monthly dividend', currencyMode: 'multi', averageCostUSD: 55, currentPriceUSD: 62, marketValueUSD: 2480, costBasisUSD: 2200, targetAllocationPercent: 5 },
+  { id: 'h-meta', assetId: 'meta', quantity: 8, averageCost: 0, currentPosture: 'growth', dcaStatus: 'paused', dividendStatus: 'expected', risk: 'medium', notes: 'Social + AI monetization', currencyMode: 'multi', averageCostUSD: 540, currentPriceUSD: 580, marketValueUSD: 4640, costBasisUSD: 4320, targetAllocationPercent: 6 },
+  { id: 'h-amzn', assetId: 'amzn', quantity: 10, averageCost: 0, currentPosture: 'growth', dcaStatus: 'paused', dividendStatus: 'none', risk: 'low', notes: 'E-commerce + AWS', currencyMode: 'multi', averageCostUSD: 195, currentPriceUSD: 210, marketValueUSD: 2100, costBasisUSD: 1950, targetAllocationPercent: 5 },
+  { id: 'h-nflx', assetId: 'nflx', quantity: 3, averageCost: 0, currentPosture: 'growth', dcaStatus: 'paused', dividendStatus: 'none', risk: 'medium', notes: 'Streaming content leader', currencyMode: 'multi', averageCostUSD: 650, currentPriceUSD: 700, marketValueUSD: 2100, costBasisUSD: 1950, targetAllocationPercent: 4 },
+  { id: 'h-rbrk', assetId: 'rbrk', quantity: 20, averageCost: 0, currentPosture: 'watch', dcaStatus: 'review', dividendStatus: 'none', risk: 'high', notes: 'Cyber security sandbox', currencyMode: 'multi', averageCostUSD: 60, currentPriceUSD: 70, marketValueUSD: 1400, costBasisUSD: 1200, targetAllocationPercent: 2 },
+] as unknown as Holding[]
+
 export const mockOsData: OsData = {
   projects: [],
   tasks: [],
@@ -119,8 +158,8 @@ export const mockOsData: OsData = {
   artworkRecords: [],
   creativeBriefs: [],
   studioReviews: [],
-  financeAssets: [],
-  holdings: [],
+  financeAssets: mockFinanceAssets,
+  holdings: mockHoldings,
   thaiNavAssets: [],
   transactions: [],
   familyFinanceRecords: [],

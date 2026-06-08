@@ -312,6 +312,13 @@ const AssetRow = ({
   const isDrifted = Math.abs(drift) >= 2
   const dcaLabel = holding.dcaStatus ?? '—'
   const isDcaReview = dcaRecord?.status === 'review' || holding.dcaStatus === 'review'
+  const h = holding as unknown as Record<string, unknown>
+  const avgCostUSD = h.averageCostUSD as number | undefined
+  const curPriceUSD = h.currentPriceUSD as number | undefined
+  const mvUSD = h.marketValueUSD as number | undefined
+  const gainUSD = mvUSD !== undefined && h.costBasisUSD !== undefined ? (mvUSD - (h.costBasisUSD as number)) : undefined
+  const gainPct = gainUSD !== undefined && h.costBasisUSD !== undefined && (h.costBasisUSD as number) > 0 ? (gainUSD / (h.costBasisUSD as number)) * 100 : undefined
+  const usdLabel = (v: number | undefined) => v !== undefined ? `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''
 
   return (
     <div className="grid grid-cols-1 gap-1 px-5 py-3 transition hover:bg-[#faf9f8] md:grid-cols-[1fr_100px_80px_80px_80px_70px_60px_auto] md:items-center md:gap-3">
@@ -329,18 +336,34 @@ const AssetRow = ({
         </div>
         <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-[#777777]">
           <span>Qty: {holding.units ?? holding.quantity}</span>
+          {avgCostUSD !== undefined && <span>Avg: {usdLabel(avgCostUSD)}</span>}
+          {curPriceUSD !== undefined && <span>Price: {usdLabel(curPriceUSD)}</span>}
+          {mvUSD !== undefined && <span>MV: {usdLabel(mvUSD)}</span>}
+          {gainPct !== undefined && <span className={gainUSD !== undefined && gainUSD >= 0 ? 'text-[#16a36a]' : 'text-[#c2410c]'}>{gainUSD !== undefined && gainUSD >= 0 ? '+' : ''}{usdLabel(gainUSD)} ({gainPct >= 0 ? '+' : ''}{gainPct.toFixed(1)}%)</span>}
           <span>Alloc: {pct(holding.allocationPercent)}</span>
           <span>Target: {pct(holding.targetAllocationPercent)}</span>
           <span className={isDcaReview ? 'text-[#9a6a1f] font-semibold' : ''}>DCA: {dcaLabel}</span>
           {holding.risk ? <span className={holding.risk === 'high' ? 'text-[#c2410c] font-semibold' : ''}>{holding.risk}</span> : null}
         </div>
         {holding.notes ? <p className="mt-1 text-xs text-[#777777] truncate">{holding.notes}</p> : null}
+        {mvUSD !== undefined && (
+          <p className="mt-1 text-[10px] text-[var(--bb-text-faint)]">
+            MV: {usdLabel(mvUSD)} {gainPct !== undefined && (
+              <span className={gainUSD !== undefined && gainUSD >= 0 ? 'text-[#16a36a]' : 'text-[#c2410c]'}>
+                / {gainUSD !== undefined && gainUSD >= 0 ? '+' : ''}{usdLabel(gainUSD)} ({gainPct >= 0 ? '+' : ''}{gainPct.toFixed(1)}%)
+              </span>
+            )}
+          </p>
+        )}
       </div>
 
       {/* Desktop: table row */}
       <div className="hidden min-w-0 md:block">
         <p className="text-sm font-semibold truncate">{holding.asset?.symbol ?? holding.assetId}</p>
         <p className="text-xs text-[#777777] truncate">{holding.asset?.name ?? ''}</p>
+        {avgCostUSD !== undefined && curPriceUSD !== undefined && (
+          <p className="text-[9px] text-[var(--bb-text-faint)]">Avg {usdLabel(avgCostUSD)} / {usdLabel(curPriceUSD)}</p>
+        )}
       </div>
       <p className="hidden text-right text-sm font-semibold md:block">{thb(holding.marketValueTHB)}</p>
       <p className="hidden text-right text-sm md:block">{pct(holding.allocationPercent)}</p>
@@ -348,6 +371,16 @@ const AssetRow = ({
       <p className={`hidden text-right text-sm font-semibold md:block ${driftStyle(drift)}`}>{drift > 0 ? '+' : ''}{drift.toFixed(1)}%</p>
       <p className={`hidden text-right text-sm md:block ${isDcaReview ? 'text-[#9a6a1f] font-semibold' : 'text-[#777777]'}`}>{dcaLabel}</p>
       <p className={`hidden text-right text-sm md:block ${holding.risk === 'high' ? 'text-[#c2410c] font-semibold' : 'text-[#777777]'}`}>{holding.risk ?? '—'}</p>
+      {mvUSD !== undefined && (
+        <p className="hidden text-right text-[10px] md:block text-[var(--bb-text-faint)]">
+          {usdLabel(mvUSD)}
+          {gainPct !== undefined && (
+            <span className={gainUSD !== undefined && gainUSD >= 0 ? ' text-[#16a36a]' : ' text-[#c2410c]'}>
+              {' '}{gainUSD !== undefined && gainUSD >= 0 ? '+' : ''}{gainPct.toFixed(1)}%
+            </span>
+          )}
+        </p>
+      )}
 
       {/* Actions */}
       <div className="flex flex-wrap items-center gap-1.5 md:justify-end">
