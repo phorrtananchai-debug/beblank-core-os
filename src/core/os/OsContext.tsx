@@ -4,6 +4,7 @@ import { createInitialOsDataFromProviders } from '../data/providers'
 import { normalizeRows } from '../sheetBridge/adapters'
 import { getActiveAppsScriptEndpoint } from '../sheetBridge/config'
 import { SHEET_RESOURCES } from '../sheetBridge/resources'
+import { saveFullHistoryCache } from '../dividends/fullHistoryCache'
 import { OsContext, type BridgeBootstrapDiagnostic, type OsContextValue } from './osContextObject'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
@@ -303,6 +304,10 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
           })
           if (mergeResult.appended > 0 || mergeResult.updated > 0) {
             hydratedAny = true
+          }
+
+          if (resource.id === 'dividend-records-full-history' && mergeResult.appended > 0) {
+            saveFullHistoryCache(rows as unknown as Parameters<typeof saveFullHistoryCache>[0])
           }
         } catch (error) {
           diagnostics.push({

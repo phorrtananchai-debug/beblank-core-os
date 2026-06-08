@@ -1,5 +1,8 @@
 import type { FinanceAsset, Holding, OsData, SourceStatus } from '../types/models'
 import { fullHistoryDividendRecords } from '../core/dividends/fullHistoryData'
+import { loadFullHistoryCache } from '../core/dividends/fullHistoryCache'
+
+const cachedFullHistory = loadFullHistoryCache()
 
 export const mockSourceStatuses: Record<string, SourceStatus> = {
   commandCenter: {
@@ -172,7 +175,7 @@ export const mockOsData: OsData = {
   tradingSignals: [],
   tradingStrategyNotes: [],
   dcaRecords: [],
-  dividendRecordsFullHistory: fullHistoryDividendRecords,
+  dividendRecordsFullHistory: cachedFullHistory.length > 0 ? cachedFullHistory : fullHistoryDividendRecords,
   dividendRecords: [
     { id: 'div-20260604-jepq', accountId: 'acct-dime', assetId: 'JEPQ', symbol: 'JEPQ', expectedAmountTHB: 0, payDate: '2026-06-04', grossAmount: 3.62, taxAmount: 0.54, netAmount: 3.08, currency: 'USD', source: 'Dime screenshot', status: 'received', note: 'Visible 2026 record from Dime PDF.', sourceStatus: mockSourceStatuses.investments, lastUpdated: '2026-06-04', notes: 'Dime screenshot import seed.', risk: 'low', tags: ['dividend', 'dime', 'seed'] },
     { id: 'div-20260604-jepi', accountId: 'acct-dime', assetId: 'JEPI', symbol: 'JEPI', expectedAmountTHB: 0, payDate: '2026-06-04', grossAmount: 1.71, taxAmount: 0.25, netAmount: 1.46, currency: 'USD', source: 'Dime screenshot', status: 'received', note: 'Visible 2026 record from Dime PDF.', sourceStatus: mockSourceStatuses.investments, lastUpdated: '2026-06-04', notes: 'Dime screenshot import seed.', risk: 'low', tags: ['dividend', 'dime', 'seed'] },
