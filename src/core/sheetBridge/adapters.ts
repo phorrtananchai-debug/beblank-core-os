@@ -63,7 +63,7 @@ export function normalizeRow(
       ? (
           col.key === 'symbol' ? (raw.assetId ?? raw['Asset ID']) :
           col.key === 'grossAmount' ? (raw.gross ?? raw['Gross']) :
-          col.key === 'taxAmount' ? (raw.tax ?? raw['Tax']) :
+          col.key === 'taxAmount' ? (raw.tax ?? raw.taxWithheld ?? raw['Tax']) :
           col.key === 'taxWithheld' ? (raw.tax ?? raw['Tax'] ?? raw.taxAmount ?? raw['Tax Amount']) :
           col.key === 'netAmount' ? (raw.net ?? raw['Net'] ?? raw.expectedAmountTHB ?? raw['Expected Amount THB']) :
           col.key === 'source' ? (raw.sourceLabel ?? raw['Source Label']) :

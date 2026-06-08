@@ -4,7 +4,7 @@ import { createInitialOsDataFromProviders } from '../data/providers'
 import { normalizeRows } from '../sheetBridge/adapters'
 import { getActiveAppsScriptEndpoint } from '../sheetBridge/config'
 import { SHEET_RESOURCES } from '../sheetBridge/resources'
-import { saveFullHistoryCache } from '../dividends/fullHistoryCache'
+import { loadFullHistoryCache, mergeDividendFullHistory } from '../investments/dividendFullHistoryCache'
 import { OsContext, type BridgeBootstrapDiagnostic, type OsContextValue } from './osContextObject'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
@@ -12,6 +12,11 @@ import type { DataProviderStatus, OsData, SourceStatus } from '../../types/model
 const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRows', 'holdings', 'dcaRecords', 'dividendRecords', 'dividendRecordsFullHistory', 'aiContexts'])
 
 const initialProviderState = createInitialOsDataFromProviders()
+const cachedDividendHistory = loadFullHistoryCache()
+const hydratedInitialData = {
+  ...initialProviderState.data,
+  dividendRecords: mergeDividendFullHistory(initialProviderState.data.dividendRecords, cachedDividendHistory),
+}
 const IMPORTABLE_BRIDGE_RESOURCES = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
 
 const synthesizeBootstrapDiagnosticsFromData = (data: OsData): BridgeBootstrapDiagnostic[] => {
@@ -51,10 +56,10 @@ if (typeof window !== 'undefined') {
 }
 
 export const OsProvider = ({ children }: { children: React.ReactNode }) => {
-  const [data, setData] = useState<OsData>(initialProviderState.data)
+  const [data, setData] = useState<OsData>(hydratedInitialData)
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(initialProviderState.sourceStatuses)
   const [providerStatuses] = useState<Record<string, DataProviderStatus>>(initialProviderState.providerStatuses)
-  const [bootstrapDiagnostics, setBootstrapDiagnostics] = useState<BridgeBootstrapDiagnostic[]>(() => synthesizeBootstrapDiagnosticsFromData(initialProviderState.data))
+  const [bootstrapDiagnostics, setBootstrapDiagnostics] = useState<BridgeBootstrapDiagnostic[]>(() => synthesizeBootstrapDiagnosticsFromData(hydratedInitialData))
   const [karunBridgeStatus, setKarunBridgeStatus] = useState<DataProviderStatus>({
     source: 'Karun Phuket Apps Script Read Bridge',
     mode: isKarunBridgeConfigured ? 'live' : 'fallback',
@@ -306,9 +311,6 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
             hydratedAny = true
           }
 
-          if (resource.id === 'dividend-records-full-history' && mergeResult.appended > 0) {
-            saveFullHistoryCache(rows as unknown as Parameters<typeof saveFullHistoryCache>[0])
-          }
         } catch (error) {
           diagnostics.push({
             resourceId: resource.id,

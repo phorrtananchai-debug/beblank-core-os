@@ -516,6 +516,7 @@ export interface DividendRecord {
   expectedAmountTHB: number
   payDate: string
   grossAmount: number
+  taxWithheld?: number
   taxAmount: number
   netAmount: number
   currency: 'USD' | 'THB'

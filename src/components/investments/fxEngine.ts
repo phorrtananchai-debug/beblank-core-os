@@ -50,6 +50,15 @@ export interface NormalizedHolding extends Holding {
 export function normalizeHoldingValue(holding: Holding, fxRate: number): NormalizedHolding {
   const h = holding as unknown as Record<string, unknown>
   const mode = h.currencyMode as string | undefined
+  const sheetMarketValueTHB = h.marketValueTHB as number | undefined
+
+  if (typeof sheetMarketValueTHB === 'number' && Number.isFinite(sheetMarketValueTHB) && sheetMarketValueTHB > 0) {
+    return {
+      ...holding,
+      currencyMode: mode ?? 'legacy',
+      marketValueTHB: sheetMarketValueTHB,
+    }
+  }
 
   if (mode === 'multi') {
     const qty = holding.quantity

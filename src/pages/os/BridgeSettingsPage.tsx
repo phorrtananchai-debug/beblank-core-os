@@ -4,6 +4,7 @@ import { SHEET_RESOURCES } from '../../core/sheetBridge/resources'
 import { useSheetBridge } from '../../hooks/useSheetBridge'
 import { useOs } from '../../core/os/useOs'
 import { loadBackup, removeBackup } from '../../core/sheetBridge/backup'
+import { saveFullHistoryCache } from '../../core/investments/dividendFullHistoryCache'
 import { SourceHealthMonitorFull } from '../../components/shared/SourceHealthMonitor'
 import { BridgeDiagnostics } from '../../components/bridge/BridgeDiagnostics'
 
@@ -155,6 +156,9 @@ export const BridgeSettingsPage = () => {
       importPreview.rows,
       () => {
         const result = bulkMergeData(resource.osField, importPreview.rows)
+        if (resource.id === 'dividend-records' && importPreview.rows.length > 0) {
+          saveFullHistoryCache(importPreview.rows)
+        }
         updateBridgeDiagnostic({
           resourceId: resource.id,
           resourceName: resource.name,
