@@ -28,12 +28,34 @@ function parseInlineMediaImageUrls(value: unknown): string[] {
   return raw.split(',').map((item) => item.trim()).filter(Boolean)
 }
 
+function parseSheetNumber(value: unknown): number | undefined {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : undefined
+  }
+
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const normalized = value
+    .replace(/THB/gi, '')
+    .replace(/฿/g, '')
+    .replace(/,/g, '')
+    .trim()
+
+  if (!normalized) {
+    return undefined
+  }
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 function coerceValue(value: unknown, type: 'string' | 'number' | 'date' | 'boolean'): unknown {
   if (value === undefined || value === null || value === '') return undefined
   switch (type) {
     case 'number': {
-      const n = Number(value)
-      return Number.isFinite(n) ? n : undefined
+      return parseSheetNumber(value)
     }
     case 'date': {
       const d = new Date(String(value))
