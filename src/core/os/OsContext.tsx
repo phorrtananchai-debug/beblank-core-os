@@ -20,6 +20,12 @@ const hydratedInitialData = {
 }
 const IMPORTABLE_BRIDGE_RESOURCES = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
 
+const normalizeHoldingAssetKey = (value: unknown): string | null => {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toUpperCase()
+  return normalized.length > 0 ? normalized : null
+}
+
 const synthesizeBootstrapDiagnosticsFromData = (data: OsData): BridgeBootstrapDiagnostic[] => {
   return IMPORTABLE_BRIDGE_RESOURCES.flatMap((resource) => {
     const value = (data as unknown as Record<string, unknown>)[resource.osField]
@@ -97,6 +103,65 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     setData((current) => {
       const arr = (current as unknown as Record<string, unknown>)[field]
       if (!Array.isArray(arr)) return current
+
+      if (field === 'holdings') {
+        const existingRows = arr as Array<Record<string, unknown>>
+        const incomingRows = rows as Array<Record<string, unknown>>
+        const existingAssetKeys = new Set(
+          existingRows
+            .map((item) => normalizeHoldingAssetKey(item.assetId))
+            .filter((key): key is string => key !== null),
+        )
+        const merged: Array<Record<string, unknown>> = []
+        const incomingAssetKeys = new Set<string>()
+        const incomingIds = new Set<unknown>()
+        let appended = 0
+        let updated = 0
+
+        for (const row of incomingRows) {
+          const assetKey = normalizeHoldingAssetKey(row.assetId)
+          const rowId = row.id
+
+          if (assetKey) {
+            incomingAssetKeys.add(assetKey)
+          }
+          if (rowId !== undefined && rowId !== null) {
+            incomingIds.add(rowId)
+          }
+
+          if (
+            (assetKey && existingAssetKeys.has(assetKey)) ||
+            (!assetKey && rowId !== undefined && rowId !== null && existingRows.some((item) => item.id === rowId))
+          ) {
+            updated++
+          } else {
+            appended++
+          }
+
+          merged.push(row)
+        }
+
+        for (const existing of existingRows) {
+          const assetKey = normalizeHoldingAssetKey(existing.assetId)
+          const existingId = existing.id
+
+          if (assetKey) {
+            if (incomingAssetKeys.has(assetKey)) {
+              continue
+            }
+            continue
+          }
+
+          if (existingId !== undefined && existingId !== null && incomingIds.has(existingId)) {
+            continue
+          }
+
+          merged.push(existing)
+        }
+
+        result = { appended, updated, skipped: rows.length - appended - updated, total: merged.length }
+        return { ...current, [field]: merged as unknown as OsData['holdings'] }
+      }
 
       const currentIds = new Set(arr.map((item) => (item as Record<string, unknown>)?.id))
       let appended = 0
