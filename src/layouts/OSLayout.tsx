@@ -29,6 +29,7 @@ const groups = [
     label: 'SYSTEM',
     links: [
       { to: '/os/settings', label: 'Settings', icon: '⚙' },
+      { to: '/os/bridge', label: 'Bridge', icon: '⇆' },
     ],
   },
 ]
