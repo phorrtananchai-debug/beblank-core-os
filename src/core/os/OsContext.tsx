@@ -8,7 +8,7 @@ import { OsContext, type BridgeBootstrapDiagnostic, type OsContextValue } from '
 import { useApprovalWorkflow } from './useApprovalWorkflow'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
 
-const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRows', 'holdings', 'dcaRecords', 'dividendRecords', 'aiContexts'])
+const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRows', 'holdings', 'dcaRecords', 'dividendRecords', 'dividendRecordsFullHistory', 'aiContexts'])
 
 const initialProviderState = createInitialOsDataFromProviders()
 const IMPORTABLE_BRIDGE_RESOURCES = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))

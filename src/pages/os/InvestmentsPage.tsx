@@ -605,6 +605,7 @@ export const InvestmentsPage = () => {
         <DividendsTab
           assetName={assetName}
           dividendRecords={data.dividendRecords}
+          dividendRecordsFullHistory={data.dividendRecordsFullHistory}
           fxRate={fxRate}
         />
       ) : null}
@@ -1247,16 +1248,21 @@ type SourceScope = 'imported-ledger' | 'full-dime-history' | 'all'
 const DividendsTab = ({
   assetName,
   dividendRecords,
+  dividendRecordsFullHistory,
   fxRate,
 }: {
   assetName: (id: string) => string
   dividendRecords: DividendRecord[]
+  dividendRecordsFullHistory: DividendRecord[]
   fxRate: number
 }) => {
   const [sourceScope, setSourceScope] = useState<SourceScope>('imported-ledger')
+  const allRecords = [...dividendRecords, ...dividendRecordsFullHistory]
   const filteredRecords = sourceScope === 'all'
-    ? dividendRecords
-    : dividendRecords.filter((r) => (r.sourceScope ?? 'imported-ledger') === sourceScope)
+    ? allRecords
+    : sourceScope === 'full-dime-history'
+      ? dividendRecordsFullHistory
+      : dividendRecords
   const sortedRecords = [...filteredRecords].sort((a, b) => b.payDate.localeCompare(a.payDate))
   const trailing12Start = new Date()
   trailing12Start.setMonth(trailing12Start.getMonth() - 12)
@@ -1301,8 +1307,8 @@ const DividendsTab = ({
     return [...map.entries()].sort((a, b) => b[1].gross - a[1].gross)
   }, [dividendRecords])
 
-  const importableCount = dividendRecords.filter((r) => (r.sourceScope ?? 'imported-ledger') === 'imported-ledger').length
-  const fullHistoryCount = dividendRecords.filter((r) => r.sourceScope === 'full-dime-history').length
+  const importableCount = dividendRecords.length
+  const fullHistoryCount = dividendRecordsFullHistory.length
 
   return (
     <div className="space-y-5">

@@ -655,6 +655,7 @@ export interface OsData {
   tradingStrategyNotes: TradingStrategyNote[]
   dcaRecords: DcaRecord[]
   dividendRecords: DividendRecord[]
+  dividendRecordsFullHistory: DividendRecord[]
   financeSnapshots: FinanceSnapshot[]
   financeLedgerRows: FinanceLedgerRow[]
   reserveRows: ReserveRow[]
