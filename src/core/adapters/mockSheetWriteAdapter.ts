@@ -1,3 +1,4 @@
+import { loadFxRate } from '../../components/investments/fxEngine'
 import { generateId } from '../../app/utils'
 import type {
   ActionRequest,
@@ -303,7 +304,8 @@ export const mockSheetWriteAdapter = (
     const manualContributionTHB = Number(request.payload.manualContributionTHB ?? 0)
     const manualContributionUSD = Number(request.payload.manualContributionUSD ?? 0)
     const fallbackContribution = Number(request.payload.manualContribution ?? units * averageCost)
-    const manualContribution = manualContributionTHB || (manualContributionUSD ? manualContributionUSD * 36.5 : currency === 'USD' ? fallbackContribution * 36.5 : fallbackContribution)
+    const fxRate = loadFxRate().rate
+    const manualContribution = manualContributionTHB || (manualContributionUSD ? manualContributionUSD * fxRate : currency === 'USD' ? fallbackContribution * fxRate : fallbackContribution)
     const helperPrice = Number(request.payload.currentHelperPrice ?? 0)
     const estimatedValue = helperPrice > 0 ? units * helperPrice : manualContribution
     const assetId = generateId('asset')

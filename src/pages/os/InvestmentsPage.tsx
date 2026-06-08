@@ -134,7 +134,10 @@ export const InvestmentsPage = () => {
 
   const hasInvestments = data.holdings.length > 0 || data.financeAssets.length > 0
   const totalValue = normalizedHoldings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
-  const driftHoldings = normalizedHoldings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
+  const assetLookup = (assetId: string) => data.financeAssets.find((a) => a.id.toLowerCase() === assetId.toLowerCase())
+  const isCashHolding = (holding: { assetId: string }) => assetLookup(holding.assetId)?.category === 'cash'
+  const securitiesHoldings = normalizedHoldings.filter((h) => !isCashHolding(h))
+  const driftHoldings = securitiesHoldings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
   const dcaQueue = data.dcaRecords.filter((record) => record.status === 'planned' || record.status === 'review')
   const expectedDividends = data.dividendRecords.reduce((sum, record) => sum + (record.expectedAmountTHB ?? 0), 0)
   const monthlyDcaTarget = data.dcaRecords.reduce((sum, record) => sum + (record.status === 'planned' ? record.plannedAmountTHB : 0), 0)
@@ -147,18 +150,27 @@ export const InvestmentsPage = () => {
   const isThaiAsset = manualAssetDraft.assetType.startsWith('thai')
   const helperSource = isThaiAsset ? (helperNavRow?.helperSource ?? 'manual-nav') : supportedMarketSymbols.includes(normalizedDraftSymbol) ? 'finnhub' : 'none'
 
-  const cashPosture = normalizedHoldings.filter((holding) => data.financeAssets.find((asset) => asset.id === holding.assetId)?.category === 'cash').reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
-  const riskPosture = normalizedHoldings.filter((holding) => holding.risk === 'high').length
-  const dcaImpactPreview = dcaQueue[0] ? ((dcaQueue[0].plannedAmountTHB / Math.max(totalValue, 1)) * 100).toFixed(2) : '0.00'
-  const assetName = (assetId: string) => data.financeAssets.find((asset) => asset.id === assetId)?.symbol ?? assetId
+  const cashHoldings = normalizedHoldings.filter((h) => isCashHolding(h))
 
-  const totalValueUSD = normalizedHoldings.reduce((sum, h) => sum + ((h as unknown as Record<string, unknown>).marketValueUSD as number ?? 0), 0)
-  const totalGainLossUSD = normalizedHoldings.reduce((sum, h) => {
+  const cashUSD = cashHoldings.reduce((sum, h) => sum + ((h as unknown as Record<string, unknown>).marketValueUSD as number ?? 0), 0)
+  const cashTHB = cashHoldings.reduce((sum, h) => sum + (h.marketValueTHB ?? 0), 0)
+  const offshoreSecuritiesUSD = securitiesHoldings.filter((h) => (assetLookup(h.assetId)?.currency ?? 'USD') === 'USD').reduce((sum, h) => sum + ((h as unknown as Record<string, unknown>).marketValueUSD as number ?? 0), 0)
+  const thaiFundsTHB = securitiesHoldings.filter((h) => (assetLookup(h.assetId)?.currency ?? 'USD') === 'THB').reduce((sum, h) => sum + (h.marketValueTHB ?? 0), 0)
+  const offshoreSecuritiesTHB = securitiesHoldings.filter((h) => (assetLookup(h.assetId)?.currency ?? 'USD') === 'USD').reduce((sum, h) => sum + (h.marketValueTHB ?? 0), 0)
+  const investedExCashTHB = offshoreSecuritiesTHB + thaiFundsTHB
+  const totalInclCashTHB = investedExCashTHB + cashTHB
+  const totalGainLossUSD = securitiesHoldings.reduce((sum, h) => {
     const mvUSD = (h as unknown as Record<string, unknown>).marketValueUSD as number ?? 0
     const cbUSD = (h as unknown as Record<string, unknown>).costBasisUSD as number ?? 0
     return sum + (mvUSD - cbUSD)
   }, 0)
-  const totalGainLossPct = totalValueUSD > 0 ? ((totalGainLossUSD / (totalValueUSD - totalGainLossUSD)) * 100) : 0
+  const totalGainLossPct = offshoreSecuritiesUSD > 0 ? ((totalGainLossUSD / (offshoreSecuritiesUSD - totalGainLossUSD)) * 100) : 0
+
+  const cashPosture = cashTHB
+  const riskPosture = normalizedHoldings.filter((holding) => holding.risk === 'high').length
+  const dcaImpactPreview = dcaQueue[0] ? ((dcaQueue[0].plannedAmountTHB / Math.max(investedExCashTHB, 1)) * 100).toFixed(2) : '0.00'
+  const assetName = (assetId: string) => assetLookup(assetId)?.symbol ?? assetId
+
   const receivedDividendsUSD = data.dividendRecords.reduce((sum, r) => {
     const gross = (r as unknown as Record<string, unknown>).grossAmount as number | undefined
     return sum + (gross ?? 0)
@@ -167,12 +179,13 @@ export const InvestmentsPage = () => {
     VOO: 7.50, SCHD: 3.20, JEPQ: 5.20, JEPI: 4.80, ABBV: 6.60,
     PG: 4.00, MAIN: 3.00, MSFT: 3.32, GOOGL: 0.80,
   }
-  const forwardDividendRunRateUSD = normalizedHoldings.reduce((sum, h) => {
-    const sym = data.financeAssets.find((a) => a.id === h.assetId)?.symbol
+  const forwardDividendRunRateUSD = securitiesHoldings.reduce((sum, h) => {
+    const sym = assetLookup(h.assetId)?.symbol
     const dps = sym ? (annualDivPerShare[sym] ?? 0) : 0
     return sum + dps * h.quantity
   }, 0)
   const forwardMonthlyPassiveUSD = forwardDividendRunRateUSD / 12
+  const forwardYieldPct = offshoreSecuritiesUSD > 0 ? (forwardDividendRunRateUSD / offshoreSecuritiesUSD) * 100 : 0
 
   const queueDca = () => {
     const record = dcaQueue[0]
@@ -436,20 +449,25 @@ export const InvestmentsPage = () => {
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">การลงทุน / แกนหลัก Aequitas</p>
         <h2 className="mt-4 text-2xl font-extrabold leading-[0.92]">การลงทุน / หุ้น</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
-          <OsHeroMetric icon="◆" value={hasInvestments ? thb(totalValue) : '—'} label="มูลค่ารวม (THB)" helper={hasInvestments ? 'รวมทุกประเภท' : 'ยังไม่มีข้อมูล'} color="neutral" progress={100} />
-          <OsHeroMetric icon="$" value={hasInvestments ? `$${Math.round(totalValueUSD).toLocaleString()}` : '—'} label="มูลค่ารวม (USD)" helper={hasInvestments ? 'USD Equivalent' : 'ยังไม่มีข้อมูล'} color="blue" progress={totalValueUSD > 0 ? 100 : 0} />
-          <OsHeroMetric icon="±" value={hasInvestments ? `${totalGainLossUSD >= 0 ? '+' : ''}$${Math.round(totalGainLossUSD).toLocaleString()}` : '—'} label="Gain/Loss (USD)" helper={hasInvestments ? `${totalGainLossPct >= 0 ? '+' : ''}${totalGainLossPct.toFixed(1)}%` : '—'} color={totalGainLossUSD >= 0 ? 'green' : 'red'} progress={Math.min(Math.abs(totalGainLossPct) * 2, 100)} />
-          <OsHeroMetric icon="○" value={cashPosture > 0 ? thb(cashPosture) : '—'} label="เงินสดรอจัดสรร" helper={cashPosture > 0 ? 'สำรอง' : 'ยังไม่มีข้อมูล'} color="blue" progress={totalValue > 0 ? (cashPosture / totalValue) * 100 : 0} />
-          <OsHeroMetric icon="↓" value={monthlyDcaTarget > 0 ? thb(monthlyDcaTarget) : '—'} label="แผน DCA เดือนนี้" helper={monthlyDcaTarget > 0 ? 'เป้าหมายรายเดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={totalValue > 0 ? (monthlyDcaTarget / totalValue) * 100 : 0} />
-          <OsHeroMetric icon="☆" value={forwardDividendRunRateUSD > 0 ? `$${forwardDividendRunRateUSD.toFixed(0)}` : '—'} label="Forward Div Run Rate" helper={forwardDividendRunRateUSD > 0 ? 'USD / ปี (จากพอร์ต)' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalValueUSD > 0 ? Math.min((forwardDividendRunRateUSD / totalValueUSD) * 100, 100) : 0} />
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+          <OsHeroMetric icon="◆" value={hasInvestments ? `$${Math.round(offshoreSecuritiesUSD).toLocaleString()}` : '—'} label="Offshore Securities" helper={hasInvestments ? `${thb(offshoreSecuritiesTHB)}` : 'ยังไม่มีข้อมูล'} color="neutral" progress={100} />
+          <OsHeroMetric icon="○" value={hasInvestments ? `$${cashUSD.toFixed(2)}` : '—'} label="Cash / Dry Powder" helper={hasInvestments ? `${thb(cashTHB)}` : 'ยังไม่มีข้อมูล'} color="blue" progress={totalInclCashTHB > 0 ? (cashTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="▣" value={hasInvestments ? thb(thaiFundsTHB) : '—'} label="Thai Funds" helper={hasInvestments ? 'THB' : 'ยังไม่มีข้อมูล'} color="purple" progress={totalInclCashTHB > 0 ? (thaiFundsTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="◈" value={hasInvestments ? thb(investedExCashTHB) : '—'} label="Invested ex Cash" helper={hasInvestments ? 'Offshore + Thai Funds' : 'ยังไม่มีข้อมูล'} color="green" progress={totalInclCashTHB > 0 ? (investedExCashTHB / totalInclCashTHB) * 100 : 0} />
+          <OsHeroMetric icon="◆" value={hasInvestments ? thb(totalInclCashTHB) : '—'} label="Total incl Cash" helper={hasInvestments ? 'รวมทุกประเภท' : 'ยังไม่มีข้อมูล'} color="neutral" progress={100} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+          <OsHeroMetric icon="±" value={hasInvestments ? `${totalGainLossUSD >= 0 ? '+' : ''}$${Math.round(totalGainLossUSD).toLocaleString()}` : '—'} label="Gain/Loss (Securities)" helper={hasInvestments ? `${totalGainLossPct >= 0 ? '+' : ''}${totalGainLossPct.toFixed(1)}%` : '—'} color={totalGainLossUSD >= 0 ? 'green' : 'red'} progress={Math.min(Math.abs(totalGainLossPct) * 2, 100)} />
+          <OsHeroMetric icon="☆" value={forwardDividendRunRateUSD > 0 ? `$${forwardDividendRunRateUSD.toFixed(0)}` : '—'} label="Forward Div Run Rate" helper={forwardDividendRunRateUSD > 0 ? 'USD / ปี' : 'ยังไม่มีข้อมูล'} color="purple" progress={offshoreSecuritiesUSD > 0 ? Math.min((forwardDividendRunRateUSD / offshoreSecuritiesUSD) * 100, 100) : 0} />
           <OsHeroMetric icon="◈" value={forwardMonthlyPassiveUSD > 0 ? `$${forwardMonthlyPassiveUSD.toFixed(1)}` : '—'} label="Monthly Passive" helper={forwardMonthlyPassiveUSD > 0 ? 'USD / เดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(forwardMonthlyPassiveUSD * 10, 100)} />
-          <span className="sr-only">Received: ${receivedDividendsUSD.toFixed(2)}</span>
+          <OsHeroMetric icon="‰" value={forwardYieldPct > 0 ? `${forwardYieldPct.toFixed(1)}%` : '—'} label="Forward Yield" helper={forwardYieldPct > 0 ? 'ต่อปี (securities)' : 'ยังไม่มีข้อมูล'} color="green" progress={Math.min(forwardYieldPct * 5, 100)} />
+          <OsHeroMetric icon="↓" value={monthlyDcaTarget > 0 ? thb(monthlyDcaTarget) : '—'} label="แผน DCA เดือนนี้" helper={monthlyDcaTarget > 0 ? 'เป้าหมายรายเดือน' : 'ยังไม่มีข้อมูล'} color="green" progress={investedExCashTHB > 0 ? (monthlyDcaTarget / investedExCashTHB) * 100 : 0} />
           <OsHeroMetric icon="△" value={driftHoldings.length > 0 ? `${driftHoldings.length} รายการ` : '—'} label="ความคลาดเคลื่อน" helper={driftHoldings.length > 0 ? 'สัดส่วนที่ดริฟท์' : 'ไม่มีรายการ'} color={driftHoldings.length > 0 ? 'amber' : 'green'} progress={Math.min(driftHoldings.length * 10, 100)} />
         </div>
         {receivedDividendsUSD > 0 && (
           <div className="mt-2 flex items-center gap-2 text-[10px] text-[var(--bb-text-faint)]">
             <span>Received Dividends (ledger): <strong>${receivedDividendsUSD.toFixed(2)} USD</strong></span>
+            <span>{thb(convertUsdToThb(receivedDividendsUSD, fxRate))}</span>
             <span>·</span>
             <span>@ <strong>{fxRate.toFixed(2)}</strong> THB/USD</span>
           </div>

@@ -1,4 +1,7 @@
 import { finnhubConfig, isFinnhubConfigured, isSupportedFinnhubSymbol } from './config'
+import { loadFxRate } from '../../../components/investments/fxEngine'
+
+const fx = () => loadFxRate().rate
 
 export interface FinnhubQuoteResult {
   symbol: string
@@ -39,7 +42,7 @@ const parseQuote = (symbol: string, payload: unknown): FinnhubQuoteResult => {
   return {
     symbol,
     priceUSD: current,
-    delayedPriceTHB: Math.round(current * finnhubConfig.thbPerUsd),
+    delayedPriceTHB: Math.round(current * fx()),
     refreshedAt,
     staleAfterHours: 24,
   }

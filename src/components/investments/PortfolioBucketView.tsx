@@ -45,6 +45,7 @@ const SYMBOL_BUCKET: Record<string, BucketId> = {
   ABBV: 'income-layer',
   'TH-INCOME-DIV': 'income-layer',
   'CASH-THB': 'cash-reserve',
+  'CASH-USD': 'cash-reserve',
   RBRK: 'sandbox',
   MRVL: 'sandbox',
   DDOG: 'sandbox',

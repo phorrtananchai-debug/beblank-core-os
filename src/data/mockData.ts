@@ -126,6 +126,7 @@ export const mockFinanceAssets: FinanceAsset[] = [
   { id: 'k-us500x-a', name: 'กองทุนเปิดเค ยูเอส 500 (A)', symbol: 'K-US500X-A(A)', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-mutual-fund', market: 'TH' },
   { id: 'k-us500xrmf', name: 'กองทุนเปิดเค ยูเอส 500 RMF', symbol: 'K-US500XRMF', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-rmf', market: 'TH' },
   { id: 'scbndq', name: 'กองทุนเปิดไทยพาณิชย์ SCBNDQ (A)', symbol: 'SCBNDQ(A)', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-mutual-fund', market: 'TH' },
+  { id: 'cash-usd-dime', name: 'Dime USD Cash', symbol: 'CASH-USD', currency: 'USD', category: 'cash', region: 'US', assetType: 'cash', market: 'manual', sourceOfTruth: 'sheet' },
 ]
 
 export const mockHoldings = [
@@ -147,6 +148,7 @@ export const mockHoldings = [
   { id: 'h-kus500xa', assetId: 'k-us500x-a', quantity: 200, averageCost: 14.2, currentPosture: 'core', risk: 'low', notes: 'Thai S&P 500 fund (A)', marketValueTHB: 2960, targetAllocationPercent: 10 },
   { id: 'h-kus500xrmf', assetId: 'k-us500xrmf', quantity: 100, averageCost: 14.0, currentPosture: 'core', risk: 'low', notes: 'Thai S&P 500 RMF', marketValueTHB: 1480, targetAllocationPercent: 6 },
   { id: 'h-scbndq', assetId: 'scbndq', quantity: 142, averageCost: 10.8, currentPosture: 'income', risk: 'low', notes: 'Thai bond fund', marketValueTHB: 1590, targetAllocationPercent: 5 },
+  { id: 'h-cash-dime', assetId: 'cash-usd-dime', quantity: 448.44, averageCost: 1, currentPosture: 'reserve', risk: 'low', notes: 'Dime cash balance May 2026 statement', currencyMode: 'multi', averageCostUSD: 1, currentPriceUSD: 1, marketValueUSD: 448.44, costBasisUSD: 448.44, targetAllocationPercent: 0 },
 ] as unknown as Holding[]
 
 export const mockOsData: OsData = {
