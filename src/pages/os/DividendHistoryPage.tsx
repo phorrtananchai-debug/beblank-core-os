@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useOs } from '../../core/os/useOs'
+import { buildCanonicalDividends } from '../../core/dividends/canonicalDividends'
 
 const usd = (value = 0) => `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
 const statusClass = (status: string) => {
@@ -11,8 +12,8 @@ const statusClass = (status: string) => {
 
 export const DividendHistoryPage = () => {
   const { data } = useOs()
-  const allRecords = useMemo(() => [...data.dividendRecords, ...data.dividendRecordsFullHistory], [data.dividendRecords, data.dividendRecordsFullHistory])
-  const sortedRecords = useMemo(() => [...allRecords].sort((a, b) => b.payDate.localeCompare(a.payDate)), [allRecords])
+  const canonical = useMemo(() => buildCanonicalDividends(data.dividendRecords, data.dividendRecordsFullHistory), [data.dividendRecords, data.dividendRecordsFullHistory])
+  const sortedRecords = useMemo(() => [...canonical.canonical].sort((a, b) => b.payDate.localeCompare(a.payDate)), [canonical.canonical])
 
   const totals = useMemo(() => {
     return sortedRecords.reduce((acc, r) => {

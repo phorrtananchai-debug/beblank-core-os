@@ -9,6 +9,7 @@ import { InvestmentCriticalPath } from '../../components/investments/InvestmentC
 import { FxRateControl } from '../../components/investments/FxRateControl'
 import { TransactionForm } from '../../components/investments/TransactionForm'
 import { normalizePortfolioValues, computeDynamicAllocation, convertUsdToThb, loadFxRate } from '../../components/investments/fxEngine'
+import { buildCanonicalDividends } from '../../core/dividends/canonicalDividends'
 import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
@@ -1237,8 +1238,8 @@ const DividendsTab = ({
   dividendRecordsFullHistory: DividendRecord[]
   fxRate: number
 }) => {
-  const allRecords = useMemo(() => [...dividendRecords, ...dividendRecordsFullHistory], [dividendRecords, dividendRecordsFullHistory])
-  const sortedRecords = useMemo(() => [...allRecords].sort((a, b) => b.payDate.localeCompare(a.payDate)), [allRecords])
+  const canonicalResult = useMemo(() => buildCanonicalDividends(dividendRecords, dividendRecordsFullHistory), [dividendRecords, dividendRecordsFullHistory])
+  const sortedRecords = useMemo(() => [...canonicalResult.canonical].sort((a, b) => b.payDate.localeCompare(a.payDate)), [canonicalResult])
 
   const lifetimeTotals = useMemo(() => sortedRecords.reduce((acc, r) => {
     acc.grossUsd += r.grossAmount
@@ -1249,7 +1250,7 @@ const DividendsTab = ({
 
   const byAsset = useMemo(() => {
     const map = new Map<string, { gross: number; net: number; tax: number; count: number; latest: string }>()
-    for (const r of allRecords) {
+    for (const r of canonicalResult.canonical) {
       const key = r.symbol || r.assetId
       const entry = map.get(key) ?? { gross: 0, net: 0, tax: 0, count: 0, latest: '' }
       entry.gross += r.grossAmount
@@ -1260,14 +1261,16 @@ const DividendsTab = ({
       map.set(key, entry)
     }
     return [...map.entries()].sort((a, b) => b[1].gross - a[1].gross)
-  }, [allRecords])
+  }, [canonicalResult])
 
   const recentRecords = sortedRecords.slice(0, 10)
 
+  const { canonical, duplicatesRemoved, importedCount, fullHistoryCount } = canonicalResult
+
   return (
     <div className="space-y-5">
-      <SectionPanel label="Dividend Dashboard" title="Dividend Summary" endSlot={<span className="pill">{allRecords.length} records</span>}>
-        {allRecords.length === 0 ? (
+      <SectionPanel label="Dividend Dashboard" title="Dividend Summary" endSlot={<span className="pill">{canonical.length} canonical records</span>}>
+        {canonical.length === 0 ? (
           <p className="text-sm text-[var(--bb-text-muted)]">No dividend records yet</p>
         ) : (
           <>
@@ -1276,6 +1279,12 @@ const DividendsTab = ({
               <Mini label="Lifetime Net" value={<><span>{usd(lifetimeTotals.netUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.netUsd, fxRate))}</span></>} />
               <Mini label="Lifetime Tax" value={<><span>{usd(lifetimeTotals.taxUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.taxUsd, fxRate))}</span></>} />
               <Mini label="Forward Run Rate" value="~$80/yr" />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-[var(--bb-text-faint)]">
+              <span>Imported: <strong>{importedCount}</strong></span>
+              <span>Full History: <strong>{fullHistoryCount}</strong></span>
+              {duplicatesRemoved > 0 && <span className="text-[var(--bb-amber)]">Duplicates Removed: <strong>{duplicatesRemoved}</strong></span>}
+              <span>Canonical: <strong>{canonical.length}</strong></span>
             </div>
 
             <div className="mt-5">
@@ -1317,7 +1326,7 @@ const DividendsTab = ({
                   className="text-[10px] font-semibold text-[var(--bb-accent)] hover:underline"
                   to="/os/finance/investments/dividend-history"
                 >
-                  View Full History ({sortedRecords.length})
+                  View Full History ({canonical.length})
                 </Link>
               </div>
               <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
