@@ -1,4 +1,5 @@
 import type { FinanceAsset, Holding, OsData, SourceStatus } from '../types/models'
+import { fullHistoryDividendRecords } from '../core/dividends/fullHistoryData'
 
 export const mockSourceStatuses: Record<string, SourceStatus> = {
   commandCenter: {
@@ -172,6 +173,7 @@ export const mockOsData: OsData = {
   tradingStrategyNotes: [],
   dcaRecords: [],
   dividendRecords: [
+    ...fullHistoryDividendRecords,
     { id: 'div-20260604-jepq', accountId: 'acct-dime', assetId: 'JEPQ', symbol: 'JEPQ', expectedAmountTHB: 0, payDate: '2026-06-04', grossAmount: 3.62, taxAmount: 0.54, netAmount: 3.08, currency: 'USD', source: 'Dime screenshot', status: 'received', note: 'Visible 2026 record from Dime PDF.', sourceStatus: mockSourceStatuses.investments, lastUpdated: '2026-06-04', notes: 'Dime screenshot import seed.', risk: 'low', tags: ['dividend', 'dime', 'seed'] },
     { id: 'div-20260604-jepi', accountId: 'acct-dime', assetId: 'JEPI', symbol: 'JEPI', expectedAmountTHB: 0, payDate: '2026-06-04', grossAmount: 1.71, taxAmount: 0.25, netAmount: 1.46, currency: 'USD', source: 'Dime screenshot', status: 'received', note: 'Visible 2026 record from Dime PDF.', sourceStatus: mockSourceStatuses.investments, lastUpdated: '2026-06-04', notes: 'Dime screenshot import seed.', risk: 'low', tags: ['dividend', 'dime', 'seed'] },
     { id: 'div-20260516-pg', accountId: 'acct-dime', assetId: 'PG', symbol: 'PG', expectedAmountTHB: 0, payDate: '2026-05-16', grossAmount: 0.59, taxAmount: 0.08, netAmount: 0.51, currency: 'USD', source: 'Dime screenshot', status: 'received', note: 'Visible 2026 record from Dime PDF.', sourceStatus: mockSourceStatuses.investments, lastUpdated: '2026-05-16', notes: 'Dime screenshot import seed.', risk: 'low', tags: ['dividend', 'dime', 'seed'] },
