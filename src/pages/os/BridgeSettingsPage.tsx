@@ -156,7 +156,7 @@ export const BridgeSettingsPage = () => {
       importPreview.rows,
       () => {
         const result = bulkMergeData(resource.osField, importPreview.rows)
-        if (resource.id === 'dividend-records' && importPreview.rows.length > 0) {
+        if (resource.id === 'dividend-records-full-history' && importPreview.rows.length > 0) {
           saveFullHistoryCache(importPreview.rows)
         }
         updateBridgeDiagnostic({

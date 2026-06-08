@@ -16,6 +16,7 @@ const cachedDividendHistory = loadFullHistoryCache()
 const hydratedInitialData = {
   ...initialProviderState.data,
   dividendRecords: mergeDividendFullHistory(initialProviderState.data.dividendRecords, cachedDividendHistory),
+  dividendRecordsFullHistory: mergeDividendFullHistory(initialProviderState.data.dividendRecordsFullHistory, cachedDividendHistory),
 }
 const IMPORTABLE_BRIDGE_RESOURCES = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
 

@@ -36,6 +36,28 @@ export function convertUsdToThb(usd: number, fxRate: number): number {
   return Math.round(usd * fxRate)
 }
 
+function parseSheetNumber(value: unknown): number | undefined {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : undefined
+  }
+
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const normalized = value
+    .replace(/THB/gi, '')
+    .replace(/,/g, '')
+    .trim()
+
+  if (!normalized) {
+    return undefined
+  }
+
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
 export interface NormalizedHolding extends Holding {
   currencyMode?: string
   averageCostUSD?: number
@@ -50,9 +72,9 @@ export interface NormalizedHolding extends Holding {
 export function normalizeHoldingValue(holding: Holding, fxRate: number): NormalizedHolding {
   const h = holding as unknown as Record<string, unknown>
   const mode = h.currencyMode as string | undefined
-  const sheetMarketValueTHB = h.marketValueTHB as number | undefined
+  const sheetMarketValueTHB = parseSheetNumber(h.marketValueTHB)
 
-  if (typeof sheetMarketValueTHB === 'number' && Number.isFinite(sheetMarketValueTHB) && sheetMarketValueTHB > 0) {
+  if (sheetMarketValueTHB !== undefined && sheetMarketValueTHB > 0) {
     return {
       ...holding,
       currencyMode: mode ?? 'legacy',
