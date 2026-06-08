@@ -119,5 +119,6 @@ export function saveHoldingsCache(records: Array<Record<string, unknown>>): Hold
 }
 
 export function mergeHoldingsCache(baseRecords: Holding[], cacheRecords: Holding[]): Holding[] {
-  return cacheRecords.length > 0 ? cacheRecords : baseRecords
+  void baseRecords
+  return cacheRecords
 }
