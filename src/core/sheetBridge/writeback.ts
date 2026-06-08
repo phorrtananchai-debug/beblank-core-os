@@ -179,6 +179,28 @@ export function buildTransactionRow(fields: {
   }
 }
 
+export function buildDividendFullHistoryRow(fields: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: fields.id ?? generateId('div-full'),
+    symbol: String(fields.symbol ?? '').toUpperCase(),
+    assetId: String(fields.assetId ?? fields.symbol ?? '').toUpperCase(),
+    payDate: fields.payDate ?? new Date().toISOString().slice(0, 10),
+    grossAmount: Number(fields.grossAmount ?? 0),
+    taxWithheld: Number(fields.taxWithheld ?? fields.taxAmount ?? 0),
+    netAmount: Number(fields.netAmount ?? (Number(fields.grossAmount ?? 0) - Number(fields.taxWithheld ?? fields.taxAmount ?? 0))),
+    currency: String(fields.currency ?? 'USD'),
+    source: String(fields.source ?? 'Dime full history PDF'),
+    sourceScope: 'full-dime-history',
+    sourceDocument: String(fields.sourceDocument ?? 'Binder1(1).pdf'),
+    sourcePage: Number(fields.sourcePage ?? 0),
+    needsReview: fields.needsReview ?? true,
+    reviewNote: String(fields.reviewNote ?? ''),
+    dedupeKey: String(fields.dedupeKey ?? ''),
+    isCurrentHolding: fields.isCurrentHolding ?? false,
+    status: String(fields.status ?? 'received'),
+  }
+}
+
 export function buildRowForResource(
   resource: SheetResourceDef,
   fields: Record<string, unknown>,
@@ -192,6 +214,8 @@ export function buildRowForResource(
       return buildHoldingRow(fields as Parameters<typeof buildHoldingRow>[0])
     case 'ai-context-logs':
       return buildAIContextRow(fields as Parameters<typeof buildAIContextRow>[0])
+    case 'dividend-records-full-history':
+      return buildDividendFullHistoryRow(fields as Record<string, unknown>)
     default:
       throw new Error(`No write-back builder for resource: ${resource.id}`)
   }

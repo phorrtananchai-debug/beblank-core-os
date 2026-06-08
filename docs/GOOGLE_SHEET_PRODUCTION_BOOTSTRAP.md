@@ -199,6 +199,7 @@ Create a new Apps Script project attached to your Google Sheet and paste the tem
  * GET ?resource=dividend-records
  * GET ?resource=ai-context-logs
  * GET ?resource=allocation-buckets
+ * GET ?resource=dividend-records-full-history
  */
 
 const RESOURCE_MAP = {
@@ -210,6 +211,7 @@ const RESOURCE_MAP = {
   'dividend-records': { sheetName: 'DividendRecords', id: 'dividend-records' },
   'ai-context-logs': { sheetName: 'AIContexts', id: 'ai-context-logs' },
   'allocation-buckets': { sheetName: 'AllocationBuckets', id: 'allocation-buckets' },
+  'dividend-records-full-history': { sheetName: 'DividendRecordsFullHistory', id: 'dividend-records-full-history' },
 }
 
 function doGet(e) {
@@ -354,6 +356,7 @@ https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=dca-records
 https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=dividend-records
 https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=ai-context-logs
 https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=allocation-buckets
+https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?resource=dividend-records-full-history
 ```
 
 Each should return `{ "ok": true, "resource": "...", "rows": [...] }`.

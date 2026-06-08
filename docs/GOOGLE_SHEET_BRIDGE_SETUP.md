@@ -110,6 +110,7 @@ Use `docs/google-sheet/AppsScriptWebApp.gs` as the full canonical Apps Script te
 - `dividend-records`
 - `allocation-buckets`
 - `ai-context-logs`
+- `dividend-records-full-history`
 
 ---
 

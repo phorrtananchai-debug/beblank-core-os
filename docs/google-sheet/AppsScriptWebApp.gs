@@ -12,6 +12,7 @@
  *   ?resource=dividend-records
  *   ?resource=allocation-buckets
  *   ?resource=ai-context-logs
+ *   ?resource=dividend-records-full-history
  */
 
 const RESOURCE_MAP = {
@@ -23,6 +24,7 @@ const RESOURCE_MAP = {
   'dividend-records': { sheetName: 'DividendRecords', id: 'dividend-records' },
   'allocation-buckets': { sheetName: 'AllocationBuckets', id: 'allocation-buckets' },
   'ai-context-logs': { sheetName: 'AIContexts', id: 'ai-context-logs' },
+  'dividend-records-full-history': { sheetName: 'DividendRecordsFullHistory', id: 'dividend-records-full-history' },
 }
 
 function doGet(e) {

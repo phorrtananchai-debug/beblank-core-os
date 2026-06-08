@@ -21,6 +21,7 @@ This folder contains CSV templates for bootstrapping the Be Blank OS Google Shee
 | `Holdings.csv` | `Holdings` | `investment-holdings` | `holdings` | Enabled |
 | `AIContexts.csv` | `AIContexts` | `ai-context-logs` | `aiContexts` | Enabled |
 | `AllocationBuckets.csv` | `AllocationBuckets` | `allocation-buckets` | *(no OsData field yet)* | Preview/export only |
+| `DividendRecordsFullHistory.csv` | `DividendRecordsFullHistory` | `dividend-records-full-history` | `dividendRecordsFullHistory` | Enabled |
 
 ## Notes
 
