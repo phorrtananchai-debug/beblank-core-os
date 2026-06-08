@@ -1,5 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, ThaiNavAsset } from '../../types/models'
+import { findFinanceAssetByAssetId, normalizeAssetId } from '../../core/investments/assetIdentity'
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString()} THB`
 const pct = (value: number | undefined | null) => `${(value ?? 0).toFixed(1)}%`
@@ -9,7 +10,7 @@ const driftStyle = (drift: number) => {
   return 'text-[#777777]'
 }
 
-type BucketId = 'core-wealth' | 'growth-engine' | 'income-layer' | 'thai-tax' | 'cash-reserve' | 'sandbox' | 'watchlist' | 'unclassified'
+type BucketId = 'core-wealth' | 'growth-engine' | 'income-layer' | 'thai-tax' | 'cash-reserve' | 'legacy-review' | 'sandbox' | 'watchlist' | 'unclassified'
 
 interface BucketMeta {
   id: BucketId
@@ -23,6 +24,7 @@ const BUCKET_META: Record<BucketId, BucketMeta> = {
   'income-layer': { id: 'income-layer', name: 'Income Layer', purpose: 'Dividends, premium income, cashflow' },
   'thai-tax': { id: 'thai-tax', name: 'Thai Tax Wrapper', purpose: 'RMF / Thai fund tax-advantaged sleeve' },
   'cash-reserve': { id: 'cash-reserve', name: 'Cash Reserve', purpose: 'Dry powder, operating liquidity' },
+  'legacy-review': { id: 'legacy-review', name: 'Legacy / Review', purpose: 'Existing non-target holdings and cleanup candidates' },
   sandbox: { id: 'sandbox', name: 'Sandbox', purpose: 'High-risk experiments, satellite positions' },
   watchlist: { id: 'watchlist', name: 'Watchlist / Research', purpose: 'Under observation, not yet held' },
   unclassified: { id: 'unclassified', name: 'Unclassified', purpose: 'Fallback — review mapping' },
@@ -43,11 +45,11 @@ const SYMBOL_BUCKET: Record<string, BucketId> = {
   SCHD: 'income-layer',
   JEPQ: 'income-layer',
   ABBV: 'income-layer',
+  QYLD: 'income-layer',
   'TH-INCOME-DIV': 'income-layer',
   'CASH-THB': 'cash-reserve',
   'CASH-USD': 'cash-reserve',
   RBRK: 'sandbox',
-  MRVL: 'sandbox',
   DDOG: 'sandbox',
 }
 
@@ -57,11 +59,12 @@ const bucketForHolding = (holding: Holding, asset: FinanceAsset | undefined): Bu
   if (asset?.category === 'cash') return 'cash-reserve'
   if (asset?.region === 'TH' && asset?.category === 'fund') return 'thai-tax'
   if (asset?.assetType === 'thai-rmf' || asset?.assetType === 'thai-mutual-fund') return 'thai-tax'
+  if ((holding.marketValueTHB ?? 0) > 0 && (holding.targetAllocationPercent ?? 0) === 0) return 'legacy-review'
   if (holding.currentPosture === 'core') return 'core-wealth'
   if (holding.currentPosture === 'growth') return 'growth-engine'
   if (holding.currentPosture === 'income') return 'income-layer'
   if (holding.currentPosture === 'reserve') return 'cash-reserve'
-  if (holding.currentPosture === 'watch' || holding.risk === 'high') return 'sandbox'
+  if (holding.currentPosture === 'watch' || holding.risk === 'high') return 'legacy-review'
   return 'unclassified'
 }
 
@@ -103,7 +106,12 @@ export const PortfolioBucketView = ({
 }: PortfolioBucketViewProps): ReactNode => {
   const assetMap = useMemo(() => {
     const map = new Map<string, FinanceAsset>()
-    for (const asset of financeAssets) map.set(asset.id, asset)
+    for (const asset of financeAssets) {
+      map.set(normalizeAssetId(asset.id), asset)
+      if (asset.symbol) {
+        map.set(normalizeAssetId(asset.symbol), asset)
+      }
+    }
     for (const nav of navAssets) {
       const synthId = `synth-nav-${nav.id}`
       if (!map.has(synthId)) {
@@ -135,11 +143,12 @@ export const PortfolioBucketView = ({
   }, [dividendRecords])
 
   const buckets = useMemo(() => {
+    const visibleHoldings = holdings.filter((holding) => !(Number(holding.quantity ?? 0) === 0 && Number(holding.marketValueTHB ?? 0) === 0))
     const navDerived: Array<{ asset: FinanceAsset; holding: Holding }> = navAssets.map((nav) => {
       const synthId = `synth-nav-${nav.id}`
       const valueTHB = nav.valueTHB ?? (nav.units ?? 0) * nav.nav
       return {
-        asset: assetMap.get(synthId)!,
+        asset: assetMap.get(normalizeAssetId(synthId))!,
         holding: {
           id: synthId,
           assetId: synthId,
@@ -159,9 +168,9 @@ export const PortfolioBucketView = ({
       }
     })
 
-    const enriched = [...holdings, ...navDerived.map((n) => n.holding)].map((h) => ({
+    const enriched = [...visibleHoldings, ...navDerived.map((n) => n.holding)].map((h) => ({
       ...h,
-      asset: assetMap.get(h.assetId),
+      asset: assetMap.get(normalizeAssetId(h.assetId)) ?? findFinanceAssetByAssetId(financeAssets, h.assetId),
       drift: (h.allocationPercent ?? 0) - (h.targetAllocationPercent ?? 0),
     }))
 
@@ -188,9 +197,11 @@ export const PortfolioBucketView = ({
     }
 
     return result
-  }, [holdings, assetMap, navAssets, totalValue])
+  }, [holdings, assetMap, navAssets, totalValue, financeAssets])
 
-  if (holdings.length === 0) {
+  const visibleHoldingCount = holdings.filter((holding) => !(Number(holding.quantity ?? 0) === 0 && Number(holding.marketValueTHB ?? 0) === 0)).length
+
+  if (visibleHoldingCount === 0 && navAssets.length === 0) {
     return (
       <div className="rounded-[28px] border border-black/[0.05] bg-[#faf9f8] p-6 text-center">
         <p className="text-sm text-[#777777]">ไม่มีข้อมูลการถือครอง</p>

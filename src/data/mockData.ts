@@ -127,6 +127,7 @@ export const mockFinanceAssets: FinanceAsset[] = [
   { id: 'amzn', name: 'Amazon.com Inc.', symbol: 'AMZN', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
   { id: 'nflx', name: 'Netflix Inc.', symbol: 'NFLX', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
   { id: 'rbrk', name: 'Rubrik Inc.', symbol: 'RBRK', currency: 'USD', category: 'stock', region: 'US', assetType: 'other', market: 'US', sourceOfTruth: 'sheet' },
+  { id: 'qyld', name: 'Global X NASDAQ 100 Covered Call ETF', symbol: 'QYLD', currency: 'USD', category: 'etf', region: 'US', assetType: 'us-equity-etf', market: 'US', sourceOfTruth: 'sheet' },
   { id: 'k-us500x-a', name: 'กองทุนเปิดเค ยูเอส 500 (A)', symbol: 'K-US500X-A(A)', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-mutual-fund', market: 'TH' },
   { id: 'k-us500xrmf', name: 'กองทุนเปิดเค ยูเอส 500 RMF', symbol: 'K-US500XRMF', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-rmf', market: 'TH' },
   { id: 'scbndq', name: 'กองทุนเปิดไทยพาณิชย์ SCBNDQ (A)', symbol: 'SCBNDQ(A)', currency: 'THB', category: 'fund', region: 'TH', assetType: 'thai-mutual-fund', market: 'TH' },

@@ -21,6 +21,7 @@ import { AllocationDonut } from '../../components/investments/AllocationDonut'
 import { AllocationComparison } from '../../components/investments/AllocationComparison'
 import { RebalancePreview } from '../../components/investments/RebalancePreview'
 import { computePostureBuckets, computeRebalanceSuggestions } from '../../core/investments/allocationUtils'
+import { findFinanceAssetByAssetId } from '../../core/investments/assetIdentity'
 import { generateId } from '../../app/utils'
 import { getSupportedFinnhubSymbols, isFinnhubConfigured } from '../../core/connectors'
 import { useOs } from '../../core/os/useOs'
@@ -136,7 +137,7 @@ export const InvestmentsPage = () => {
 
   const hasInvestments = data.holdings.length > 0 || data.financeAssets.length > 0
   const totalValue = normalizedHoldings.reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
-  const assetLookup = (assetId: string) => data.financeAssets.find((a) => a.id.toLowerCase() === assetId.toLowerCase())
+  const assetLookup = (assetId: string) => findFinanceAssetByAssetId(data.financeAssets, assetId)
   const isCashHolding = (holding: { assetId: string }) => assetLookup(holding.assetId)?.category === 'cash'
   const securitiesHoldings = normalizedHoldings.filter((h) => !isCashHolding(h))
   const driftHoldings = securitiesHoldings.filter((holding) => Math.abs((holding.allocationPercent ?? 0) - (holding.targetAllocationPercent ?? 0)) >= 2)
@@ -1150,7 +1151,7 @@ const TransactionsTab = ({
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {transactions.map((tx) => {
-            const asset = financeAssets.find((a) => a.id === tx.assetId)
+            const asset = tx.assetId ? findFinanceAssetByAssetId(financeAssets, tx.assetId) : undefined
             return (
               <div key={tx.id} className="os-list-row">
                 <div className="flex items-start justify-between gap-3">

@@ -1,4 +1,5 @@
 import type { Holding } from '../../types/models'
+import { findFinanceAssetByAssetId } from './assetIdentity'
 
 export interface PostureBucket {
   id: string
@@ -29,7 +30,7 @@ const POSTURE_CONFIG: Array<{ id: string; label: string; color: string; postureV
   { id: 'growth', label: 'Growth Engine', color: '#3b82f6', postureValues: ['growth'] },
   { id: 'income', label: 'Income Layer', color: '#f59e0b', postureValues: ['income'] },
   { id: 'reserve', label: 'Cash Reserve', color: '#8b5cf6', postureValues: ['reserve'] },
-  { id: 'watch', label: 'Watch / Sandbox', color: '#6b7280', postureValues: ['watch', undefined] },
+  { id: 'watch', label: 'Legacy / Review', color: '#6b7280', postureValues: ['watch', undefined] },
 ]
 
 function bucketForPosture(posture: string | undefined): string {
@@ -96,7 +97,7 @@ export function computeRebalanceSuggestions(
     if (Math.abs(drift) < 0.5) continue
 
     const adjustmentTHB = (targetPct - currentPct) * totalValue / 100
-    const asset = financeAssets.find((a) => a.id === h.assetId)
+    const asset = findFinanceAssetByAssetId(financeAssets, h.assetId)
     const symbol = asset?.symbol ?? h.assetId
 
     suggestions.push({
