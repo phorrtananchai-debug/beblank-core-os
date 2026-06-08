@@ -7,7 +7,7 @@ import { InvestmentRhythm } from '../../components/investments/InvestmentRhythm'
 import { InvestmentCriticalPath } from '../../components/investments/InvestmentCriticalPath'
 import { FxRateControl } from '../../components/investments/FxRateControl'
 import { TransactionForm } from '../../components/investments/TransactionForm'
-import { normalizePortfolioValues, computeDynamicAllocation, loadFxRate } from '../../components/investments/fxEngine'
+import { normalizePortfolioValues, computeDynamicAllocation, convertUsdToThb, loadFxRate } from '../../components/investments/fxEngine'
 import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { AIContextExportPanel } from '../../components/shared/AIContextExportPanel'
 import { AISuggestionImportPanel } from '../../components/shared/AISuggestionImportPanel'
@@ -26,7 +26,6 @@ import type { ActionRequest, DcaRecord, DividendRecord, FinanceAsset, Holding, T
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
 const usd = (value = 0) => `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
-const usdToThb = 36.5
 const statusClass = (status: string) => {
   if (['blocked', 'high', 'at-risk', 'open', 'failed'].includes(status)) return 'text-[var(--bb-red)]'
   if (['review', 'pending', 'medium', 'active', 'watching'].includes(status)) return 'text-[var(--bb-amber)]'
@@ -192,8 +191,8 @@ export const InvestmentsPage = () => {
     const amountTHB = Number(manualAssetDraft.manualContributionTHB) || 0
     const amountUSD = Number(manualAssetDraft.manualContributionUSD) || 0
     const fallbackNativeContribution = units * avgCost
-    const fallbackTHB = manualAssetDraft.currency === 'USD' ? fallbackNativeContribution * usdToThb : fallbackNativeContribution
-    const costBasisTHB = amountTHB || (amountUSD ? amountUSD * usdToThb : fallbackTHB)
+    const fallbackTHB = manualAssetDraft.currency === 'USD' ? fallbackNativeContribution * fxRate : fallbackNativeContribution
+    const costBasisTHB = amountTHB || (amountUSD ? amountUSD * fxRate : fallbackTHB)
     const helperPrice = isThaiAsset ? helperNavRow?.nav : helperMarketRow?.delayedPriceTHB
     const helperValueTHB = helperPrice ? units * helperPrice : 0
     const currentValueTHB = helperValueTHB || costBasisTHB
@@ -210,7 +209,7 @@ export const InvestmentsPage = () => {
       dcaImpact: allocationImpact > 5 ? 'review sizing before recurring DCA' : 'small enough for watchlist/DCA review',
       missingDataWarning: !helperPrice ? 'No helper price/NAV found. Manual cost basis will be used until helper data is reviewed.' : undefined,
     }
-  }, [helperMarketRow, helperNavRow, isThaiAsset, manualAssetDraft, totalValue])
+  }, [fxRate, helperMarketRow, helperNavRow, isThaiAsset, manualAssetDraft, totalValue])
 
   const holdingsByCategory = data.financeAssets.reduce<Record<string, number>>((acc, asset) => {
     const value = normalizedHoldings.filter((holding) => holding.assetId === asset.id).reduce((sum, holding) => sum + (holding.marketValueTHB ?? 0), 0)
@@ -557,6 +556,7 @@ export const InvestmentsPage = () => {
         <DividendsTab
           assetName={assetName}
           dividendRecords={data.dividendRecords}
+          fxRate={fxRate}
         />
       ) : null}
 
@@ -693,6 +693,24 @@ const Mini = ({ label, value }: { label: string; value: string | ReactNode }) =>
     <p className="mt-1 font-semibold">{value}</p>
   </div>
 )
+
+const DividendAmountCell = ({ amount, currency, fxRate, emphasize = false }: { amount: number; currency: 'USD' | 'THB'; fxRate: number; emphasize?: boolean }) => {
+  if (currency === 'USD') {
+    return (
+      <div>
+        <p className={emphasize ? 'font-semibold' : undefined}>{usd(amount)}</p>
+        <p className="text-xs text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(amount, fxRate))} <span className="text-[var(--bb-text-faint)]">FX estimate</span></p>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className={emphasize ? 'font-semibold' : undefined}>{thb(amount)}</p>
+      <p className="text-xs text-[var(--bb-text-muted)]">Recorded in THB</p>
+    </div>
+  )
+}
 
 const Field = ({ children, label }: { children: ReactNode; label: string }) => (
   <label className="mt-3 block">
@@ -1155,29 +1173,38 @@ const DcaTab = ({
 const DividendsTab = ({
   assetName,
   dividendRecords,
+  fxRate,
 }: {
   assetName: (id: string) => string
   dividendRecords: DividendRecord[]
+  fxRate: number
 }) => {
   const sortedRecords = [...dividendRecords].sort((a, b) => b.payDate.localeCompare(a.payDate))
-  const today = new Date()
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
-  const yearStart = new Date(today.getFullYear(), 0, 1)
-  const trailing12Start = new Date(today)
+  const trailing12Start = new Date()
   trailing12Start.setMonth(trailing12Start.getMonth() - 12)
 
-  const sumNet = (records: DividendRecord[]) => records.reduce((sum, record) => sum + record.netAmount, 0)
-  const inRange = (start: Date) => sortedRecords.filter((record) => new Date(record.payDate) >= start)
-  const thisMonthTotal = sumNet(inRange(monthStart))
-  const thisYearTotal = sumNet(inRange(yearStart))
-  const trailing12Total = sumNet(inRange(trailing12Start))
-  const bestPaying = Object.entries(
-    sortedRecords.reduce<Record<string, number>>((acc, record) => {
-      const symbol = record.symbol || assetName(record.assetId)
-      acc[symbol] = (acc[symbol] ?? 0) + record.netAmount
-      return acc
-    }, {}),
-  ).sort((a, b) => b[1] - a[1])[0] ?? null
+  const totals = sortedRecords.reduce((acc, record) => {
+    const toThb = (amount: number) => record.currency === 'USD' ? convertUsdToThb(amount, fxRate) : amount
+    acc.grossUsd += record.currency === 'USD' ? record.grossAmount : 0
+    acc.netUsd += record.currency === 'USD' ? record.netAmount : 0
+    acc.taxUsd += record.currency === 'USD' ? record.taxAmount : 0
+    acc.grossThb += toThb(record.grossAmount)
+    acc.netThb += toThb(record.netAmount)
+    acc.taxThb += toThb(record.taxAmount)
+    if (new Date(record.payDate) >= trailing12Start) {
+      acc.trailing12NetThb += toThb(record.netAmount)
+    }
+    return acc
+  }, {
+    grossUsd: 0,
+    netUsd: 0,
+    taxUsd: 0,
+    grossThb: 0,
+    netThb: 0,
+    taxThb: 0,
+    trailing12NetThb: 0,
+  })
+  const estimatedMonthlyNetThb = totals.trailing12NetThb > 0 ? Math.round(totals.trailing12NetThb / 12) : 0
 
   return (
     <div className="space-y-5">
@@ -1186,11 +1213,14 @@ const DividendsTab = ({
           <p className="text-sm text-[var(--bb-text-muted)]">No dividend ledger records yet</p>
         ) : (
           <>
+            <p className="mb-3 rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3 text-xs leading-5 text-[var(--bb-text-soft)]">
+              Ledger amounts stay in original USD. Thai baht values below are marked as <span className="font-semibold">FX estimate</span> using {fxRate.toFixed(2)} THB/USD.
+            </p>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <Mini label="This Month" value={usd(thisMonthTotal)} />
-              <Mini label="This Year" value={usd(thisYearTotal)} />
-              <Mini label="Trailing 12M" value={usd(trailing12Total)} />
-              <Mini label="Best Paying Symbol" value={bestPaying ? `${bestPaying[0]} · ${usd(bestPaying[1])}` : '—'} />
+              <Mini label="Total Gross" value={<><span>{usd(totals.grossUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(totals.grossThb)} · FX estimate</span></>} />
+              <Mini label="Total Net" value={<><span>{usd(totals.netUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(totals.netThb)} · FX estimate</span></>} />
+              <Mini label="Tax Withheld" value={<><span>{usd(totals.taxUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(totals.taxThb)} · FX estimate</span></>} />
+              <Mini label="Estimated Monthly Net" value={<><span>{thb(estimatedMonthlyNetThb)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">Trailing 12M ÷ 12 · FX estimate</span></>} />
             </div>
             <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
               <table className="min-w-full text-left text-sm">
@@ -1211,9 +1241,9 @@ const DividendsTab = ({
                     <tr key={record.id} className="border-t border-black/[0.05]">
                       <td className="px-4 py-3">{record.payDate.slice(0, 10)}</td>
                       <td className="px-4 py-3 font-semibold">{record.symbol || assetName(record.assetId)}</td>
-                      <td className="px-4 py-3">{record.currency === 'USD' ? usd(record.grossAmount) : `${record.grossAmount.toFixed(2)} ${record.currency}`}</td>
-                      <td className="px-4 py-3">{record.currency === 'USD' ? usd(record.taxAmount) : `${record.taxAmount.toFixed(2)} ${record.currency}`}</td>
-                      <td className="px-4 py-3 font-semibold">{record.currency === 'USD' ? usd(record.netAmount) : `${record.netAmount.toFixed(2)} ${record.currency}`}</td>
+                      <td className="px-4 py-3"><DividendAmountCell amount={record.grossAmount} currency={record.currency} fxRate={fxRate} /></td>
+                      <td className="px-4 py-3"><DividendAmountCell amount={record.taxAmount} currency={record.currency} fxRate={fxRate} /></td>
+                      <td className="px-4 py-3"><DividendAmountCell amount={record.netAmount} currency={record.currency} fxRate={fxRate} emphasize /></td>
                       <td className="px-4 py-3">{record.currency}</td>
                       <td className="px-4 py-3 text-xs text-[var(--bb-text-muted)]">{record.source}</td>
                       <td className="px-4 py-3"><span className={`font-mono text-[10px] font-semibold uppercase ${statusClass(record.status)}`}>{record.status}</span></td>

@@ -1,7 +1,7 @@
 import type { Holding } from '../../types/models'
 
 const FX_STORAGE_KEY = 'beblank_os_fx_rate_v1'
-const DEFAULT_FX_RATE = 36.5
+const DEFAULT_FX_RATE = 32.42
 
 export interface FxConfig {
   rate: number
