@@ -527,6 +527,14 @@ export interface DividendRecord {
   notes: string
   risk: 'low' | 'medium' | 'high'
   tags: string[]
+  sourceScope?: 'imported-ledger' | 'full-dime-history' | 'manual-review'
+  sourceDocument?: string
+  sourcePage?: number
+  sourceRow?: string
+  needsReview?: boolean
+  reviewNote?: string
+  dedupeKey?: string
+  isCurrentHolding?: boolean
 }
 
 export interface FinanceSnapshot {

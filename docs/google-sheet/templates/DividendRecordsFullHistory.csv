@@ -1,0 +1,2 @@
+id,symbol,assetId,payDate,grossAmount,taxWithheld,netAmount,currency,source,sourceScope,sourceDocument,sourcePage,needsReview,reviewNote,dedupeKey,status
+div-full-jepq-20260604,JEPQ,JEPQ,2026-06-04,3.62,0.54,3.08,USD,Dime full history PDF,full-dime-history,Binder1(1).pdf,1,false,,JEPQ|2026-06-04|3.62|0.54,received

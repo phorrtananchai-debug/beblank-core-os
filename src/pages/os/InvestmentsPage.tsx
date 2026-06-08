@@ -1242,6 +1242,8 @@ const DcaTab = ({
   )
 }
 
+type SourceScope = 'imported-ledger' | 'full-dime-history' | 'all'
+
 const DividendsTab = ({
   assetName,
   dividendRecords,
@@ -1251,7 +1253,11 @@ const DividendsTab = ({
   dividendRecords: DividendRecord[]
   fxRate: number
 }) => {
-  const sortedRecords = [...dividendRecords].sort((a, b) => b.payDate.localeCompare(a.payDate))
+  const [sourceScope, setSourceScope] = useState<SourceScope>('imported-ledger')
+  const filteredRecords = sourceScope === 'all'
+    ? dividendRecords
+    : dividendRecords.filter((r) => (r.sourceScope ?? 'imported-ledger') === sourceScope)
+  const sortedRecords = [...filteredRecords].sort((a, b) => b.payDate.localeCompare(a.payDate))
   const trailing12Start = new Date()
   trailing12Start.setMonth(trailing12Start.getMonth() - 12)
 
@@ -1295,10 +1301,37 @@ const DividendsTab = ({
     return [...map.entries()].sort((a, b) => b[1].gross - a[1].gross)
   }, [dividendRecords])
 
+  const importableCount = dividendRecords.filter((r) => (r.sourceScope ?? 'imported-ledger') === 'imported-ledger').length
+  const fullHistoryCount = dividendRecords.filter((r) => r.sourceScope === 'full-dime-history').length
+
   return (
     <div className="space-y-5">
-      <SectionPanel label="Dividend Summary" title="Real dividend history" endSlot={<span className="pill">{sortedRecords.length} records</span>}>
-        {sortedRecords.length === 0 ? (
+      {/* Source Scope Filter */}
+      <div className="flex items-center gap-2 border-b border-black/[0.05] pb-2">
+        {(['imported-ledger', 'full-dime-history', 'all'] as const).map((scope) => (
+          <button
+            key={scope}
+            type="button"
+            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] transition ${
+              sourceScope === scope
+                ? 'bg-[var(--bb-accent)]/10 text-[var(--bb-accent)]'
+                : 'text-[var(--bb-text-muted)] hover:bg-black/[0.05]'
+            }`}
+            onClick={() => setSourceScope(scope)}
+          >
+            {scope === 'imported-ledger' ? `Imported (${importableCount})` : scope === 'full-dime-history' ? `Full History (${fullHistoryCount})` : `All (${dividendRecords.length})`}
+          </button>
+        ))}
+      </div>
+
+      <SectionPanel
+        label={sourceScope === 'full-dime-history' ? 'Full Dime Dividend History' : 'Received Dividends — Imported Ledger'}
+        title={sourceScope === 'full-dime-history' ? 'Full Dime History' : 'Imported Ledger'}
+        endSlot={<span className="pill">{sortedRecords.length} records</span>}
+      >
+        {sourceScope === 'full-dime-history' && fullHistoryCount === 0 ? (
+          <p className="text-sm text-[var(--bb-text-muted)]">Full Dime history not imported yet. Import CSV/JSON to enable lifetime dividend totals.</p>
+        ) : sortedRecords.length === 0 ? (
           <p className="text-sm text-[var(--bb-text-muted)]">No dividend ledger records yet</p>
         ) : (
           <>
