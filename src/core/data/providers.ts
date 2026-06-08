@@ -53,7 +53,7 @@ export const createFinanceDataProvider = (mode: 'mock' | 'live' | 'fallback' | '
   read: () => {
     const sourceStatus = mode === 'empty' ? emptyStatus('Finance Provider') : mockSourceStatuses.investments
     const data = mode === 'empty'
-      ? { financeAssets: [], holdings: [], thaiNavAssets: [], transactions: [], familyFinanceRecords: [], tradingSignals: [], tradingStrategyNotes: [], dcaRecords: [], dividendRecords: [], financeSnapshots: [], financeLedgerRows: [], reserveRows: [], tradingWatchlist: [], sandboxPositions: [], paperTradeRecords: [], marketDataSymbols: [] }
+      ? { financeAssets: [], holdings: [], thaiNavAssets: [], transactions: [], familyFinanceRecords: [], tradingSignals: [], tradingStrategyNotes: [], dcaRecords: [], dividendRecords: [], dividendRecordsFullHistory: [], financeSnapshots: [], financeLedgerRows: [], reserveRows: [], tradingWatchlist: [], sandboxPositions: [], paperTradeRecords: [], marketDataSymbols: [] }
       : {
           financeAssets: mockOsData.financeAssets,
           holdings: mockOsData.holdings,
@@ -64,6 +64,7 @@ export const createFinanceDataProvider = (mode: 'mock' | 'live' | 'fallback' | '
           tradingStrategyNotes: mockOsData.tradingStrategyNotes,
           dcaRecords: mockOsData.dcaRecords,
           dividendRecords: mockOsData.dividendRecords,
+          dividendRecordsFullHistory: mockOsData.dividendRecordsFullHistory,
           financeSnapshots: mockOsData.financeSnapshots,
           financeLedgerRows: mockOsData.financeLedgerRows,
           reserveRows: mockOsData.reserveRows,

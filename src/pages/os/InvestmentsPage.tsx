@@ -1,4 +1,5 @@
 ﻿import { type ReactNode, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { InvestmentActionButton } from '../../components/investments/InvestmentActionButton'
 import { InvestmentInputDialog, type DialogMode } from '../../components/investments/InvestmentInputDialog'
 import { PortfolioBucketView } from '../../components/investments/PortfolioBucketView'
@@ -744,24 +745,6 @@ const Mini = ({ label, value }: { label: string; value: string | ReactNode }) =>
   </div>
 )
 
-const DividendAmountCell = ({ amount, currency, fxRate, emphasize = false }: { amount: number; currency: 'USD' | 'THB'; fxRate: number; emphasize?: boolean }) => {
-  if (currency === 'USD') {
-    return (
-      <div>
-        <p className={emphasize ? 'font-semibold' : undefined}>{usd(amount)}</p>
-        <p className="text-xs text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(amount, fxRate))} <span className="text-[var(--bb-text-faint)]">FX estimate</span></p>
-      </div>
-    )
-  }
-
-  return (
-    <div>
-      <p className={emphasize ? 'font-semibold' : undefined}>{thb(amount)}</p>
-      <p className="text-xs text-[var(--bb-text-muted)]">Recorded in THB</p>
-    </div>
-  )
-}
-
 const Field = ({ children, label }: { children: ReactNode; label: string }) => (
   <label className="mt-3 block">
     <span className="mb-2 block font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</span>
@@ -1243,8 +1226,6 @@ const DcaTab = ({
   )
 }
 
-type SourceScope = 'imported-ledger' | 'full-dime-history' | 'all'
-
 const DividendsTab = ({
   assetName,
   dividendRecords,
@@ -1256,103 +1237,47 @@ const DividendsTab = ({
   dividendRecordsFullHistory: DividendRecord[]
   fxRate: number
 }) => {
-  const [sourceScope, setSourceScope] = useState<SourceScope>('imported-ledger')
   const allRecords = useMemo(() => [...dividendRecords, ...dividendRecordsFullHistory], [dividendRecords, dividendRecordsFullHistory])
-  const filteredRecords = sourceScope === 'all'
-    ? allRecords
-    : sourceScope === 'full-dime-history'
-      ? dividendRecordsFullHistory
-      : dividendRecords
-  const sortedRecords = [...filteredRecords].sort((a, b) => b.payDate.localeCompare(a.payDate))
-  const trailing12Start = new Date()
-  trailing12Start.setMonth(trailing12Start.getMonth() - 12)
+  const sortedRecords = useMemo(() => [...allRecords].sort((a, b) => b.payDate.localeCompare(a.payDate)), [allRecords])
 
-  const totals = sortedRecords.reduce((acc, record) => {
-    const toThb = (amount: number) => record.currency === 'USD' ? convertUsdToThb(amount, fxRate) : amount
-    acc.grossUsd += record.currency === 'USD' ? record.grossAmount : 0
-    acc.netUsd += record.currency === 'USD' ? record.netAmount : 0
-    acc.taxUsd += record.currency === 'USD' ? record.taxAmount : 0
-    acc.grossThb += toThb(record.grossAmount)
-    acc.netThb += toThb(record.netAmount)
-    acc.taxThb += toThb(record.taxAmount)
-    if (new Date(record.payDate) >= trailing12Start) {
-      acc.trailing12NetThb += toThb(record.netAmount)
-    }
+  const lifetimeTotals = useMemo(() => sortedRecords.reduce((acc, r) => {
+    acc.grossUsd += r.grossAmount
+    acc.netUsd += r.netAmount
+    acc.taxUsd += r.taxAmount ?? (r as unknown as Record<string, unknown>).taxWithheld as number ?? 0
     return acc
-  }, {
-    grossUsd: 0,
-    netUsd: 0,
-    taxUsd: 0,
-    grossThb: 0,
-    netThb: 0,
-    taxThb: 0,
-    trailing12NetThb: 0,
-  })
-  const estimatedMonthlyNetThb = totals.trailing12NetThb > 0 ? Math.round(totals.trailing12NetThb / 12) : 0
-  const [showFullHistory, setShowFullHistory] = useState(false)
-  const visibleRecords = showFullHistory ? sortedRecords : sortedRecords.slice(0, 10)
+  }, { grossUsd: 0, netUsd: 0, taxUsd: 0 }), [sortedRecords])
 
   const byAsset = useMemo(() => {
-    const map = new Map<string, { gross: number; net: number; tax: number; count: number; latest: string; status: string }>()
-    const source = sourceScope === 'full-dime-history' ? dividendRecordsFullHistory : sourceScope === 'all' ? allRecords : dividendRecords
-    for (const r of source) {
+    const map = new Map<string, { gross: number; net: number; tax: number; count: number; latest: string }>()
+    for (const r of allRecords) {
       const key = r.symbol || r.assetId
-      const entry = map.get(key) ?? { gross: 0, net: 0, tax: 0, count: 0, latest: '', status: r.status }
+      const entry = map.get(key) ?? { gross: 0, net: 0, tax: 0, count: 0, latest: '' }
       entry.gross += r.grossAmount
       entry.net += r.netAmount
       entry.tax += r.taxAmount ?? (r as unknown as Record<string, unknown>).taxWithheld as number ?? 0
       entry.count++
-      if (r.payDate > entry.latest) { entry.latest = r.payDate; entry.status = r.status }
+      if (r.payDate > entry.latest) entry.latest = r.payDate
       map.set(key, entry)
     }
     return [...map.entries()].sort((a, b) => b[1].gross - a[1].gross)
-  }, [sourceScope, dividendRecords, dividendRecordsFullHistory, allRecords])
+  }, [allRecords])
 
-  const importableCount = dividendRecords.length
-  const fullHistoryCount = dividendRecordsFullHistory.length
+  const recentRecords = sortedRecords.slice(0, 10)
 
   return (
     <div className="space-y-5">
-      {/* Source Scope Filter */}
-      <div className="flex items-center gap-2 border-b border-black/[0.05] pb-2">
-        {(['imported-ledger', 'full-dime-history', 'all'] as const).map((scope) => (
-          <button
-            key={scope}
-            type="button"
-            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] transition ${
-              sourceScope === scope
-                ? 'bg-[var(--bb-accent)]/10 text-[var(--bb-accent)]'
-                : 'text-[var(--bb-text-muted)] hover:bg-black/[0.05]'
-            }`}
-            onClick={() => setSourceScope(scope)}
-          >
-            {scope === 'imported-ledger' ? `Imported (${importableCount})` : scope === 'full-dime-history' ? `Full History (${fullHistoryCount})` : `All (${dividendRecords.length})`}
-          </button>
-        ))}
-      </div>
-
-      <SectionPanel
-        label={sourceScope === 'full-dime-history' ? 'Full Dime Dividend History' : 'Received Dividends — Imported Ledger'}
-        title={sourceScope === 'full-dime-history' ? 'Full Dime History' : 'Imported Ledger'}
-        endSlot={<span className="pill">{sortedRecords.length} records</span>}
-      >
-        {sourceScope === 'full-dime-history' && fullHistoryCount === 0 ? (
-          <p className="text-sm text-[var(--bb-text-muted)]">Full Dime history not imported yet. Import CSV/JSON to enable lifetime dividend totals.</p>
-        ) : sortedRecords.length === 0 ? (
-          <p className="text-sm text-[var(--bb-text-muted)]">No dividend ledger records yet</p>
+      <SectionPanel label="Dividend Dashboard" title="Dividend Summary" endSlot={<span className="pill">{allRecords.length} records</span>}>
+        {allRecords.length === 0 ? (
+          <p className="text-sm text-[var(--bb-text-muted)]">No dividend records yet</p>
         ) : (
           <>
-            <p className="mb-3 rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3 text-xs leading-5 text-[var(--bb-text-soft)]">
-              Ledger amounts stay in original USD. Thai baht values below are marked as <span className="font-semibold">FX estimate</span> using {fxRate.toFixed(2)} THB/USD.
-            </p>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <Mini label="Total Gross" value={<><span>{usd(totals.grossUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(totals.grossThb)} · FX estimate</span></>} />
-              <Mini label="Total Net" value={<><span>{usd(totals.netUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(totals.netThb)} · FX estimate</span></>} />
-              <Mini label="Tax Withheld" value={<><span>{usd(totals.taxUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(totals.taxThb)} · FX estimate</span></>} />
-              <Mini label="Estimated Monthly Net" value={<><span>{thb(estimatedMonthlyNetThb)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">Trailing 12M ÷ 12 · FX estimate</span></>} />
+            <div className="grid gap-3 md:grid-cols-4">
+              <Mini label="Lifetime Gross" value={<><span>{usd(lifetimeTotals.grossUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.grossUsd, fxRate))}</span></>} />
+              <Mini label="Lifetime Net" value={<><span>{usd(lifetimeTotals.netUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.netUsd, fxRate))}</span></>} />
+              <Mini label="Lifetime Tax" value={<><span>{usd(lifetimeTotals.taxUsd)}</span><span className="block text-xs font-normal text-[var(--bb-text-muted)]">≈ {thb(convertUsdToThb(lifetimeTotals.taxUsd, fxRate))}</span></>} />
+              <Mini label="Forward Run Rate" value="~$80/yr" />
             </div>
 
-            {/* Dividend by Asset */}
             <div className="mt-5">
               <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Dividend by Asset</p>
               <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
@@ -1377,7 +1302,6 @@ const DividendsTab = ({
                         <td className="px-3 py-2 text-right">{usd(data.net)}</td>
                         <td className="px-3 py-2 text-right">{usd(data.tax)}</td>
                         <td className="px-3 py-2 text-xs">{data.latest.slice(0, 10)}</td>
-                        <td className="px-3 py-2"><span className={`font-mono text-[9px] font-semibold uppercase ${statusClass(data.status)}`}>{data.status}</span></td>
                       </tr>
                     ))}
                   </tbody>
@@ -1385,13 +1309,16 @@ const DividendsTab = ({
               </div>
             </div>
 
-            {/* Dividend History */}
+            {/* Recent Activity */}
             <div className="mt-5">
               <div className="mb-2 flex items-center justify-between">
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">History</p>
-                <button className="text-[10px] font-semibold text-[var(--bb-accent)] hover:underline" type="button" onClick={() => setShowFullHistory((p) => !p)}>
-                  {showFullHistory ? 'Collapse history' : `Show full history (${sortedRecords.length})`}
-                </button>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Recent Dividend Activity</p>
+                <Link
+                  className="text-[10px] font-semibold text-[var(--bb-accent)] hover:underline"
+                  to="/os/finance/investments/dividend-history"
+                >
+                  View Full History ({sortedRecords.length})
+                </Link>
               </div>
               <div className="overflow-x-auto rounded-2xl border border-black/[0.04] bg-white/70">
                 <table className="min-w-full text-left text-sm">
@@ -1400,22 +1327,18 @@ const DividendsTab = ({
                       <th className="px-3 py-2">Date</th>
                       <th className="px-3 py-2">Symbol</th>
                       <th className="px-3 py-2 text-right">Gross</th>
-                      <th className="px-3 py-2 text-right">Tax</th>
                       <th className="px-3 py-2 text-right">Net</th>
                       <th className="px-3 py-2">Source</th>
-                      <th className="px-3 py-2">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-black/[0.04]">
-                    {visibleRecords.map((record) => (
+                    {recentRecords.map((record) => (
                       <tr key={record.id} className="hover:bg-black/[0.02]">
                         <td className="px-3 py-1.5 text-xs">{record.payDate.slice(0, 10)}</td>
                         <td className="px-3 py-1.5 text-xs font-semibold">{record.symbol || assetName(record.assetId)}</td>
-                        <td className="px-3 py-1.5 text-right text-xs"><DividendAmountCell amount={record.grossAmount} currency={record.currency} fxRate={fxRate} /></td>
-                        <td className="px-3 py-1.5 text-right text-xs"><DividendAmountCell amount={record.taxAmount} currency={record.currency} fxRate={fxRate} /></td>
-                        <td className="px-3 py-1.5 text-right text-xs font-semibold"><DividendAmountCell amount={record.netAmount} currency={record.currency} fxRate={fxRate} emphasize /></td>
+                        <td className="px-3 py-1.5 text-right text-xs">{usd(record.grossAmount)}</td>
+                        <td className="px-3 py-1.5 text-right text-xs font-semibold">{usd(record.netAmount)}</td>
                         <td className="px-3 py-1.5 text-[10px] text-[var(--bb-text-muted)]">{record.source}</td>
-                        <td className="px-3 py-1.5"><span className={`font-mono text-[9px] font-semibold uppercase ${statusClass(record.status)}`}>{record.status}</span></td>
                       </tr>
                     ))}
                   </tbody>
