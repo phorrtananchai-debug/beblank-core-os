@@ -5,6 +5,8 @@ import { normalizeRows } from '../sheetBridge/adapters'
 import { getActiveAppsScriptEndpoint } from '../sheetBridge/config'
 import { SHEET_RESOURCES } from '../sheetBridge/resources'
 import { loadFullHistoryCache, mergeDividendFullHistory } from '../investments/dividendFullHistoryCache'
+import { loadHoldingsCache, mergeHoldingsCache } from '../investments/holdingsCache'
+import { normalizeAssetId } from '../investments/assetIdentity'
 import { OsContext, type BridgeBootstrapDiagnostic, type OsContextValue } from './osContextObject'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
@@ -13,16 +15,18 @@ const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRo
 
 const initialProviderState = createInitialOsDataFromProviders()
 const cachedDividendHistory = loadFullHistoryCache()
+const cachedHoldings = loadHoldingsCache()
 const hydratedInitialData = {
   ...initialProviderState.data,
   dividendRecords: mergeDividendFullHistory(initialProviderState.data.dividendRecords, cachedDividendHistory),
   dividendRecordsFullHistory: mergeDividendFullHistory(initialProviderState.data.dividendRecordsFullHistory, cachedDividendHistory),
+  holdings: mergeHoldingsCache(initialProviderState.data.holdings, cachedHoldings.records),
 }
 const IMPORTABLE_BRIDGE_RESOURCES = SHEET_RESOURCES.filter((resource) => resource.importEnabled !== false && ALLOWED_BRIDGE_FIELDS.has(resource.osField))
 
 const normalizeHoldingAssetKey = (value: unknown): string | null => {
   if (typeof value !== 'string') return null
-  const normalized = value.trim().toUpperCase()
+  const normalized = normalizeAssetId(value)
   return normalized.length > 0 ? normalized : null
 }
 
@@ -49,7 +53,7 @@ const synthesizeBootstrapDiagnosticsFromData = (data: OsData): BridgeBootstrapDi
 if (typeof window !== 'undefined') {
   const resources = [
     { label: 'Projects', count: initialProviderState.data.projects.length },
-    { label: 'Holdings', count: initialProviderState.data.holdings.length },
+    { label: 'Holdings', count: hydratedInitialData.holdings.length },
     { label: 'DCA Plans', count: initialProviderState.data.dcaRecords.length },
     { label: 'Dividends', count: initialProviderState.data.dividendRecords.length },
     { label: 'Approvals', count: initialProviderState.data.approvals.length },
@@ -58,6 +62,8 @@ if (typeof window !== 'undefined') {
   ]
   console.group('[OsProvider] Startup Hydration')
   console.log('Provider statuses:', initialProviderState.providerStatuses)
+  console.log('Holdings cache records:', cachedHoldings.records.length)
+  console.log('Last holdings import timestamp:', cachedHoldings.updatedAt ?? 'n/a')
   resources.forEach((r) => console.log(`${r.label}: ${r.count} rows`))
   console.groupEnd()
 }
