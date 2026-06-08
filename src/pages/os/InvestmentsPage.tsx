@@ -1257,7 +1257,7 @@ const DividendsTab = ({
   fxRate: number
 }) => {
   const [sourceScope, setSourceScope] = useState<SourceScope>('imported-ledger')
-  const allRecords = [...dividendRecords, ...dividendRecordsFullHistory]
+  const allRecords = useMemo(() => [...dividendRecords, ...dividendRecordsFullHistory], [dividendRecords, dividendRecordsFullHistory])
   const filteredRecords = sourceScope === 'all'
     ? allRecords
     : sourceScope === 'full-dime-history'
@@ -1294,18 +1294,19 @@ const DividendsTab = ({
 
   const byAsset = useMemo(() => {
     const map = new Map<string, { gross: number; net: number; tax: number; count: number; latest: string; status: string }>()
-    for (const r of dividendRecords) {
+    const source = sourceScope === 'full-dime-history' ? dividendRecordsFullHistory : sourceScope === 'all' ? allRecords : dividendRecords
+    for (const r of source) {
       const key = r.symbol || r.assetId
       const entry = map.get(key) ?? { gross: 0, net: 0, tax: 0, count: 0, latest: '', status: r.status }
       entry.gross += r.grossAmount
       entry.net += r.netAmount
-      entry.tax += r.taxAmount
+      entry.tax += r.taxAmount ?? (r as unknown as Record<string, unknown>).taxWithheld as number ?? 0
       entry.count++
       if (r.payDate > entry.latest) { entry.latest = r.payDate; entry.status = r.status }
       map.set(key, entry)
     }
     return [...map.entries()].sort((a, b) => b[1].gross - a[1].gross)
-  }, [dividendRecords])
+  }, [sourceScope, dividendRecords, dividendRecordsFullHistory, allRecords])
 
   const importableCount = dividendRecords.length
   const fullHistoryCount = dividendRecordsFullHistory.length

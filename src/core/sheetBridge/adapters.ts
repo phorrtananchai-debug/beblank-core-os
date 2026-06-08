@@ -58,14 +58,18 @@ export function normalizeRow(
   const errors: RowValidationError[] = []
 
   for (const col of resource.columns) {
-    const dividendAliasValue = resource.id === 'dividend-records'
+    const isDividendResource = resource.id === 'dividend-records' || resource.id === 'dividend-records-full-history'
+    const dividendAliasValue = isDividendResource
       ? (
           col.key === 'symbol' ? (raw.assetId ?? raw['Asset ID']) :
           col.key === 'grossAmount' ? (raw.gross ?? raw['Gross']) :
           col.key === 'taxAmount' ? (raw.tax ?? raw['Tax']) :
+          col.key === 'taxWithheld' ? (raw.tax ?? raw['Tax'] ?? raw.taxAmount ?? raw['Tax Amount']) :
           col.key === 'netAmount' ? (raw.net ?? raw['Net'] ?? raw.expectedAmountTHB ?? raw['Expected Amount THB']) :
           col.key === 'source' ? (raw.sourceLabel ?? raw['Source Label']) :
           col.key === 'note' ? (raw.note ?? raw.notes ?? raw['Notes']) :
+          col.key === 'needsReview' ? (raw.needsReview ?? raw['Needs Review'] ?? raw.flag ?? raw['Flag']) :
+          col.key === 'dedupeKey' ? (raw.dedupeKey ?? raw['Dedupe Key'] ?? raw.dedupKey ?? raw['Dedup Key']) :
           undefined
         )
       : undefined
