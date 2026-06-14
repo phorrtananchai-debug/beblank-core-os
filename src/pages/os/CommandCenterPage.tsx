@@ -99,11 +99,33 @@ const divisionColors: Record<string, string> = {
   'my-house': 'bg-[#7c3aed]/10 text-[#7c3aed]',
 }
 
-const moodLabel: Record<DivisionMood, string> = {
+  const moodLabel: Record<DivisionMood, string> = {
   calm: 'Calm',
   busy: 'Busy',
   'review-needed': 'Review Needed',
   offline: 'Offline',
+}
+
+const divisionAccentBar: Record<string, string> = {
+  'jarvis-b-hq': 'border-l-black/[0.12]',
+  'aequitas-capital': 'border-l-[var(--bb-accent)]',
+  'creator-factory': 'border-l-[#16a36a]',
+  'bbh-studio': 'border-l-[#2563eb]',
+  'my-house': 'border-l-[#7c3aed]',
+}
+
+
+const moodBorder: Record<DivisionMood, string> = {
+  calm: 'border-l-[#16a36a]',
+  busy: 'border-l-[var(--bb-accent)]',
+  'review-needed': 'border-l-[#c2410c]',
+  offline: 'border-l-black/[0.12]',
+}
+
+const moodStatusColor: Record<string, string> = {
+  'Review Pressure': 'bg-[#c2410c]',
+  'Busy / Controlled': 'bg-[var(--bb-accent)]',
+  'Calm': 'bg-[#16a36a]',
 }
 
 export const CommandCenterPage = () => {
@@ -313,39 +335,51 @@ export const CommandCenterPage = () => {
 
   return (
     <section className="space-y-4">
-      <header className="panel">
+      <header className="relative overflow-hidden rounded-[12px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-2">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-faint)]">
-              Command Center / Operational Matrix
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-faint)]">
+                Command Center / Operational Matrix
+              </p>
+              {systemMood !== 'Calm' && (
+                <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white ${moodStatusColor[systemMood] ?? ''}`}>
+                  <span className="inline-block h-1 w-1 rounded-full bg-white animate-pulse" />
+                  {systemMood === 'Review Pressure' ? 'Attention' : 'Active'}
+                </span>
+              )}
+            </div>
             <div>
               <h2 className="text-[1.9rem] font-semibold leading-none tracking-[-0.04em] md:text-[2.4rem]">
                 BeBlank Core OS
               </h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--bb-text-muted)]">
-                Executive operations board for division status, read-only integrations, and live agent queues.
+                {jarvis.executiveBrief}
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="pill">{divisions.length} divisions</span>
             <span className="pill">{agents.length} agents</span>
-            <span className="pill-accent">Command View</span>
+            <span className={`pill-accent ${systemMood === 'Calm' ? '' : ''}`}>Command View</span>
           </div>
         </div>
       </header>
 
-      {/* System Status Strip */}
+      {/* System Status Strip with mood-colored borders */}
       <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {statusStrip.map((item) => (
-          <div key={item.label} className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] px-3.5 py-2.5">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.label}</p>
-            <div className="mt-1.5 flex items-baseline gap-1.5">
-              <span className="text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)]">{item.value}</span>
+        {statusStrip.map((item) => {
+          const isMood = item.label === 'System Mood'
+          const mood = divisions.length > 0 ? divisions[0].mood : 'calm'
+          return (
+            <div key={item.label} className={`rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] px-3.5 py-2.5 ${isMood ? `border-l-2 ${moodBorder[mood]}` : ''}`}>
+              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.label}</p>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className={`text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)] ${isMood ? (mood === 'review-needed' ? 'text-[#c2410c]' : mood === 'busy' ? 'text-[var(--bb-accent)]' : '') : ''}`}>{item.value}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Division Matrix */}
@@ -363,7 +397,7 @@ export const CommandCenterPage = () => {
               <Link
                 key={division.id}
                 to={`/os/command-center/${division.id}`}
-                className="block rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3.5 transition-colors duration-150 hover:border-[var(--bb-border-strong)]"
+                className={`block rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3.5 transition-colors duration-150 hover:border-[var(--bb-border-strong)] border-l-2 ${divisionAccentBar[division.id] ?? 'border-l-black/[0.08]'}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
@@ -435,6 +469,71 @@ export const CommandCenterPage = () => {
           <QueueTable title="Running Now" items={runningNow} icon="▶" />
           <QueueTable title="Waiting Review" items={waitingReview} icon="◷" />
           <QueueTable title="Recently Completed" items={completed} icon="✓" />
+        </div>
+      </div>
+
+      {/* System Activity — compact pulse stream */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 px-0.5">
+          <h3 className="text-sm font-semibold text-[var(--bb-text)]">System Activity</h3>
+          <span className={`inline-block h-1.5 w-1.5 rounded-full ${systemMood === 'Review Pressure' ? 'bg-[#c2410c] animate-pulse' : systemMood === 'Busy / Controlled' ? 'bg-[var(--bb-accent)] animate-pulse' : 'bg-[#16a36a]'}`} />
+          <span className="text-[10px] text-[var(--bb-text-faint)]">Live</span>
+        </div>
+        <div className="grid gap-2 xl:grid-cols-3">
+          {/* Priority Alerts */}
+          <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Priority Alerts</p>
+            <div className="mt-2 space-y-1.5">
+              {jarvis.topPriorities.length === 0 ? (
+                <p className="text-[11px] text-[var(--bb-text-muted)]">All systems normal</p>
+              ) : (
+                jarvis.topPriorities.slice(0, 4).map((priority, i) => (
+                  <div key={i} className="flex items-start gap-2 text-[11px] leading-5">
+                    <span className="mt-0.5 shrink-0 font-mono text-[9px] text-[#c2410c]">{i + 1}</span>
+                    <span className="text-[var(--bb-text)]">{priority}</span>
+                  </div>
+                ))
+              )}
+            </div>
+            {jarvis.staleSources.length > 0 && (
+              <div className="mt-2 rounded-md bg-[#c2410c]/[0.04] px-2 py-1.5">
+                <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[#c2410c]">{jarvis.staleSources.length} stale source(s)</p>
+              </div>
+            )}
+          </div>
+
+          {/* Running Activity */}
+          <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Running Activity</p>
+            <div className="mt-2 space-y-1.5">
+              {runningNow.length === 0 ? (
+                <p className="text-[11px] text-[var(--bb-text-muted)]">No active agents</p>
+              ) : (
+                runningNow.slice(0, 4).map((agent) => (
+                  <div key={agent.id} className="flex items-center gap-2 text-[11px]">
+                    <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--bb-accent)] animate-pulse" />
+                    <span className="truncate text-[var(--bb-text)]">{agent.name}: {agent.currentTask.slice(0, 50)}{agent.currentTask.length > 50 ? '...' : ''}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Division Status */}
+          <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Division Status</p>
+            <div className="mt-2 space-y-1.5">
+              {divisions.map((div) => (
+                <div key={div.id} className="flex items-center justify-between gap-2 text-[11px]">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${moodDot[div.mood]} ${div.mood === 'busy' ? 'animate-pulse' : ''}`} />
+                    <span className="truncate text-[var(--bb-text)]">{div.name}</span>
+                  </div>
+                  <span className="shrink-0 font-mono text-[9px] text-[var(--bb-text-faint)]">{moodLabel[div.mood]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
