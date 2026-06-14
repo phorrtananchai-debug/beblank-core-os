@@ -3,6 +3,7 @@ import { OSLayout } from '../layouts/OSLayout'
 import { PublicWebsiteLayout } from '../layouts/PublicWebsiteLayout'
 import { AIWorkflowPage } from '../pages/os/AIWorkflowPage'
 import { BridgeSettingsPage } from '../pages/os/BridgeSettingsPage'
+import { CommandCenterDivisionPage } from '../pages/os/CommandCenterDivisionPage'
 import { CommandCenterPage } from '../pages/os/CommandCenterPage'
 import { CapitalPage } from '../pages/os/CapitalPage'
 import { DividendHistoryPage } from '../pages/os/DividendHistoryPage'
@@ -48,7 +49,9 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<CommandCenterPage />} />
+        <Route index element={<Navigate to="command-center" replace />} />
+        <Route path="command-center" element={<CommandCenterPage />} />
+        <Route path="command-center/:divisionId" element={<CommandCenterDivisionPage />} />
         <Route path="studio" element={<StudioWorkspacePage view="overview" />} />
         <Route path="studio/projects/:projectId" element={<StudioProjectDetailPage />} />
         <Route path="studio/projects" element={<StudioWorkspacePage view="projects" />} />
