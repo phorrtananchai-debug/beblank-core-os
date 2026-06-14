@@ -62,16 +62,48 @@ const moodClass: Record<DivisionMood, string> = {
   offline: 'pill',
 }
 
-const queueClass: Record<AgentState, string> = {
-  running: 'pill-accent',
-  'waiting-review': 'pill-amber',
-  completed: 'pill-green',
+const moodDot: Record<DivisionMood, string> = {
+  calm: 'bg-[#16a36a]',
+  busy: 'bg-[var(--bb-accent)]',
+  'review-needed': 'bg-[#c2410c]',
+  offline: 'bg-black/[0.12]',
 }
 
-const queueLabel: Record<AgentState, string> = {
-  running: 'Running',
-  'waiting-review': 'Waiting Review',
-  completed: 'Completed',
+
+
+const queueBorder: Record<AgentState, string> = {
+  running: 'border-l-[var(--bb-accent)]',
+  'waiting-review': 'border-l-[#c2410c]',
+  completed: 'border-l-[#16a36a]',
+}
+
+const queueProgressColor: Record<AgentState, string> = {
+  running: 'os-progress-bar-accent',
+  'waiting-review': 'os-progress-bar-amber',
+  completed: 'os-progress-bar-green',
+}
+
+const divisionIcons: Record<string, string> = {
+  'jarvis-b-hq': '⊞',
+  'aequitas-capital': '◆',
+  'creator-factory': '◎',
+  'bbh-studio': '◇',
+  'my-house': '○',
+}
+
+const divisionColors: Record<string, string> = {
+  'jarvis-b-hq': 'bg-black/[0.04] text-[var(--bb-text)]',
+  'aequitas-capital': 'bg-[var(--bb-accent)]/10 text-[var(--bb-accent)]',
+  'creator-factory': 'bg-[#16a36a]/10 text-[#16a36a]',
+  'bbh-studio': 'bg-[#2563eb]/10 text-[#2563eb]',
+  'my-house': 'bg-[#7c3aed]/10 text-[#7c3aed]',
+}
+
+const moodLabel: Record<DivisionMood, string> = {
+  calm: 'Calm',
+  busy: 'Busy',
+  'review-needed': 'Review Needed',
+  offline: 'Offline',
 }
 
 export const CommandCenterPage = () => {
@@ -304,138 +336,149 @@ export const CommandCenterPage = () => {
         </div>
       </header>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+      {/* System Status Strip */}
+      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {statusStrip.map((item) => (
-          <article key={item.label} className="panel">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-faint)]">{item.label}</p>
-            <p className="mt-3 text-xl font-semibold leading-none tracking-[-0.03em] text-[var(--bb-text)] md:text-2xl">
-              {item.value}
-            </p>
-          </article>
+          <div key={item.label} className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] px-3.5 py-2.5">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.label}</p>
+            <div className="mt-1.5 flex items-baseline gap-1.5">
+              <span className="text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)]">{item.value}</span>
+            </div>
+          </div>
         ))}
-      </section>
+      </div>
 
-      <section className="panel">
-        <div className="panel-header">
-          <h3>Division Matrix</h3>
-          <span className="pill">Read-only aggregation layer</span>
+      {/* Division Matrix */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 px-0.5">
+          <h3 className="text-sm font-semibold text-[var(--bb-text)]">Division Matrix</h3>
+          <span className="text-[10px] text-[var(--bb-text-faint)]">{divisions.length} divisions</span>
         </div>
-        <div className="mt-4 grid gap-3 xl:grid-cols-2">
-          {divisions.map((division) => (
-            <Link
-              key={division.id}
-              to={`/os/command-center/${division.id}`}
-              className="group rounded-[12px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-4 transition-colors duration-150 hover:border-[var(--bb-border-strong)] hover:bg-[var(--bb-surface-3)]"
-            >
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="text-base font-semibold leading-none tracking-[-0.02em]">{division.name}</h4>
-                      <span className={moodClass[division.mood]}>{division.mood}</span>
-                      {division.readOnly ? <span className="pill">Read-only</span> : null}
+        <div className="grid gap-2 xl:grid-cols-2">
+          {divisions.map((division) => {
+            const icon = divisionIcons[division.id] ?? '⊡'
+            const colorClass = divisionColors[division.id] ?? 'bg-black/[0.04] text-[var(--bb-text-muted)]'
+            const maxStat = Math.max(division.runningTasks, division.waitingReviews, division.completedToday, 1)
+            return (
+              <Link
+                key={division.id}
+                to={`/os/command-center/${division.id}`}
+                className="block rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3.5 transition-colors duration-150 hover:border-[var(--bb-border-strong)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${colorClass}`}>{icon}</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-semibold leading-none text-[var(--bb-text)]">{division.name}</h4>
+                        <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${moodDot[division.mood]} ${division.mood === 'busy' ? 'animate-pulse' : ''}`} />
+                      </div>
+                      <p className="mt-0.5 truncate text-[11px] text-[var(--bb-text-muted)]">{division.summary.slice(0, 80)}{division.summary.length > 80 ? '…' : ''}</p>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-[var(--bb-text-muted)]">{division.summary}</p>
                   </div>
-                  <div className="grid min-w-[180px] grid-cols-2 gap-2 text-right">
-                    <MetaBadge label="Confidence" value={division.confidence} />
-                    <MetaBadge label="Freshness" value={division.freshness} />
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className={moodClass[division.mood]}>{moodLabel[division.mood]}</span>
+                    {division.readOnly ? <span className="pill text-[9px]">R/O</span> : null}
                   </div>
                 </div>
 
-                <div className="grid gap-2 md:grid-cols-3">
-                  <DivisionStat label="Active Agents" value={division.activeAgents} />
-                  <DivisionStat label="Running Tasks" value={division.runningTasks} />
-                  <DivisionStat label="Waiting Reviews" value={division.waitingReviews} />
+                <div className="mt-3 grid grid-cols-4 gap-1.5">
+                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
+                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Agents</p>
+                    <p className="mt-0.5 text-sm font-semibold text-[var(--bb-text)]">{division.activeAgents}</p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
+                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Tasks</p>
+                    <p className="mt-0.5 text-sm font-semibold text-[var(--bb-text)]">{division.runningTasks}</p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
+                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Reviews</p>
+                    <p className={`mt-0.5 text-sm font-semibold ${division.waitingReviews > 0 ? 'text-[#c2410c]' : 'text-[var(--bb-text)]'}`}>{division.waitingReviews}</p>
+                  </div>
+                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
+                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Done</p>
+                    <p className="mt-0.5 text-sm font-semibold text-[var(--bb-text)]">{division.completedToday}</p>
+                  </div>
                 </div>
 
-                <div className="overflow-hidden rounded-[10px] border border-[var(--bb-border)]">
-                  <div className="grid grid-cols-3 border-b border-[var(--bb-border)] bg-[var(--bb-surface-3)] font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">
-                    <span className="px-3 py-2">Metric</span>
-                    <span className="px-3 py-2">Value</span>
-                    <span className="px-3 py-2 text-right">Today</span>
-                  </div>
-                  {division.keyMetrics.map((metric, index) => (
-                    <div
-                      key={`${division.id}-${metric.label}`}
-                      className={`grid grid-cols-3 text-sm ${index !== division.keyMetrics.length - 1 ? 'border-b border-[var(--bb-border)]' : ''}`}
-                    >
-                      <span className="px-3 py-2.5 text-[var(--bb-text-muted)]">{metric.label}</span>
-                      <span className="px-3 py-2.5 font-medium text-[var(--bb-text)]">{metric.value}</span>
-                      <span className="px-3 py-2.5 text-right text-[var(--bb-text-muted)]">
-                        {metric.label === 'Completed' ? division.completedToday : division.completedToday > 0 ? `${division.completedToday} done` : 'No change'}
-                      </span>
-                    </div>
+                {/* Compact micro bar showing task distribution */}
+                <div className="mt-2 flex h-1 gap-0.5 overflow-hidden rounded-full bg-black/[0.04]">
+                  <div className="bg-[var(--bb-accent)] transition-all" style={{ width: `${(division.runningTasks / maxStat) * 30}%` }} />
+                  <div className="bg-[#c2410c] transition-all" style={{ width: `${(division.waitingReviews / maxStat) * 30}%` }} />
+                  <div className="bg-[#16a36a] transition-all" style={{ width: `${(division.completedToday / maxStat) * 30}%` }} />
+                </div>
+
+                {/* Key metrics as compact badges */}
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {division.keyMetrics.map((metric) => (
+                    <span key={metric.label} className="rounded-md bg-black/[0.03] px-2 py-0.5 font-mono text-[9px] text-[var(--bb-text-muted)]">
+                      {metric.label}: <strong className="text-[var(--bb-text)]">{metric.value}</strong>
+                    </span>
                   ))}
+                  <span className="rounded-md bg-black/[0.03] px-2 py-0.5 font-mono text-[9px] text-[var(--bb-text-muted)]">
+                    {division.confidence} · {division.freshness}
+                  </span>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
-      </section>
+      </div>
 
-      <section className="panel">
-        <div className="panel-header">
-          <h3>Agent Queue</h3>
-          <span className="pill">{agents.length} tracked</span>
+      {/* Agent Queue */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 px-0.5">
+          <h3 className="text-sm font-semibold text-[var(--bb-text)]">Agent Queue</h3>
+          <span className="text-[10px] text-[var(--bb-text-faint)]">{agents.length} tracked</span>
         </div>
-        <div className="mt-4 grid gap-4 xl:grid-cols-3">
-          <QueueTable title="Running Now" items={runningNow} />
-          <QueueTable title="Waiting Review" items={waitingReview} />
-          <QueueTable title="Recently Completed" items={completed} />
+        <div className="grid gap-2 xl:grid-cols-3">
+          <QueueTable title="Running Now" items={runningNow} icon="▶" />
+          <QueueTable title="Waiting Review" items={waitingReview} icon="◷" />
+          <QueueTable title="Recently Completed" items={completed} icon="✓" />
         </div>
-      </section>
+      </div>
     </section>
   )
 }
 
-const MetaBadge = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)] px-3 py-2">
-    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{label}</p>
-    <p className="mt-1 text-sm font-medium text-[var(--bb-text)]">{value}</p>
-  </div>
-)
-
-const DivisionStat = ({ label, value }: { label: string; value: string | number }) => (
-  <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)] px-3 py-3">
-    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{label}</p>
-    <p className="mt-2 text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)]">{value}</p>
-  </div>
-)
-
-const QueueTable = ({ title, items }: { title: string; items: AgentRecord[] }) => (
-  <div className="overflow-hidden rounded-[12px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)]">
-    <div className="flex items-center justify-between border-b border-[var(--bb-border)] bg-[var(--bb-surface-3)] px-3 py-2.5">
-      <p className="text-sm font-semibold">{title}</p>
-      <span className="pill">{items.length}</span>
+const QueueTable = ({ title, items, icon }: { title: string; items: AgentRecord[]; icon: string }) => (
+  <div className="overflow-hidden rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)]">
+    <div className={`flex items-center justify-between border-b border-[var(--bb-border)] px-3 py-2`}>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-[var(--bb-text-faint)]">{icon}</span>
+        <p className="text-xs font-semibold text-[var(--bb-text)]">{title}</p>
+      </div>
+      <span className="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[9px] font-semibold text-[var(--bb-text-muted)]">{items.length}</span>
     </div>
     <div>
       {items.length === 0 ? (
-        <div className="px-3 py-6 text-sm text-[var(--bb-text-muted)]">No agents in this queue.</div>
+        <div className="px-3 py-5 text-xs text-[var(--bb-text-muted)]">No agents in this queue.</div>
       ) : (
         items.map((item, index) => (
-          <div key={item.id} className={`${index !== items.length - 1 ? 'border-b border-[var(--bb-border)]' : ''} px-3 py-3`}>
-            <div className="flex items-start justify-between gap-3">
+          <div key={item.id} className={`${index !== items.length - 1 ? 'border-b border-[var(--bb-border)]' : ''} border-l-2 ${queueBorder[item.state]} pl-3 pr-3 py-2.5`}>
+            <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-[var(--bb-text)]">{item.name}</p>
-                  <span className={queueClass[item.state]}>{queueLabel[item.state]}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${item.state === 'running' ? 'bg-[var(--bb-accent)] animate-pulse' : item.state === 'waiting-review' ? 'bg-[#c2410c]' : 'bg-[#16a36a]'}`} />
+                  <p className="text-xs font-semibold text-[var(--bb-text)]">{item.name}</p>
                 </div>
-                <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.division} / {item.role}</p>
+                <p className="mt-0.5 text-[10px] text-[var(--bb-text-faint)]">{item.division} · {item.role}</p>
               </div>
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.updatedAt}</span>
+              <span className="shrink-0 font-mono text-[9px] text-[var(--bb-text-faint)]">{item.updatedAt}</span>
             </div>
-            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-muted)]">{item.currentTask}</p>
-            <div className="mt-3 flex items-center gap-3">
-              <div className="os-progress flex-1">
-                <div className="os-progress-bar os-progress-bar-accent" style={{ width: `${item.progress}%` }} />
+            <p className="mt-1.5 text-[11px] leading-5 text-[var(--bb-text-muted)]">{item.currentTask}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="os-progress flex-1" style={{ height: '4px' }}>
+                <div className={`os-progress-bar ${queueProgressColor[item.state]}`} style={{ width: `${item.progress}%` }} />
               </div>
-              <span className="text-xs font-medium text-[var(--bb-text-muted)]">{item.progress}%</span>
+              <span className="text-[9px] font-medium text-[var(--bb-text-faint)]">{item.progress}%</span>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {item.confidence ? <span className="pill">{item.confidence}</span> : null}
-              {item.freshness ? <span className="pill">{item.freshness}</span> : null}
-            </div>
+            {(item.confidence || item.freshness) && (
+              <div className="mt-1.5 flex gap-1.5">
+                {item.confidence && <span className="rounded bg-black/[0.04] px-1.5 py-0.5 font-mono text-[8px] text-[var(--bb-text-faint)]">{item.confidence}</span>}
+                {item.freshness && <span className="rounded bg-black/[0.04] px-1.5 py-0.5 font-mono text-[8px] text-[var(--bb-text-faint)]">{item.freshness}</span>}
+              </div>
+            )}
           </div>
         ))
       )}
