@@ -7,6 +7,7 @@ import type {
   SnapshotRecord,
   SourceStatus,
 } from '../../types/models'
+import type { CommandEvent, CommandEventInput, CommandEventListener } from '../events/commandCenterEvents'
 
 export interface BridgeBootstrapDiagnostic {
   resourceId: string
@@ -23,6 +24,7 @@ export interface OsContextValue {
   sourceStatuses: Record<string, SourceStatus>
   providerStatuses: Record<string, DataProviderStatus>
   bootstrapDiagnostics: BridgeBootstrapDiagnostic[]
+  commandEvents: CommandEvent[]
   refreshKarunBridge: () => Promise<void>
   pendingApprovals: ActionRequest[]
   changeLogs: ChangeLogRecord[]
@@ -34,6 +36,9 @@ export interface OsContextValue {
   bulkMergeData: (field: string, rows: unknown[]) => { appended: number; updated: number; skipped: number; total: number }
   restoreField: (field: string, rows: unknown[]) => void
   updateBridgeDiagnostic: (diagnostic: BridgeBootstrapDiagnostic) => void
+  publishCommandEvent: (input: CommandEventInput) => CommandEvent
+  clearCommandEvents: () => void
+  subscribeToCommandEvents: (listener: CommandEventListener) => () => void
 }
 
 export const OsContext = createContext<OsContextValue | undefined>(undefined)

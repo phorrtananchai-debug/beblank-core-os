@@ -6,6 +6,8 @@ import { getActiveAppsScriptEndpoint } from '../sheetBridge/config'
 import { SHEET_RESOURCES } from '../sheetBridge/resources'
 import { loadFullHistoryCache, mergeDividendFullHistory } from '../investments/dividendFullHistoryCache'
 import { loadHoldingsCache, mergeHoldingsCache } from '../investments/holdingsCache'
+import { createCommandEventBus } from '../events/commandEventBus'
+import { COMMAND_EVENT_LOG_LIMIT, createCommandEvent, type CommandEvent, type CommandEventInput, type CommandEventListener } from '../events/commandCenterEvents'
 import { OsContext, type BridgeBootstrapDiagnostic, type OsContextValue } from './osContextObject'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
@@ -66,6 +68,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>(initialProviderState.sourceStatuses)
   const [providerStatuses] = useState<Record<string, DataProviderStatus>>(initialProviderState.providerStatuses)
   const [bootstrapDiagnostics, setBootstrapDiagnostics] = useState<BridgeBootstrapDiagnostic[]>(() => synthesizeBootstrapDiagnosticsFromData(hydratedInitialData))
+  const [commandEvents, setCommandEvents] = useState<CommandEvent[]>([])
   const [karunBridgeStatus, setKarunBridgeStatus] = useState<DataProviderStatus>({
     source: 'Karun Phuket Apps Script Read Bridge',
     mode: isKarunBridgeConfigured ? 'live' : 'fallback',
@@ -92,6 +95,22 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     queueSuggestionImport,
   } = useApprovalWorkflow(data, setData, sourceStatuses, setSourceStatuses, setFinnhubStatus)
   const hasBootstrappedRef = useRef(false)
+  const commandEventBusRef = useRef(createCommandEventBus())
+
+  const publishCommandEvent = useCallback((input: CommandEventInput) => {
+    const event = createCommandEvent(input)
+    setCommandEvents((current) => [event, ...current].slice(0, COMMAND_EVENT_LOG_LIMIT))
+    commandEventBusRef.current.emit(event)
+    return event
+  }, [])
+
+  const clearCommandEvents = useCallback(() => {
+    setCommandEvents([])
+  }, [])
+
+  const subscribeToCommandEvents = useCallback((listener: CommandEventListener) => {
+    return commandEventBusRef.current.subscribe(listener)
+  }, [])
 
   const bulkMergeData = useCallback((field: string, rows: unknown[]): { appended: number; updated: number; skipped: number; total: number } => {
     if (!ALLOWED_BRIDGE_FIELDS.has(field)) {
@@ -162,13 +181,33 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
     })
   }, [])
 
-  const refreshKarunBridge = async () => {
+  const refreshKarunBridge = useCallback(async () => {
+    publishCommandEvent({
+      type: 'connector.refresh.started',
+      category: 'connector',
+      severity: 'info',
+      title: 'Karun refresh started',
+      message: 'Karun Phuket bridge refresh has started.',
+      source: 'OsProvider.refreshKarunBridge',
+      tags: ['karun', 'connector', 'studio'],
+    })
+
     setKarunBridgeStatus((current) => ({ ...current, mode: isKarunBridgeConfigured ? 'live' : 'fallback', stale: true }))
     const response = await readKarunPhuketBridge()
     const now = new Date().toISOString()
 
     if (!response.ok || !response.result) {
       const error = response.error ?? 'Karun bridge refresh failed.'
+      publishCommandEvent({
+        type: 'connector.refresh.failed',
+        category: 'connector',
+        severity: 'error',
+        title: 'Karun refresh failed',
+        message: error,
+        source: 'OsProvider.refreshKarunBridge',
+        tags: ['karun', 'connector', 'studio'],
+        metadata: { configured: response.configured },
+      })
       setKarunBridgeStatus({
         source: 'Karun Phuket Apps Script Read Bridge',
         mode: response.configured ? 'fallback' : 'fallback',
@@ -228,7 +267,23 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       error: normalized.warnings.length ? normalized.warnings.join(' ') : undefined,
       fallbackUsed: false,
     })
-  }
+
+    publishCommandEvent({
+      type: normalized.warnings.length > 0 ? 'connector.status.changed' : 'connector.refresh.completed',
+      category: 'connector',
+      severity: normalized.warnings.length > 0 ? 'warning' : 'success',
+      title: normalized.warnings.length > 0 ? 'Karun refresh completed with warnings' : 'Karun refresh completed',
+      message: normalized.warnings.length > 0
+        ? normalized.warnings.join(' ')
+        : `Studio bridge refreshed from ${normalized.sourceStatus.sourceName}.`,
+      source: 'OsProvider.refreshKarunBridge',
+      tags: ['karun', 'connector', 'studio'],
+      metadata: {
+        stale: normalized.sourceStatus.isStale,
+        warnings: normalized.warnings.length,
+      },
+    })
+  }, [publishCommandEvent])
 
   useEffect(() => {
     if (hasBootstrappedRef.current) return
@@ -341,6 +396,20 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (hydratedAny) {
         const now = new Date().toISOString()
+        publishCommandEvent({
+          type: 'system.bootstrap.completed',
+          category: 'system',
+          severity: 'success',
+          title: 'Bootstrap hydration completed',
+          message: `Imported ${diagnostics.filter((item) => item.status === 'imported').length} bridge resources during startup hydration.`,
+          source: 'OsProvider.bootstrap',
+          tags: ['bootstrap', 'startup'],
+          metadata: {
+            imported: diagnostics.filter((item) => item.status === 'imported').length,
+            failed: diagnostics.filter((item) => item.status === 'failed').length,
+            empty: diagnostics.filter((item) => item.status === 'empty').length,
+          },
+        })
         setSourceStatuses((current) => ({
           ...current,
           appsScriptBridge: {
@@ -353,11 +422,24 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
             bridgeWarning: undefined,
           },
         }))
+      } else if (diagnostics.some((item) => item.status === 'failed')) {
+        publishCommandEvent({
+          type: 'system.bootstrap.failed',
+          category: 'system',
+          severity: 'warning',
+          title: 'Bootstrap hydration incomplete',
+          message: 'Startup hydration did not import bridge rows and at least one resource failed.',
+          source: 'OsProvider.bootstrap',
+          tags: ['bootstrap', 'startup'],
+          metadata: {
+            failed: diagnostics.filter((item) => item.status === 'failed').length,
+          },
+        })
       }
     }
 
     void hydrate()
-  }, [bulkMergeData, data.holdings.length, data.projects.length])
+  }, [bulkMergeData, data.holdings.length, data.projects.length, publishCommandEvent])
 
   const value = useMemo<OsContextValue>(
     () => ({
@@ -365,6 +447,7 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       sourceStatuses,
       providerStatuses: { ...providerStatuses, karunBridge: karunBridgeStatus, finnhub: finnhubStatus },
       bootstrapDiagnostics,
+      commandEvents,
       refreshKarunBridge,
       pendingApprovals,
       changeLogs,
@@ -376,8 +459,11 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
       bulkMergeData,
       restoreField,
       updateBridgeDiagnostic,
+      publishCommandEvent,
+      clearCommandEvents,
+      subscribeToCommandEvents,
     }),
-    [data, sourceStatuses, providerStatuses, bootstrapDiagnostics, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots, bulkMergeData, restoreField, updateBridgeDiagnostic, createActionRequest, approveActionRequest, rejectActionRequest, queueSuggestionImport],
+    [data, sourceStatuses, providerStatuses, bootstrapDiagnostics, commandEvents, karunBridgeStatus, finnhubStatus, pendingApprovals, changeLogs, snapshots, bulkMergeData, restoreField, updateBridgeDiagnostic, createActionRequest, approveActionRequest, rejectActionRequest, queueSuggestionImport, publishCommandEvent, clearCommandEvents, subscribeToCommandEvents, refreshKarunBridge],
   )
 
   return <OsContext.Provider value={value}>{children}</OsContext.Provider>

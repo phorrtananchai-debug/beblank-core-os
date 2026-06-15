@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ConfidenceBadge } from '../../components/command-center/ConfidenceBadge'
+import { FreshnessBadge } from '../../components/command-center/FreshnessBadge'
+import { MetricStrip } from '../../components/command-center/MetricStrip'
+import { ReadOnlyBadge } from '../../components/command-center/ReadOnlyBadge'
+import { WorkloadBar } from '../../components/command-center/WorkloadBar'
 import { buildAequitasCapitalModel } from '../../core/aequitas/buildAequitasCapitalModel'
 import { buildCreatorFactoryModel, loadCreatorFactorySnapshot, type CreatorFactoryModel } from '../../core/creator/buildCreatorFactoryModel'
 import { buildLifeModel } from '../../core/life/buildLifeModel'
@@ -162,7 +167,7 @@ export const CommandCenterDivisionPage = () => {
               <h2 className="text-[1.8rem] font-semibold leading-none tracking-[-0.04em] md:text-[2.2rem]">{displayDivision.name}</h2>
               <span className={tone[displayDivision.status]}>{displayDivision.status}</span>
               {displayDivision.id === 'aequitas-capital' || displayDivision.id === 'creator-factory' || displayDivision.id === 'bbh-studio' || displayDivision.id === 'my-house' ? (
-                <span className="pill">Read-only Integration</span>
+                <ReadOnlyBadge />
               ) : null}
             </div>
             <p className="max-w-3xl text-sm leading-6 text-[var(--bb-text-muted)]">{displayDivision.summary}</p>
@@ -171,11 +176,14 @@ export const CommandCenterDivisionPage = () => {
         </div>
       </header>
 
-      <section className="grid gap-3 md:grid-cols-3">
-        <MiniStat label="Active Agents" value={displayDivision.activeAgents} />
-        <MiniStat label="Running Tasks" value={displayDivision.runningTasks} />
-        <MiniStat label="Waiting Reviews" value={displayDivision.waitingReviews} />
-      </section>
+      <MetricStrip
+        items={[
+          { label: 'Active Agents', value: displayDivision.activeAgents },
+          { label: 'Running Tasks', value: displayDivision.runningTasks },
+          { label: 'Waiting Reviews', value: displayDivision.waitingReviews },
+        ]}
+        columnsClass="md:grid-cols-3"
+      />
 
       {displayDivision.id === 'aequitas-capital' ? (
         <>
@@ -463,7 +471,7 @@ export const CommandCenterDivisionPage = () => {
 const ReadOnlyBanner = ({ text }: { text: string }) => (
   <section className="rounded-[12px] border border-[var(--bb-accent-border)] bg-[var(--bb-accent-wash)] px-4 py-3">
     <div className="flex flex-wrap items-center gap-2">
-      <span className="pill-accent">Read-only Integration</span>
+      <ReadOnlyBadge />
       <span className="text-sm text-[var(--bb-text-muted)]">{text}</span>
     </div>
   </section>
@@ -487,13 +495,20 @@ const SummaryPanel = ({
       <h3>{title}</h3>
       <div className="flex flex-wrap gap-2">
         {badges.map((badge) => (
-          <span key={`${title}-${badge}`} className="pill">{badge}</span>
+          badge === 'Fresh' || badge === 'Stale' || badge === 'Unknown'
+            ? <FreshnessBadge key={`${title}-${badge}`} freshness={badge} />
+            : badge === 'Real' || badge === 'Inferred' || badge === 'Fallback' || badge === 'Mock' || badge === 'Derived'
+              ? <ConfidenceBadge key={`${title}-${badge}`} confidence={badge} />
+              : <span key={`${title}-${badge}`} className="pill">{badge}</span>
         ))}
       </div>
     </div>
     <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {stats.map((stat) => (
-        <MiniStat key={`${title}-${stat.label}`} label={stat.label} value={stat.value} />
+        <article key={`${title}-${stat.label}`} className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)] px-3 py-3">
+          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{stat.label}</p>
+          <p className="mt-2 text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)]">{stat.value}</p>
+        </article>
       ))}
     </div>
     {note ? <p className="mt-4 text-sm leading-6 text-[var(--bb-text-muted)]">{note}</p> : null}
@@ -525,7 +540,11 @@ const AgentTable = ({
       <h3>{title}</h3>
       <div className="flex flex-wrap gap-2">
         {badges.map((badge) => (
-          <span key={`${title}-${badge}`} className="pill">{badge}</span>
+          badge === 'Fresh' || badge === 'Stale' || badge === 'Unknown'
+            ? <FreshnessBadge key={`${title}-${badge}`} freshness={badge} />
+            : badge === 'Real' || badge === 'Inferred' || badge === 'Fallback' || badge === 'Mock' || badge === 'Derived'
+              ? <ConfidenceBadge key={`${title}-${badge}`} confidence={badge} />
+              : <span key={`${title}-${badge}`} className="pill">{badge}</span>
         ))}
       </div>
     </div>
@@ -550,9 +569,7 @@ const AgentTable = ({
           </div>
           <p className="leading-6 text-[var(--bb-text-muted)]">{row.task}</p>
           <div className="space-y-2">
-            <div className="os-progress">
-              <div className="os-progress-bar os-progress-bar-accent" style={{ width: `${row.progress}%` }} />
-            </div>
+            <WorkloadBar value={row.progress} tone={row.state === 'running' ? 'running' : row.state === 'waiting-review' ? 'waiting-review' : 'completed'} showValue={false} />
             <p className="text-xs text-[var(--bb-text-faint)]">{row.progress}%</p>
           </div>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{row.updatedAt}</p>
@@ -570,10 +587,3 @@ const EmptyState = ({ message }: { message: string }) => (
 )
 
 const thb = (value = 0) => `${Math.round(value).toLocaleString('en-US')} THB`
-
-const MiniStat = ({ label, value }: { label: string; value: number | string }) => (
-  <article className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)] px-3 py-3">
-    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{label}</p>
-    <p className="mt-2 text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)]">{value}</p>
-  </article>
-)

@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { AgentQueueBoard } from '../../components/command-center/AgentQueueBoard'
+import { ActivityFeed } from '../../components/command-center/ActivityFeed'
+import { CommandHeader } from '../../components/command-center/CommandHeader'
+import { DivisionTile } from '../../components/command-center/DivisionTile'
 import { buildAequitasCapitalModel } from '../../core/aequitas/buildAequitasCapitalModel'
 import { buildCreatorFactoryModel, loadCreatorFactorySnapshot, type CreatorFactoryModel } from '../../core/creator/buildCreatorFactoryModel'
 import { buildJarvisBModel } from '../../core/jarvis/buildJarvisBModel'
 import { buildLifeModel } from '../../core/life/buildLifeModel'
-import { buildStudioModel } from '../../core/studio/buildStudioModel'
 import { useOs } from '../../core/os/useOs'
+import { buildStudioModel } from '../../core/studio/buildStudioModel'
 
 type DivisionMood = 'calm' | 'busy' | 'review-needed' | 'offline'
 type AgentState = 'running' | 'waiting-review' | 'completed'
@@ -43,9 +46,6 @@ type AgentRecord = {
   freshness?: Freshness
 }
 
-
-
-
 const creatorFallbackModel: CreatorFactoryModel = buildCreatorFactoryModel({
   episodes: [],
   ideasCount: 0,
@@ -54,79 +54,6 @@ const creatorFallbackModel: CreatorFactoryModel = buildCreatorFactoryModel({
   sourceLabel: 'Creator OS adapter fallback',
   confidence: 'Fallback',
 })
-
-const moodClass: Record<DivisionMood, string> = {
-  calm: 'pill-green',
-  busy: 'pill-accent',
-  'review-needed': 'pill-amber',
-  offline: 'pill',
-}
-
-const moodDot: Record<DivisionMood, string> = {
-  calm: 'bg-[#16a36a]',
-  busy: 'bg-[var(--bb-accent)]',
-  'review-needed': 'bg-[#c2410c]',
-  offline: 'bg-black/[0.12]',
-}
-
-
-
-const queueBorder: Record<AgentState, string> = {
-  running: 'border-l-[var(--bb-accent)]',
-  'waiting-review': 'border-l-[#c2410c]',
-  completed: 'border-l-[#16a36a]',
-}
-
-const queueProgressColor: Record<AgentState, string> = {
-  running: 'os-progress-bar-accent',
-  'waiting-review': 'os-progress-bar-amber',
-  completed: 'os-progress-bar-green',
-}
-
-const divisionIcons: Record<string, string> = {
-  'jarvis-b-hq': '⊞',
-  'aequitas-capital': '◆',
-  'creator-factory': '◎',
-  'bbh-studio': '◇',
-  'my-house': '○',
-}
-
-const divisionColors: Record<string, string> = {
-  'jarvis-b-hq': 'bg-black/[0.04] text-[var(--bb-text)]',
-  'aequitas-capital': 'bg-[var(--bb-accent)]/10 text-[var(--bb-accent)]',
-  'creator-factory': 'bg-[#16a36a]/10 text-[#16a36a]',
-  'bbh-studio': 'bg-[#2563eb]/10 text-[#2563eb]',
-  'my-house': 'bg-[#7c3aed]/10 text-[#7c3aed]',
-}
-
-  const moodLabel: Record<DivisionMood, string> = {
-  calm: 'Calm',
-  busy: 'Busy',
-  'review-needed': 'Review Needed',
-  offline: 'Offline',
-}
-
-const divisionAccentBar: Record<string, string> = {
-  'jarvis-b-hq': 'border-l-black/[0.12]',
-  'aequitas-capital': 'border-l-[var(--bb-accent)]',
-  'creator-factory': 'border-l-[#16a36a]',
-  'bbh-studio': 'border-l-[#2563eb]',
-  'my-house': 'border-l-[#7c3aed]',
-}
-
-
-const moodBorder: Record<DivisionMood, string> = {
-  calm: 'border-l-[#16a36a]',
-  busy: 'border-l-[var(--bb-accent)]',
-  'review-needed': 'border-l-[#c2410c]',
-  offline: 'border-l-black/[0.12]',
-}
-
-const moodStatusColor: Record<string, string> = {
-  'Review Pressure': 'bg-[#c2410c]',
-  'Busy / Controlled': 'bg-[var(--bb-accent)]',
-  'Calm': 'bg-[#16a36a]',
-}
 
 export const CommandCenterPage = () => {
   const { data, sourceStatuses } = useOs()
@@ -150,7 +77,10 @@ export const CommandCenterPage = () => {
     }
   }, [])
 
-  const jarvis = useMemo(() => buildJarvisBModel(aequitas, creator, studio, life, sourceStatuses, sourceStatuses?.commandCenter), [aequitas, creator, life, studio, sourceStatuses])
+  const jarvis = useMemo(
+    () => buildJarvisBModel(aequitas, creator, studio, life, sourceStatuses, sourceStatuses?.commandCenter),
+    [aequitas, creator, life, studio, sourceStatuses],
+  )
 
   const divisions: DivisionRecord[] = useMemo(() => ([
     {
@@ -315,17 +245,13 @@ export const CommandCenterPage = () => {
   }, [jarvis])
 
   const lastUpdated = [jarvis.lastUpdated, aequitas.lastUpdated, creator.lastUpdated, studio.lastUpdated, life.lastUpdated].find((value) => value !== 'Unavailable') ?? 'Unavailable'
-  const totalActiveAgents = jarvis.activeAgents
-  const totalRunningTasks = jarvis.runningTasks
-  const totalWaitingReviews = jarvis.waitingReviews
-  const totalCompletedToday = jarvis.completedToday
 
   const statusStrip = [
     { label: 'System Mood', value: systemMood },
-    { label: 'Active Agents', value: totalActiveAgents },
-    { label: 'Running Tasks', value: totalRunningTasks },
-    { label: 'Waiting Reviews', value: totalWaitingReviews },
-    { label: 'Completed Today', value: totalCompletedToday },
+    { label: 'Active Agents', value: jarvis.activeAgents },
+    { label: 'Running Tasks', value: jarvis.runningTasks },
+    { label: 'Waiting Reviews', value: jarvis.waitingReviews },
+    { label: 'Completed Today', value: jarvis.completedToday },
     { label: 'Last Updated', value: lastUpdated },
   ]
 
@@ -335,252 +261,51 @@ export const CommandCenterPage = () => {
 
   return (
     <section className="space-y-4">
-      <header className="relative overflow-hidden rounded-[12px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-faint)]">
-                Command Center / Operational Matrix
-              </p>
-              {systemMood !== 'Calm' && (
-                <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white ${moodStatusColor[systemMood] ?? ''}`}>
-                  <span className="inline-block h-1 w-1 rounded-full bg-white animate-pulse" />
-                  {systemMood === 'Review Pressure' ? 'Attention' : 'Active'}
-                </span>
-              )}
-            </div>
-            <div>
-              <h2 className="text-[1.9rem] font-semibold leading-none tracking-[-0.04em] md:text-[2.4rem]">
-                BeBlank Core OS
-              </h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--bb-text-muted)]">
-                {jarvis.executiveBrief}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="pill">{divisions.length} divisions</span>
-            <span className="pill">{agents.length} agents</span>
-            <span className={`pill-accent ${systemMood === 'Calm' ? '' : ''}`}>Command View</span>
-          </div>
-        </div>
-      </header>
+      <CommandHeader
+        title="BeBlank Core OS"
+        subtitle={jarvis.executiveBrief}
+        systemMood={systemMood}
+        systemMoodSource={jarvis.systemMood}
+        divisionsCount={divisions.length}
+        agentsCount={agents.length}
+        statusStrip={statusStrip}
+      />
 
-      {/* System Status Strip with mood-colored borders */}
-      <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        {statusStrip.map((item) => {
-          const isMood = item.label === 'System Mood'
-          const mood = divisions.length > 0 ? divisions[0].mood : 'calm'
-          return (
-            <div key={item.label} className={`rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] px-3.5 py-2.5 ${isMood ? `border-l-2 ${moodBorder[mood]}` : ''}`}>
-              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.label}</p>
-              <div className="mt-1.5 flex items-baseline gap-1.5">
-                <span className={`text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)] ${isMood ? (mood === 'review-needed' ? 'text-[#c2410c]' : mood === 'busy' ? 'text-[var(--bb-accent)]' : '') : ''}`}>{item.value}</span>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Division Matrix */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 px-0.5">
           <h3 className="text-sm font-semibold text-[var(--bb-text)]">Division Matrix</h3>
           <span className="text-[10px] text-[var(--bb-text-faint)]">{divisions.length} divisions</span>
         </div>
         <div className="grid gap-2 xl:grid-cols-2">
-          {divisions.map((division) => {
-            const icon = divisionIcons[division.id] ?? '⊡'
-            const colorClass = divisionColors[division.id] ?? 'bg-black/[0.04] text-[var(--bb-text-muted)]'
-            const maxStat = Math.max(division.runningTasks, division.waitingReviews, division.completedToday, 1)
-            return (
-              <Link
-                key={division.id}
-                to={`/os/command-center/${division.id}`}
-                className={`block rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3.5 transition-colors duration-150 hover:border-[var(--bb-border-strong)] border-l-2 ${divisionAccentBar[division.id] ?? 'border-l-black/[0.08]'}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm ${colorClass}`}>{icon}</span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-semibold leading-none text-[var(--bb-text)]">{division.name}</h4>
-                        <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${moodDot[division.mood]} ${division.mood === 'busy' ? 'animate-pulse' : ''}`} />
-                      </div>
-                      <p className="mt-0.5 truncate text-[11px] text-[var(--bb-text-muted)]">{division.summary.slice(0, 80)}{division.summary.length > 80 ? '…' : ''}</p>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className={moodClass[division.mood]}>{moodLabel[division.mood]}</span>
-                    {division.readOnly ? <span className="pill text-[9px]">R/O</span> : null}
-                  </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-4 gap-1.5">
-                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
-                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Agents</p>
-                    <p className="mt-0.5 text-sm font-semibold text-[var(--bb-text)]">{division.activeAgents}</p>
-                  </div>
-                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
-                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Tasks</p>
-                    <p className="mt-0.5 text-sm font-semibold text-[var(--bb-text)]">{division.runningTasks}</p>
-                  </div>
-                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
-                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Reviews</p>
-                    <p className={`mt-0.5 text-sm font-semibold ${division.waitingReviews > 0 ? 'text-[#c2410c]' : 'text-[var(--bb-text)]'}`}>{division.waitingReviews}</p>
-                  </div>
-                  <div className="rounded-lg border border-[var(--bb-border)] px-2.5 py-2">
-                    <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Done</p>
-                    <p className="mt-0.5 text-sm font-semibold text-[var(--bb-text)]">{division.completedToday}</p>
-                  </div>
-                </div>
-
-                {/* Compact micro bar showing task distribution */}
-                <div className="mt-2 flex h-1 gap-0.5 overflow-hidden rounded-full bg-black/[0.04]">
-                  <div className="bg-[var(--bb-accent)] transition-all" style={{ width: `${(division.runningTasks / maxStat) * 30}%` }} />
-                  <div className="bg-[#c2410c] transition-all" style={{ width: `${(division.waitingReviews / maxStat) * 30}%` }} />
-                  <div className="bg-[#16a36a] transition-all" style={{ width: `${(division.completedToday / maxStat) * 30}%` }} />
-                </div>
-
-                {/* Key metrics as compact badges */}
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {division.keyMetrics.map((metric) => (
-                    <span key={metric.label} className="rounded-md bg-black/[0.03] px-2 py-0.5 font-mono text-[9px] text-[var(--bb-text-muted)]">
-                      {metric.label}: <strong className="text-[var(--bb-text)]">{metric.value}</strong>
-                    </span>
-                  ))}
-                  <span className="rounded-md bg-black/[0.03] px-2 py-0.5 font-mono text-[9px] text-[var(--bb-text-muted)]">
-                    {division.confidence} · {division.freshness}
-                  </span>
-                </div>
-              </Link>
-            )
-          })}
+          {divisions.map((division) => (
+            <DivisionTile key={division.id} division={division} />
+          ))}
         </div>
       </div>
 
-      {/* Agent Queue */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 px-0.5">
           <h3 className="text-sm font-semibold text-[var(--bb-text)]">Agent Queue</h3>
           <span className="text-[10px] text-[var(--bb-text-faint)]">{agents.length} tracked</span>
         </div>
-        <div className="grid gap-2 xl:grid-cols-3">
-          <QueueTable title="Running Now" items={runningNow} icon="▶" />
-          <QueueTable title="Waiting Review" items={waitingReview} icon="◷" />
-          <QueueTable title="Recently Completed" items={completed} icon="✓" />
-        </div>
+        <AgentQueueBoard
+          runningNow={runningNow}
+          waitingReview={waitingReview}
+          completed={completed}
+        />
       </div>
 
-      {/* System Activity — compact pulse stream */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2 px-0.5">
-          <h3 className="text-sm font-semibold text-[var(--bb-text)]">System Activity</h3>
-          <span className={`inline-block h-1.5 w-1.5 rounded-full ${systemMood === 'Review Pressure' ? 'bg-[#c2410c] animate-pulse' : systemMood === 'Busy / Controlled' ? 'bg-[var(--bb-accent)] animate-pulse' : 'bg-[#16a36a]'}`} />
-          <span className="text-[10px] text-[var(--bb-text-faint)]">Live</span>
-        </div>
-        <div className="grid gap-2 xl:grid-cols-3">
-          {/* Priority Alerts */}
-          <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Priority Alerts</p>
-            <div className="mt-2 space-y-1.5">
-              {jarvis.topPriorities.length === 0 ? (
-                <p className="text-[11px] text-[var(--bb-text-muted)]">All systems normal</p>
-              ) : (
-                jarvis.topPriorities.slice(0, 4).map((priority, i) => (
-                  <div key={i} className="flex items-start gap-2 text-[11px] leading-5">
-                    <span className="mt-0.5 shrink-0 font-mono text-[9px] text-[#c2410c]">{i + 1}</span>
-                    <span className="text-[var(--bb-text)]">{priority}</span>
-                  </div>
-                ))
-              )}
-            </div>
-            {jarvis.staleSources.length > 0 && (
-              <div className="mt-2 rounded-md bg-[#c2410c]/[0.04] px-2 py-1.5">
-                <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.1em] text-[#c2410c]">{jarvis.staleSources.length} stale source(s)</p>
-              </div>
-            )}
-          </div>
-
-          {/* Running Activity */}
-          <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Running Activity</p>
-            <div className="mt-2 space-y-1.5">
-              {runningNow.length === 0 ? (
-                <p className="text-[11px] text-[var(--bb-text-muted)]">No active agents</p>
-              ) : (
-                runningNow.slice(0, 4).map((agent) => (
-                  <div key={agent.id} className="flex items-center gap-2 text-[11px]">
-                    <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--bb-accent)] animate-pulse" />
-                    <span className="truncate text-[var(--bb-text)]">{agent.name}: {agent.currentTask.slice(0, 50)}{agent.currentTask.length > 50 ? '...' : ''}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Division Status */}
-          <div className="rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-3">
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-faint)]">Division Status</p>
-            <div className="mt-2 space-y-1.5">
-              {divisions.map((div) => (
-                <div key={div.id} className="flex items-center justify-between gap-2 text-[11px]">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${moodDot[div.mood]} ${div.mood === 'busy' ? 'animate-pulse' : ''}`} />
-                    <span className="truncate text-[var(--bb-text)]">{div.name}</span>
-                  </div>
-                  <span className="shrink-0 font-mono text-[9px] text-[var(--bb-text-faint)]">{moodLabel[div.mood]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ActivityFeed
+        systemMood={systemMood}
+        topPriorities={jarvis.topPriorities}
+        staleSourcesCount={jarvis.staleSources.length}
+        runningAgents={runningNow}
+        divisions={divisions.map((division) => ({
+          id: division.id,
+          name: division.name,
+          mood: division.mood,
+        }))}
+      />
     </section>
   )
 }
-
-const QueueTable = ({ title, items, icon }: { title: string; items: AgentRecord[]; icon: string }) => (
-  <div className="overflow-hidden rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)]">
-    <div className={`flex items-center justify-between border-b border-[var(--bb-border)] px-3 py-2`}>
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-[var(--bb-text-faint)]">{icon}</span>
-        <p className="text-xs font-semibold text-[var(--bb-text)]">{title}</p>
-      </div>
-      <span className="rounded-md bg-black/[0.05] px-1.5 py-0.5 font-mono text-[9px] font-semibold text-[var(--bb-text-muted)]">{items.length}</span>
-    </div>
-    <div>
-      {items.length === 0 ? (
-        <div className="px-3 py-5 text-xs text-[var(--bb-text-muted)]">No agents in this queue.</div>
-      ) : (
-        items.map((item, index) => (
-          <div key={item.id} className={`${index !== items.length - 1 ? 'border-b border-[var(--bb-border)]' : ''} border-l-2 ${queueBorder[item.state]} pl-3 pr-3 py-2.5`}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${item.state === 'running' ? 'bg-[var(--bb-accent)] animate-pulse' : item.state === 'waiting-review' ? 'bg-[#c2410c]' : 'bg-[#16a36a]'}`} />
-                  <p className="text-xs font-semibold text-[var(--bb-text)]">{item.name}</p>
-                </div>
-                <p className="mt-0.5 text-[10px] text-[var(--bb-text-faint)]">{item.division} · {item.role}</p>
-              </div>
-              <span className="shrink-0 font-mono text-[9px] text-[var(--bb-text-faint)]">{item.updatedAt}</span>
-            </div>
-            <p className="mt-1.5 text-[11px] leading-5 text-[var(--bb-text-muted)]">{item.currentTask}</p>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="os-progress flex-1" style={{ height: '4px' }}>
-                <div className={`os-progress-bar ${queueProgressColor[item.state]}`} style={{ width: `${item.progress}%` }} />
-              </div>
-              <span className="text-[9px] font-medium text-[var(--bb-text-faint)]">{item.progress}%</span>
-            </div>
-            {(item.confidence || item.freshness) && (
-              <div className="mt-1.5 flex gap-1.5">
-                {item.confidence && <span className="rounded bg-black/[0.04] px-1.5 py-0.5 font-mono text-[8px] text-[var(--bb-text-faint)]">{item.confidence}</span>}
-                {item.freshness && <span className="rounded bg-black/[0.04] px-1.5 py-0.5 font-mono text-[8px] text-[var(--bb-text-faint)]">{item.freshness}</span>}
-              </div>
-            )}
-          </div>
-        ))
-      )}
-    </div>
-  </div>
-)
