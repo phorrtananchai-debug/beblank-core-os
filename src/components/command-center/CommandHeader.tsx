@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 type Mood = 'calm' | 'busy' | 'review-needed' | 'offline'
 
 const moodStatusColor: Record<string, string> = {
@@ -21,6 +23,8 @@ export const CommandHeader = ({
   divisionsCount,
   agentsCount,
   statusStrip,
+  viewToggle,
+  modeLabel = 'Command View',
 }: {
   title: string
   subtitle: string
@@ -29,6 +33,8 @@ export const CommandHeader = ({
   divisionsCount: number
   agentsCount: number
   statusStrip: Array<{ label: string; value: string | number }>
+  viewToggle?: ReactNode
+  modeLabel?: string
 }) => (
   <>
     <header className="relative overflow-hidden rounded-[12px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] p-5">
@@ -50,10 +56,13 @@ export const CommandHeader = ({
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--bb-text-muted)]">{subtitle}</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="pill">{divisionsCount} divisions</span>
-          <span className="pill">{agentsCount} agents</span>
-          <span className="pill-accent">Command View</span>
+        <div className="flex flex-col items-start gap-2 xl:items-end">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="pill">{divisionsCount} divisions</span>
+            <span className="pill">{agentsCount} agents</span>
+            <span className="pill-accent">{modeLabel}</span>
+          </div>
+          {viewToggle ? <div>{viewToggle}</div> : null}
         </div>
       </div>
     </header>

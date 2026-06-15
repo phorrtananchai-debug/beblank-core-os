@@ -3,6 +3,7 @@ import { AgentQueueBoard } from '../../components/command-center/AgentQueueBoard
 import { ActivityFeed } from '../../components/command-center/ActivityFeed'
 import { CommandHeader } from '../../components/command-center/CommandHeader'
 import { DivisionTile } from '../../components/command-center/DivisionTile'
+import { PixelOfficeView } from '../../components/command-center/PixelOfficeView'
 import { buildAequitasCapitalModel } from '../../core/aequitas/buildAequitasCapitalModel'
 import { buildCreatorFactoryModel, loadCreatorFactorySnapshot, type CreatorFactoryModel } from '../../core/creator/buildCreatorFactoryModel'
 import { buildJarvisBModel } from '../../core/jarvis/buildJarvisBModel'
@@ -14,6 +15,7 @@ type DivisionMood = 'calm' | 'busy' | 'review-needed' | 'offline'
 type AgentState = 'running' | 'waiting-review' | 'completed'
 type Confidence = 'Real' | 'Inferred' | 'Fallback' | 'Mock' | 'Derived'
 type Freshness = 'Fresh' | 'Stale' | 'Unknown'
+type ViewMode = 'matrix' | 'pixel'
 
 type DivisionRecord = {
   id: string
@@ -61,6 +63,7 @@ export const CommandCenterPage = () => {
   const life = useMemo(() => buildLifeModel(data, sourceStatuses), [data, sourceStatuses])
   const studio = useMemo(() => buildStudioModel(data, sourceStatuses), [data, sourceStatuses])
   const [creator, setCreator] = useState<CreatorFactoryModel>(creatorFallbackModel)
+  const [viewMode, setViewMode] = useState<ViewMode>('matrix')
 
   useEffect(() => {
     let cancelled = false
@@ -269,19 +272,48 @@ export const CommandCenterPage = () => {
         divisionsCount={divisions.length}
         agentsCount={agents.length}
         statusStrip={statusStrip}
+        modeLabel={viewMode === 'matrix' ? 'Matrix View' : 'Pixel View'}
+        viewToggle={(
+          <div className="inline-flex rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)] p-1">
+            <button
+              type="button"
+              className={`os-tab ${viewMode === 'matrix' ? 'active' : ''}`}
+              onClick={() => setViewMode('matrix')}
+            >
+              Matrix View
+            </button>
+            <button
+              type="button"
+              className={`os-tab ${viewMode === 'pixel' ? 'active' : ''}`}
+              onClick={() => setViewMode('pixel')}
+            >
+              Pixel View
+            </button>
+          </div>
+        )}
       />
 
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-2 px-0.5">
-          <h3 className="text-sm font-semibold text-[var(--bb-text)]">Division Matrix</h3>
-          <span className="text-[10px] text-[var(--bb-text-faint)]">{divisions.length} divisions</span>
+      {viewMode === 'matrix' ? (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 px-0.5">
+            <h3 className="text-sm font-semibold text-[var(--bb-text)]">Division Matrix</h3>
+            <span className="text-[10px] text-[var(--bb-text-faint)]">{divisions.length} divisions</span>
+          </div>
+          <div className="grid gap-2 xl:grid-cols-2">
+            {divisions.map((division) => (
+              <DivisionTile key={division.id} division={division} />
+            ))}
+          </div>
         </div>
-        <div className="grid gap-2 xl:grid-cols-2">
-          {divisions.map((division) => (
-            <DivisionTile key={division.id} division={division} />
-          ))}
-        </div>
-      </div>
+      ) : (
+        <PixelOfficeView
+          divisions={divisions}
+          agents={agents}
+          runningNow={runningNow}
+          waitingReview={waitingReview}
+          completed={completed}
+        />
+      )}
 
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 px-0.5">
