@@ -9,6 +9,11 @@ export interface HoldingsCacheSnapshot {
   records: Holding[]
 }
 
+const normalizeHoldingIdentityValue = (value: unknown): string => String(value ?? '')
+  .trim()
+  .toLowerCase()
+  .replace(/\s+/g, ' ')
+
 const toFiniteNumber = (value: unknown): number | undefined => {
   if (value === undefined || value === null || value === '') return undefined
   if (typeof value === 'number') return Number.isFinite(value) ? value : undefined
@@ -118,19 +123,46 @@ export function saveHoldingsCache(records: Array<Record<string, unknown>>): Hold
   return { updatedAt, records: normalized }
 }
 
+type HoldingIdentityCandidate = Pick<Holding, 'id' | 'assetId'> & {
+  symbol?: unknown
+  ticker?: unknown
+  name?: unknown
+  currency?: unknown
+}
+
+export function canonicalHoldingKey(record: HoldingIdentityCandidate): string {
+  const assetId = normalizeHoldingIdentityValue(record.assetId)
+  if (assetId) return `asset:${assetId}`
+
+  const symbol = normalizeHoldingIdentityValue(record.symbol)
+  if (symbol) return `symbol:${symbol}`
+
+  const ticker = normalizeHoldingIdentityValue(record.ticker)
+  if (ticker) return `ticker:${ticker}`
+
+  const name = normalizeHoldingIdentityValue(record.name)
+  const currency = normalizeHoldingIdentityValue(record.currency)
+  if (name && currency) return `name:${name}:currency:${currency}`
+
+  return `id:${normalizeHoldingIdentityValue(record.id)}`
+}
+
 export function mergeHoldingsCache(baseRecords: Holding[], cacheRecords: Holding[]): Holding[] {
   if (cacheRecords.length === 0) return baseRecords
   if (baseRecords.length === 0) return cacheRecords
 
-  const mergedById = new Map<string, Holding>()
+  const mergedByIdentity = new Map<string, Holding>()
 
   for (const record of baseRecords) {
-    mergedById.set(record.id, record)
+    mergedByIdentity.set(canonicalHoldingKey(record), record)
   }
 
   for (const record of cacheRecords) {
-    mergedById.set(record.id, record)
+    // Verification examples:
+    // h-voo + cached voo => one merged VOO position
+    // h-schd + cached schd => one merged SCHD position
+    mergedByIdentity.set(canonicalHoldingKey(record), record)
   }
 
-  return Array.from(mergedById.values())
+  return Array.from(mergedByIdentity.values())
 }
