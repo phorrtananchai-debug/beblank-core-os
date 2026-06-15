@@ -119,6 +119,18 @@ export function saveHoldingsCache(records: Array<Record<string, unknown>>): Hold
 }
 
 export function mergeHoldingsCache(baseRecords: Holding[], cacheRecords: Holding[]): Holding[] {
-  void baseRecords
-  return cacheRecords
+  if (cacheRecords.length === 0) return baseRecords
+  if (baseRecords.length === 0) return cacheRecords
+
+  const mergedById = new Map<string, Holding>()
+
+  for (const record of baseRecords) {
+    mergedById.set(record.id, record)
+  }
+
+  for (const record of cacheRecords) {
+    mergedById.set(record.id, record)
+  }
+
+  return Array.from(mergedById.values())
 }
