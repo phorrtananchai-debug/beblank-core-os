@@ -15,6 +15,7 @@ export type CommandEventType =
   | 'connector.refresh.failed'
   | 'connector.status.changed'
   | 'agent.execution.logged'
+  | 'creator.snapshot.imported'
   | 'creator.import.logged'
   | 'studio.review.logged'
   | 'portfolio.sync.logged'

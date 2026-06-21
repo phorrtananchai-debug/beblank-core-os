@@ -2,6 +2,7 @@ type AgentState = 'running' | 'waiting-review' | 'completed'
 type DivisionMood = 'calm' | 'busy' | 'review-needed' | 'offline'
 type DataConfidence = 'Real' | 'Inferred' | 'Fallback' | 'Mock'
 type FreshnessState = 'Fresh' | 'Stale' | 'Unknown'
+type CreatorSnapshotStatus = 'Real' | 'Stale' | 'Fallback'
 
 type CreatorEpisodeStatus =
   | 'idea'
@@ -34,9 +35,20 @@ export type CreatorFactorySnapshot = {
   episodes: CreatorEpisodeRecord[]
   ideasCount: number
   importHistory: CreatorImportHistoryEntry[]
+  updatedAt?: string
   sourceLabel: string
   source: 'window' | 'localStorage' | 'indexedDB' | 'unavailable'
   confidence: DataConfidence
+}
+
+export type CreatorFactorySnapshotMeta = {
+  status: CreatorSnapshotStatus
+  sourceLabel: string
+  source: CreatorFactorySnapshot['source']
+  lastImported: string
+  ageLabel: string
+  ageMs: number | null
+  updatedAt?: string
 }
 
 export type CreatorFactoryAgentModel = {
@@ -90,6 +102,7 @@ export type CreatorFactoryModel = {
     sourceLabel: string
     emptyState?: string
   }
+  snapshotMeta: CreatorFactorySnapshotMeta
   agents: {
     items: CreatorFactoryAgentModel[]
     confidence: 'Inferred'
@@ -142,6 +155,23 @@ const formatBangkokTime = (value?: string) => {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const formatAgeLabel = (timestamp?: string) => {
+  if (!timestamp) return 'Unavailable'
+
+  const updatedAt = new Date(timestamp)
+  if (Number.isNaN(updatedAt.getTime())) return 'Unavailable'
+
+  const diffMs = Math.max(0, Date.now() - updatedAt.getTime())
+  const diffMinutes = Math.floor(diffMs / (60 * 1000))
+  const diffHours = Math.floor(diffMinutes / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMinutes < 1) return 'Just now'
+  if (diffHours < 1) return `${diffMinutes}m ago`
+  if (diffDays < 1) return `${diffHours}h ago`
+  return `${diffDays}d ago`
 }
 
 const resolveFreshness = (timestamp?: string): FreshnessState => {
@@ -197,6 +227,18 @@ const toImportHistory = (value: unknown): CreatorImportHistoryEntry[] => {
     }))
 }
 
+const getSnapshotTimestamp = (snapshot: CreatorFactorySnapshot | null) => {
+  if (!snapshot) return 0
+  const sourceTime = snapshot.updatedAt
+  const parsed = sourceTime ? Date.parse(sourceTime) : Number.NaN
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const chooseNewestSnapshot = (snapshots: Array<CreatorFactorySnapshot | null>) =>
+  snapshots
+    .filter((snapshot): snapshot is CreatorFactorySnapshot => Boolean(snapshot))
+    .sort((a, b) => getSnapshotTimestamp(b) - getSnapshotTimestamp(a))[0] ?? null
+
 const extractSnapshot = (value: unknown, source: CreatorFactorySnapshot['source'], sourceLabel: string): CreatorFactorySnapshot | null => {
   if (!value || typeof value !== 'object') return null
 
@@ -209,6 +251,12 @@ const extractSnapshot = (value: unknown, source: CreatorFactorySnapshot['source'
       : Array.isArray(record.ideas)
         ? record.ideas.length
         : 0
+  const updatedAt =
+    typeof record.updatedAt === 'string'
+      ? record.updatedAt
+      : typeof record.exportedAt === 'string'
+        ? record.exportedAt
+        : undefined
 
   if (episodes.length === 0 && importHistory.length === 0 && ideasCount === 0) return null
 
@@ -216,6 +264,7 @@ const extractSnapshot = (value: unknown, source: CreatorFactorySnapshot['source'
     episodes,
     ideasCount,
     importHistory,
+    updatedAt,
     source,
     sourceLabel,
     confidence: 'Real',
@@ -312,6 +361,10 @@ const loadFromIndexedDb = async (): Promise<CreatorFactorySnapshot | null> => {
       episodes,
       ideasCount,
       importHistory,
+      updatedAt: getLatestTimestamp([
+        ...episodes.map((episode) => episode.updatedAt),
+        ...importHistory.map((entry) => entry.timestamp),
+      ]),
       source: 'indexedDB',
       sourceLabel: 'Creator OS IndexedDB',
       confidence: 'Real',
@@ -322,14 +375,14 @@ const loadFromIndexedDb = async (): Promise<CreatorFactorySnapshot | null> => {
 }
 
 export const loadCreatorFactorySnapshot = async (): Promise<CreatorFactorySnapshot> => {
-  const windowSnapshot = loadFromWindow()
-  if (windowSnapshot) return windowSnapshot
+  const [windowSnapshot, localSnapshot, indexedDbSnapshot] = await Promise.all([
+    Promise.resolve(loadFromWindow()),
+    Promise.resolve(loadFromLocalStorage()),
+    loadFromIndexedDb(),
+  ])
 
-  const localSnapshot = loadFromLocalStorage()
-  if (localSnapshot) return localSnapshot
-
-  const indexedDbSnapshot = await loadFromIndexedDb()
-  if (indexedDbSnapshot) return indexedDbSnapshot
+  const newestSnapshot = chooseNewestSnapshot([windowSnapshot, localSnapshot, indexedDbSnapshot])
+  if (newestSnapshot) return newestSnapshot
 
   return {
     episodes: [],
@@ -402,6 +455,22 @@ export const buildCreatorFactoryModel = (snapshot: CreatorFactorySnapshot): Crea
   const freshness = resolveFreshness(lastUpdatedRaw)
   const waitingReviews = freshness === 'Stale' ? 1 : snapshot.source === 'unavailable' ? 1 : 0
   const completedToday = snapshot.importHistory.filter((entry) => entry.status === 'success').length
+  const sourceUpdatedAt = snapshot.updatedAt ?? lastUpdatedRaw
+  const snapshotAgeMs = sourceUpdatedAt ? Math.max(0, Date.now() - new Date(sourceUpdatedAt).getTime()) : null
+  const snapshotMeta: CreatorFactorySnapshotMeta = {
+    status:
+      snapshot.source === 'unavailable'
+        ? 'Fallback'
+        : freshness === 'Stale'
+          ? 'Stale'
+          : 'Real',
+    sourceLabel: snapshot.sourceLabel,
+    source: snapshot.source,
+    lastImported: formatBangkokTime(sourceUpdatedAt),
+    ageLabel: formatAgeLabel(sourceUpdatedAt),
+    ageMs: snapshotAgeMs !== null && Number.isFinite(snapshotAgeMs) ? snapshotAgeMs : null,
+    updatedAt: sourceUpdatedAt,
+  }
 
   const readiness = {
     readyToProduce: totalEpisodes - counts.idea - counts.outline,
@@ -540,6 +609,7 @@ export const buildCreatorFactoryModel = (snapshot: CreatorFactorySnapshot): Crea
             : 'No Creator OS import history entries were found in the current read-only source.'
           : undefined,
     },
+    snapshotMeta,
     agents: {
       items: agents,
       confidence: 'Inferred',

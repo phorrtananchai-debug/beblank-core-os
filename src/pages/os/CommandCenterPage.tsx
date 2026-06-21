@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AgentQueueBoard } from '../../components/command-center/AgentQueueBoard'
 import { ActivityFeed } from '../../components/command-center/ActivityFeed'
 import { CommandHeader } from '../../components/command-center/CommandHeader'
 import { DivisionTile } from '../../components/command-center/DivisionTile'
 import { PixelOfficeView } from '../../components/command-center/PixelOfficeView'
 import { buildAequitasCapitalModel } from '../../core/aequitas/buildAequitasCapitalModel'
-import { buildCreatorFactoryModel, loadCreatorFactorySnapshot, type CreatorFactoryModel } from '../../core/creator/buildCreatorFactoryModel'
+import { useCreatorFactorySync } from '../../core/creator/useCreatorFactorySync'
 import { buildJarvisBModel } from '../../core/jarvis/buildJarvisBModel'
 import { buildLifeModel } from '../../core/life/buildLifeModel'
 import { useOs } from '../../core/os/useOs'
@@ -48,37 +48,13 @@ type AgentRecord = {
   freshness?: Freshness
 }
 
-const creatorFallbackModel: CreatorFactoryModel = buildCreatorFactoryModel({
-  episodes: [],
-  ideasCount: 0,
-  importHistory: [],
-  source: 'unavailable',
-  sourceLabel: 'Creator OS adapter fallback',
-  confidence: 'Fallback',
-})
-
 export const CommandCenterPage = () => {
   const { data, sourceStatuses } = useOs()
   const aequitas = useMemo(() => buildAequitasCapitalModel(data, sourceStatuses), [data, sourceStatuses])
   const life = useMemo(() => buildLifeModel(data, sourceStatuses), [data, sourceStatuses])
   const studio = useMemo(() => buildStudioModel(data, sourceStatuses), [data, sourceStatuses])
-  const [creator, setCreator] = useState<CreatorFactoryModel>(creatorFallbackModel)
+  const { creator } = useCreatorFactorySync()
   const [viewMode, setViewMode] = useState<ViewMode>('matrix')
-
-  useEffect(() => {
-    let cancelled = false
-
-    const syncCreator = async () => {
-      const snapshot = await loadCreatorFactorySnapshot()
-      if (!cancelled) setCreator(buildCreatorFactoryModel(snapshot))
-    }
-
-    void syncCreator()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const jarvis = useMemo(
     () => buildJarvisBModel(aequitas, creator, studio, life, sourceStatuses, sourceStatuses?.commandCenter),

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ConfidenceBadge } from '../../components/command-center/ConfidenceBadge'
 import { FreshnessBadge } from '../../components/command-center/FreshnessBadge'
@@ -6,12 +6,22 @@ import { MetricStrip } from '../../components/command-center/MetricStrip'
 import { ReadOnlyBadge } from '../../components/command-center/ReadOnlyBadge'
 import { WorkloadBar } from '../../components/command-center/WorkloadBar'
 import { buildAequitasCapitalModel } from '../../core/aequitas/buildAequitasCapitalModel'
-import { buildCreatorFactoryModel, loadCreatorFactorySnapshot, type CreatorFactoryModel } from '../../core/creator/buildCreatorFactoryModel'
+import { useCreatorFactorySync } from '../../core/creator/useCreatorFactorySync'
 import { buildLifeModel } from '../../core/life/buildLifeModel'
 import { buildStudioModel } from '../../core/studio/buildStudioModel'
 import { useOs } from '../../core/os/useOs'
 
 type DivisionStatus = 'stable' | 'active' | 'review'
+
+type CreatorSnapshotV1 = {
+  schemaVersion: 'creator.snapshot.v1'
+  source: 'creator-os'
+  confidence: 'Real'
+  updatedAt: string
+  episodes: unknown[]
+  ideasCount: number
+  importHistory: unknown[]
+}
 
 type DivisionRecord = {
   id: string
@@ -60,38 +70,91 @@ const tone: Record<DivisionStatus, string> = {
   review: 'pill-amber',
 }
 
-const creatorFallbackModel: CreatorFactoryModel = buildCreatorFactoryModel({
-  episodes: [],
-  ideasCount: 0,
-  importHistory: [],
-  source: 'unavailable',
-  sourceLabel: 'Creator OS adapter fallback',
-  confidence: 'Fallback',
-})
+const CREATOR_SNAPSHOT_LOCAL_STORAGE_KEYS = [
+  'beblank_creator_os_snapshot_v1',
+  'beblank_creator_factory_snapshot_v1',
+] as const
+
+const validateCreatorSnapshotV1 = (value: unknown): string[] => {
+  const errors: string[] = []
+  if (!value || typeof value !== 'object') {
+    return ['Snapshot must be a JSON object.']
+  }
+
+  const candidate = value as Record<string, unknown>
+  if (candidate.schemaVersion !== 'creator.snapshot.v1') errors.push('schemaVersion must equal creator.snapshot.v1.')
+  if (candidate.source !== 'creator-os') errors.push('source must equal creator-os.')
+  if (candidate.confidence !== 'Real') errors.push('confidence must equal Real.')
+  if (typeof candidate.updatedAt !== 'string') errors.push('updatedAt must be a string.')
+  if (!Array.isArray(candidate.episodes)) errors.push('episodes must be an array.')
+  if (typeof candidate.ideasCount !== 'number') errors.push('ideasCount must be a number.')
+  if (!Array.isArray(candidate.importHistory)) errors.push('importHistory must be an array.')
+  if (Array.isArray(candidate.episodes) && typeof candidate.ideasCount === 'number' && Array.isArray(candidate.importHistory)) {
+    const isEmpty = candidate.episodes.length === 0 && candidate.ideasCount === 0 && candidate.importHistory.length === 0
+    if (isEmpty) errors.push('snapshot must contain at least one episode, idea, or import history entry.')
+  }
+
+  return errors
+}
+
+const persistCreatorSnapshotImport = (snapshot: CreatorSnapshotV1) => {
+  const payload = JSON.stringify(snapshot)
+  for (const key of CREATOR_SNAPSHOT_LOCAL_STORAGE_KEYS) {
+    window.localStorage.setItem(key, payload)
+  }
+  ;(window as Window & { __BEBLANK_CREATOR_OS_SNAPSHOT__?: CreatorSnapshotV1 }).__BEBLANK_CREATOR_OS_SNAPSHOT__ = snapshot
+}
 
 export const CommandCenterDivisionPage = () => {
   const { divisionId } = useParams()
-  const { data, sourceStatuses } = useOs()
+  const { data, sourceStatuses, publishCommandEvent } = useOs()
   const division = divisions.find((item) => item.id === divisionId)
   const aequitas = useMemo(() => buildAequitasCapitalModel(data, sourceStatuses), [data, sourceStatuses])
   const life = useMemo(() => buildLifeModel(data, sourceStatuses), [data, sourceStatuses])
   const studio = useMemo(() => buildStudioModel(data, sourceStatuses), [data, sourceStatuses])
-  const [creator, setCreator] = useState<CreatorFactoryModel>(creatorFallbackModel)
+  const { creator, refreshCreatorFactory } = useCreatorFactorySync()
+  const [snapshotInput, setSnapshotInput] = useState('')
+  const [snapshotStatus, setSnapshotStatus] = useState('')
 
-  useEffect(() => {
-    let cancelled = false
+  const importCreatorSnapshot = async () => {
+    let parsed: unknown
 
-    const syncCreator = async () => {
-      const snapshot = await loadCreatorFactorySnapshot()
-      if (!cancelled) setCreator(buildCreatorFactoryModel(snapshot))
+    try {
+      parsed = JSON.parse(snapshotInput)
+    } catch {
+      setSnapshotStatus('Import failed: invalid JSON.')
+      return
     }
 
-    void syncCreator()
-
-    return () => {
-      cancelled = true
+    const validationErrors = validateCreatorSnapshotV1(parsed)
+    if (validationErrors.length > 0) {
+      setSnapshotStatus(`Import failed: ${validationErrors.join(' ')}`)
+      return
     }
-  }, [])
+
+    const snapshot = parsed as CreatorSnapshotV1
+    try {
+      persistCreatorSnapshotImport(snapshot)
+      await refreshCreatorFactory()
+      publishCommandEvent({
+        type: 'creator.snapshot.imported',
+        category: 'creator',
+        severity: 'success',
+        title: 'Creator snapshot imported',
+        message: `Imported ${snapshot.episodes.length} episode(s) into the shared Creator snapshot bridge.`,
+        source: 'CommandCenterDivisionPage.importCreatorSnapshot',
+        tags: ['creator', 'snapshot', 'import'],
+        metadata: {
+          schemaVersion: snapshot.schemaVersion,
+          ideasCount: snapshot.ideasCount,
+          importHistoryCount: snapshot.importHistory.length,
+        },
+      })
+      setSnapshotStatus('Snapshot imported successfully.')
+    } catch (error) {
+      setSnapshotStatus(error instanceof Error ? error.message : 'Import failed.')
+    }
+  }
 
   const displayDivision = useMemo(() => {
     if (!division) return undefined
@@ -247,6 +310,47 @@ export const CommandCenterDivisionPage = () => {
         <>
           <ReadOnlyBanner text="Creator Factory is read-only. No creator automation or publishing actions execute from Command Center." />
 
+          <section className="panel">
+            <div className="panel-header">
+              <h3>Creator Snapshot Import</h3>
+              <span className="pill">Read-only</span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-muted)]">
+              Paste a CreatorSnapshotV1 JSON blob from Creator OS to import a local snapshot copy into this browser origin.
+            </p>
+            <textarea
+              className="mt-4 min-h-56 w-full rounded-[12px] border border-[var(--bb-border)] bg-[var(--bb-surface-3)] px-4 py-3 font-mono text-xs leading-6 text-[var(--bb-text)] outline-none transition focus:border-[var(--bb-border-strong)]"
+              placeholder='{"schemaVersion":"creator.snapshot.v1","source":"creator-os","confidence":"Real","updatedAt":"2026-06-21T00:00:00.000Z","episodes":[],"ideasCount":0,"importHistory":[]}'
+              value={snapshotInput}
+              onChange={(event) => setSnapshotInput(event.target.value)}
+            />
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void importCreatorSnapshot()}
+              >
+                Import Snapshot
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setSnapshotInput('')
+                  setSnapshotStatus('')
+                }}
+              >
+                Clear
+              </button>
+            </div>
+              <p className="mt-3 text-sm leading-6 text-[var(--bb-text-muted)]">
+                Validation checks schemaVersion, episodes, ideasCount, and importHistory before writing the shared snapshot keys.
+              </p>
+              {snapshotStatus ? (
+                <p className="mt-3 text-sm leading-6 text-[var(--bb-text-muted)]">{snapshotStatus}</p>
+              ) : null}
+            </section>
+
           <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
             <SummaryPanel
               title="Pipeline Summary"
@@ -280,13 +384,16 @@ export const CommandCenterDivisionPage = () => {
               />
 
               <SummaryPanel
-                title="Operational Summary"
-                badges={[creator.operations.confidence, creator.operations.freshness]}
+                title="Snapshot Metadata"
+                badges={[creator.snapshotMeta.status, creator.operations.freshness]}
                 stats={[
+                  { label: 'Snapshot Source', value: creator.snapshotMeta.sourceLabel },
+                  { label: 'Snapshot Status', value: creator.snapshotMeta.status },
+                  { label: 'Last Imported', value: creator.snapshotMeta.lastImported },
+                  { label: 'Snapshot Age', value: creator.snapshotMeta.ageLabel },
                   { label: 'Import History Count', value: creator.operations.importHistoryCount },
-                  { label: 'Last Updated', value: creator.operations.lastUpdated },
                 ]}
-                note={`Source: ${creator.operations.sourceLabel}`}
+                note={`Last updated: ${creator.operations.lastUpdated}`}
                 emptyState={creator.operations.emptyState}
               />
             </div>
