@@ -11,6 +11,7 @@ import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
 import { InvestmentsPage } from '../pages/os/InvestmentsPage'
 import { SettingsPage } from '../pages/os/SettingsPage'
+import { StudioPage } from '../pages/os/StudioPage'
 import { StudioProjectDetailPage } from '../pages/os/StudioProjectDetailPage'
 import { StudioWorkspacePage } from '../pages/os/StudioWorkspacePage'
 import { TradingLabPage } from '../pages/os/TradingLabPage'
@@ -52,15 +53,17 @@ export const AppRoutes = () => {
         <Route index element={<Navigate to="command-center" replace />} />
         <Route path="command-center" element={<CommandCenterPage />} />
         <Route path="command-center/:divisionId" element={<CommandCenterDivisionPage />} />
-        <Route path="studio" element={<StudioWorkspacePage view="overview" />} />
+        <Route path="studio" element={<Navigate to="/os/studio/projects" replace />} />
         <Route path="studio/projects/:projectId" element={<StudioProjectDetailPage />} />
         <Route path="studio/projects" element={<StudioWorkspacePage view="projects" />} />
-        <Route path="studio/timeline" element={<StudioWorkspacePage view="timeline" />} />
-        <Route path="studio/site-watch" element={<StudioWorkspacePage view="site-watch" />} />
-        <Route path="studio/documents" element={<StudioWorkspacePage view="documents" />} />
-        <Route path="studio/artwork" element={<StudioWorkspacePage view="artwork" />} />
-        <Route path="studio/briefs" element={<StudioWorkspacePage view="briefs" />} />
-        <Route path="studio/reviews" element={<StudioWorkspacePage view="reviews" />} />
+        <Route path="studio/legacy" element={<StudioWorkspacePage view="overview" />} />
+        <Route path="studio/legacy/timeline" element={<StudioWorkspacePage view="timeline" />} />
+        <Route path="studio/legacy/site-watch" element={<StudioWorkspacePage view="site-watch" />} />
+        <Route path="studio/legacy/documents" element={<StudioWorkspacePage view="documents" />} />
+        <Route path="studio/legacy/artwork" element={<StudioWorkspacePage view="artwork" />} />
+        <Route path="studio/legacy/briefs" element={<StudioWorkspacePage view="briefs" />} />
+        <Route path="studio/legacy/reviews" element={<StudioWorkspacePage view="reviews" />} />
+        <Route path="studio/workspace" element={<StudioPage />} />
         <Route path="finance" element={<FinancePage />} />
         <Route path="finance/investments" element={<InvestmentsPage />} />
         <Route path="finance/investments/dividend-history" element={<DividendHistoryPage />} />
