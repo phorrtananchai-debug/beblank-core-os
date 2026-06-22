@@ -152,6 +152,11 @@ export const StudioProjectDetailPage = () => {
 
   return (
     <section className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+      {/* BUILD DEBUG: commit e9bf16f — StudioProjectDetailPage */}
+
+      <div className="rounded-lg border border-black/[0.08] bg-yellow-50 px-3 py-1.5 text-[10px] font-mono text-black">
+        Route: /os/studio/projects/:projectId · Component: StudioProjectDetailPage · Project: {project?.id ?? 'not found'} · Projects in data: {data.projects.length}
+      </div>
       <header className="space-y-4">
         <Link
           className="inline-flex items-center gap-1.5 text-xs text-[var(--bb-text-muted)] hover:text-[var(--bb-text)]"

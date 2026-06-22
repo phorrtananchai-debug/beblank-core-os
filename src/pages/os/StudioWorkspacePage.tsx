@@ -114,6 +114,11 @@ export const StudioWorkspacePage = ({ view = 'overview' }: { view?: StudioWorksp
 
   return (
     <section className="studio-workspace-space space-y-5">
+      {/* BUILD DEBUG: commit e9bf16f — StudioWorkspacePage */}
+
+      <div className="rounded-lg border border-black/[0.08] bg-yellow-50 px-3 py-1.5 text-[10px] font-mono text-black">
+        Route: /os/studio/projects · Component: StudioWorkspacePage view="projects" · Projects: {data.projects.length} · Source: mockOsData
+      </div>
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
         <div className="flex items-start justify-between gap-6">
           <div>
