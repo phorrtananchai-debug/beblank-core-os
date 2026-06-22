@@ -157,7 +157,20 @@ export const mockHoldings = [
 ] as unknown as Holding[]
 
 export const mockOsData: OsData = {
-  projects: [],
+  projects: [
+    {
+      id: 'karun-central-khonkaen',
+      slug: 'karun-central-khonkaen',
+      name: 'Karun Central Khon Kaen',
+      status: 'active',
+      owner: 'Por',
+      client: 'Karun Hospitality',
+      location: 'Khon Kaen',
+      phase: 'construction',
+      timelineStatus: 'watch',
+      operationalNotes: 'Receive space: 1 Jun / Target opening: 1 Jul',
+    },
+  ],
   tasks: [],
   timeline: [],
   studioTimelinePhases: [],
