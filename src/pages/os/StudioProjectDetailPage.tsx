@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { type ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { useOs } from '../../core/os/useOs'
 import type {
@@ -44,7 +44,7 @@ const StudioActionButton = ({
   title?: string
 }) => (
   <button
-    className="rounded-full border border-black/[0.08] bg-white/80 px-3 py-1.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)] transition hover:bg-black/[0.05] disabled:cursor-not-allowed disabled:opacity-30"
+    className="rounded-full border border-black/[0.06] bg-white/80 px-3 py-1.5 text-[11px] font-medium text-[var(--bb-text-muted)] transition hover:bg-black/[0.04] disabled:cursor-not-allowed disabled:opacity-30"
     disabled={disabled}
     title={title}
     type="button"
@@ -57,6 +57,7 @@ const StudioActionButton = ({
 export const StudioProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const { data, createActionRequest } = useOs()
+  const [activeSection, setActiveSection] = useState('overview')
 
   const project = data.projects.find((p) => p.id === projectId)
 
@@ -150,150 +151,147 @@ export const StudioProjectDetailPage = () => {
   const inspectionTotal = pendingReviewCount + openSiteIssueCount
 
   return (
-    <section className="studio-project-detail space-y-5">
-      <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
+    <section className="mx-auto max-w-5xl space-y-6 px-4 py-6">
+      <header className="space-y-4">
         <Link
-          className="inline-block rounded-full bg-white/70 px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)] transition hover:bg-black/[0.05] hover:text-[var(--bb-text)]"
+          className="inline-flex items-center gap-1.5 text-xs text-[var(--bb-text-muted)] hover:text-[var(--bb-text)]"
           to="/os/studio/projects"
         >
           &larr; กลับไปหน้ารวมโปรเจค
         </Link>
-        <div className="mt-5">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">
-            {project.client ?? 'Studio client'} / {project.location ?? '—'}
-          </p>
-          <h2 className="mt-4 max-w-4xl text-2xl font-extrabold leading-[0.92] tracking-tight">
-            {project.name}
-          </h2>
+        <div>
+          <p className="text-xs text-[var(--bb-text-muted)]">{project.client ?? 'Studio client'} / {project.location ?? '—'}</p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--bb-text)]">{project.name}</h2>
           {project.operationalNotes && (
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--bb-text-soft)]">{project.operationalNotes}</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--bb-text-soft)]">{project.operationalNotes}</p>
           )}
         </div>
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-          <MetricCard
-            icon="◆"
-            label="สถานะ"
-            value={project.status}
-            color={statusClass(project.status)}
-            helper=""
-          />
-          <MetricCard
-            icon="▶"
-            label="เฟสปัจจุบัน"
-            value={project.phase ?? '—'}
-            color=""
-            helper=""
-          />
-          <MetricCard
-            icon="◈"
-            label="ไทม์ไลน์"
-            value={project.timelineStatus ?? 'steady'}
-            color={statusClass(project.timelineStatus ?? 'steady')}
-            helper=""
-          />
-          <MetricCard
-            icon="!"
-            label="สิ่งที่ต้องตรวจสอบ"
-            value={`${inspectionTotal} รายการ`}
-            color={inspectionTotal > 0 ? 'text-[var(--bb-amber)]' : 'text-[var(--bb-green)]'}
-            helper="รีวิว + ปัญหา"
-          />
-          <MetricCard
-            icon="≡"
-            label="WorkScope"
-            value={`${workScopeSections.length} หมวด`}
-            color=""
-            helper=""
-          />
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="rounded-md bg-black/[0.04] px-2 py-1"><strong>สถานะ</strong> {project.status}</span>
+          <span className="rounded-md bg-black/[0.04] px-2 py-1"><strong>เฟส</strong> {project.phase ?? '—'}</span>
+          <span className="rounded-md bg-black/[0.04] px-2 py-1"><strong>ไทม์ไลน์</strong> {project.timelineStatus ?? 'steady'}</span>
+          <span className="rounded-md bg-black/[0.04] px-2 py-1"><strong>ตรวจสอบ</strong> {inspectionTotal} รายการ</span>
+          <span className="rounded-md bg-black/[0.04] px-2 py-1"><strong>WorkScope</strong> {workScopeSections.length} หมวด</span>
         </div>
       </header>
 
-      {/* Media & Cover Image — future workflow */}
-      <section className="panel panel-float">
-        <div className="panel-header">
-          <div>
-            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">Media & Cover Image</p>
-            <h3>Project Media</h3>
-          </div>
-        </div>
-        <div className="flex min-h-[160px] items-center justify-center rounded-[24px] border border-dashed border-black/[0.04] bg-white/40 px-4 py-8 text-center">
-          <div>
-            <p className="text-sm font-medium text-[var(--bb-text-muted)]">ยังไม่มีข้อมูลภาพในระบบนี้</p>
-            <p className="mt-1 text-xs text-[var(--bb-text-faint)]">Planned for future project media workflow</p>
-          </div>
-        </div>
-      </section>
+      {/* Section navigation */}
+      <nav className="sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto border-b border-black/[0.04] bg-white/90 px-4 py-2 backdrop-blur-sm">
+        {(['overview', 'tasks', 'timeline', 'site', 'documents', 'reviews', 'ai'] as const).map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveSection(id)}
+            className={`shrink-0 rounded-md px-3 py-1 text-xs font-medium transition ${
+              activeSection === id
+                ? 'bg-black/[0.06] text-[var(--bb-text)]'
+                : 'text-[var(--bb-text-muted)] hover:text-[var(--bb-text)]'
+            }`}
+          >
+            {id === 'overview' ? 'Overview' : id === 'tasks' ? 'Tasks' : id === 'timeline' ? 'Timeline' : id === 'site' ? 'Site' : id === 'documents' ? 'Documents' : id === 'reviews' ? 'Reviews' : 'AI Context'}
+          </button>
+        ))}
+      </nav>
 
-      <OverviewSection
-        artworkRecords={artworkRecords}
-        creativeBriefs={creativeBriefs}
-        documents={documents}
-        project={project}
-        reviews={reviews}
-        siteIssues={siteIssues}
-        siteWatchUpdates={siteWatchUpdates}
-        timelinePhases={timelinePhases}
-        timelineItems={timelineItems}
-        workScopeSections={workScopeSections}
-      />
-
-      <WorkScopeSection
-        onApprove={queueScopeApproval}
-        onBlocked={queueScopeBlocked}
-        onComplete={queueScopeComplete}
-        workScopeSections={workScopeSections}
-      />
-
-      <TimelineSection
-        onMilestoneComplete={queueMilestoneComplete}
-        onPhaseReview={queuePhaseReview}
-        phases={timelinePhases}
-        timelineItems={timelineItems}
-      />
-
-      <SiteWatchSection
-        onEscalate={queueIssueEscalation}
-        onRequestReview={queueSiteReview}
-        onResolve={queueSiteResolution}
-        siteIssues={siteIssues}
-        siteWatchUpdates={siteWatchUpdates}
-      />
-
-      <DocumentsSection
-        onApprove={queueDocumentApprove}
-        onArchive={queueDocumentArchive}
-        onIssue={queueDocumentIssue}
-        documents={documents}
-      />
-
-      <ReviewsSection
-        onApprove={queueReviewApprove}
-        onReject={queueReviewReject}
-        onRequestChanges={queueReviewChanges}
-        reviews={reviews}
-      />
-
-      <section>
-        <div className="panel-header">
-          <div>
-            <p className="text-[10px] font-semibold text-[var(--bb-text-muted)]">บริบท AI สตูดิโอ</p>
-            <h3>ข้อมูลสนับสนุนการทำงาน</h3>
-          </div>
-          <span className="pill">{aiContexts.length} รายการ</span>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {aiContexts.length === 0 ? (
-            <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีบริบท AI สำหรับโมดูลสตูดิโอ</p>
-          ) : (
-            aiContexts.map((ctx) => (
-              <div key={ctx.id} className="panel panel-float">
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{ctx.title}</p>
-                <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">{ctx.body}</p>
+      {activeSection === 'overview' && (
+        <>
+          <OverviewSection
+            artworkRecords={artworkRecords}
+            creativeBriefs={creativeBriefs}
+            documents={documents}
+            project={project}
+            reviews={reviews}
+            siteIssues={siteIssues}
+            siteWatchUpdates={siteWatchUpdates}
+            timelinePhases={timelinePhases}
+            timelineItems={timelineItems}
+            workScopeSections={workScopeSections}
+          />
+          <section className="rounded-2xl border border-black/[0.04] bg-white/60 p-4">
+            <p className="text-xs font-semibold text-[var(--bb-text-muted)]">Today / This Week</p>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-black/[0.04] bg-white/70 p-3">
+                <p className="text-[11px] text-[var(--bb-text-muted)]">Pending Reviews</p>
+                <p className="mt-0.5 text-lg font-semibold">{pendingReviewCount}</p>
               </div>
-            ))
-          )}
-        </div>
-      </section>
+              <div className="rounded-xl border border-black/[0.04] bg-white/70 p-3">
+                <p className="text-[11px] text-[var(--bb-text-muted)]">Open Site Issues</p>
+                <p className="mt-0.5 text-lg font-semibold">{openSiteIssueCount}</p>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+
+      {activeSection === 'tasks' && (
+        <WorkScopeSection
+          onApprove={queueScopeApproval}
+          onBlocked={queueScopeBlocked}
+          onComplete={queueScopeComplete}
+          workScopeSections={workScopeSections}
+        />
+      )}
+
+      {activeSection === 'timeline' && (
+        <TimelineSection
+          onMilestoneComplete={queueMilestoneComplete}
+          onPhaseReview={queuePhaseReview}
+          phases={timelinePhases}
+          timelineItems={timelineItems}
+        />
+      )}
+
+      {activeSection === 'site' && (
+        <>
+          <SiteWatchSection
+            onEscalate={queueIssueEscalation}
+            onRequestReview={queueSiteReview}
+            onResolve={queueSiteResolution}
+            siteIssues={siteIssues}
+            siteWatchUpdates={siteWatchUpdates}
+          />
+          <section className="rounded-2xl border border-dashed border-black/[0.06] bg-white/40 p-4">
+            <p className="text-xs font-semibold text-[var(--bb-text-muted)]">Billing Gates</p>
+            <p className="mt-1 text-xs text-[var(--bb-text-faint)]">วางแผนการเรียกเก็บเงินตามเฟส</p>
+          </section>
+        </>
+      )}
+
+      {activeSection === 'documents' && (
+        <DocumentsSection
+          onApprove={queueDocumentApprove}
+          onArchive={queueDocumentArchive}
+          onIssue={queueDocumentIssue}
+          documents={documents}
+        />
+      )}
+
+      {activeSection === 'reviews' && (
+        <ReviewsSection
+          onApprove={queueReviewApprove}
+          onReject={queueReviewReject}
+          onRequestChanges={queueReviewChanges}
+          reviews={reviews}
+        />
+      )}
+
+      {activeSection === 'ai' && (
+        <section className="rounded-2xl border border-black/[0.04] bg-white/60 p-4">
+          <p className="text-xs font-semibold text-[var(--bb-text-muted)]">AI Context</p>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            {aiContexts.length === 0 ? (
+              <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีบริบท AI สำหรับโมดูลสตูดิโอ</p>
+            ) : (
+              aiContexts.map((ctx) => (
+                <div key={ctx.id} className="rounded-xl border border-black/[0.04] bg-white/70 p-3">
+                  <p className="text-xs font-semibold">{ctx.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-[var(--bb-text-soft)]">{ctx.body}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      )}
     </section>
   )
 }

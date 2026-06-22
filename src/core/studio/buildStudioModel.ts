@@ -1,4 +1,6 @@
 import type { OsData, SourceStatus } from '../../types/models'
+import { toStudioWorkspaceFlatData } from './createStudioWorkspace'
+import type { StudioWorkspaceInput, StudioWorkspaceV1 } from './types'
 
 type AgentState = 'running' | 'waiting-review' | 'completed'
 type DivisionMood = 'calm' | 'busy' | 'review-needed' | 'offline'
@@ -145,14 +147,17 @@ const buildAgent = (
   return { id, name, role, state, currentTask: detail, progress, updatedAt }
 }
 
-export const buildStudioModel = (
-  data: OsData,
+export function buildStudioModel(input: OsData, sourceStatuses: Record<string, SourceStatus>): StudioModel
+export function buildStudioModel(input: StudioWorkspaceV1, sourceStatuses: Record<string, SourceStatus>): StudioModel
+export function buildStudioModel(
+  input: StudioWorkspaceInput,
   sourceStatuses: Record<string, SourceStatus>,
-): StudioModel => {
+): StudioModel {
   // Manual verification guide for this pure adapter:
   // 1. Empty studio arrays should produce fallback summaries instead of synthetic project rows.
   // 2. Live studio rows should upgrade project/deadline confidence to Real without changing queue derivations.
   // 3. Derived agent states should come only from existing OS studio arrays and source status.
+  const data = toStudioWorkspaceFlatData(input)
   const studioStatus = sourceStatuses.studio ?? null
   const sourceLabel = studioStatus?.sourceName ?? 'Studio aggregation adapter'
   const freshness = resolveFreshness(studioStatus)
