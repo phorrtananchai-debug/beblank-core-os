@@ -4,6 +4,7 @@ import { mockSheetWriteAdapter, validateActionRequest } from '../adapters/mockSh
 import { refreshFinanceMarketData } from '../data/providers'
 import type {
   ActionRequest,
+  ApprovalRecord,
   ChangeLogRecord,
   DataProviderStatus,
   OsData,
@@ -18,10 +19,9 @@ export function useApprovalWorkflow(
   setSourceStatuses: React.Dispatch<React.SetStateAction<Record<string, SourceStatus>>>,
   setFinnhubStatus: React.Dispatch<React.SetStateAction<DataProviderStatus>>,
 ) {
-  const [pendingApprovals, setPendingApprovals] = useState<ActionRequest[]>([])
+  const [pendingApprovals, setPendingApprovals] = useState<ActionRequest[]>(() => seedApprovals(data.approvals))
   const [changeLogs, setChangeLogs] = useState<ChangeLogRecord[]>([])
   const [snapshots, setSnapshots] = useState<SnapshotRecord[]>([])
-
   const createActionRequest: (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void = (input) => {
     const request: ActionRequest = {
       ...input,
@@ -188,3 +188,25 @@ export function useApprovalWorkflow(
     queueSuggestionImport,
   }
 }
+
+const seedApprovals = (approvals: ApprovalRecord[]): ActionRequest[] =>
+  approvals
+    .filter((approval) => approval.status === 'waiting' || approval.status === 'submitted')
+    .map((approval) => ({
+      id: `seed-${approval.id}`,
+      module: 'studio',
+      actionType: 'studio.approvalReview',
+      description: approval.title,
+      payload: {
+        projectId: approval.projectId,
+        title: approval.title,
+        owner: approval.owner,
+        dueDate: approval.dueDate,
+        notes: approval.notes,
+        requestedBy: approval.requestedBy,
+        status: approval.status,
+      },
+      requestedBy: approval.requestedBy,
+      requestedAt: `${approval.dueDate}T08:00:00.000+07:00`,
+      requiresApproval: true,
+    }))

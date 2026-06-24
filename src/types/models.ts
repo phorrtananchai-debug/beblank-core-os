@@ -293,6 +293,117 @@ export interface TimelineItem {
   state: 'planned' | 'at-risk' | 'completed'
 }
 
+export interface StudioProject {
+  id: string
+  slug: string
+  name: string
+  client?: string
+  location?: string
+  phase: string
+  status: 'active' | 'paused' | 'planning' | 'handover'
+  projectHealth: 'healthy' | 'watch' | 'risk'
+  processState: 'planning' | 'site-walk' | 'fit-out' | 'punch-list' | 'handover'
+  owner: string
+  trade: string
+  priority: 'low' | 'medium' | 'high'
+  blocker?: string
+  startDate: string
+  endDate: string
+  progress: number
+  paymentLink?: string
+  siteCheck: 'scheduled' | 'due' | 'done' | 'none'
+  notes?: string
+  siteInspectionPlan?: string
+  taskTimeline?: string
+  progressBillingGateIds: string[]
+  coverImageUrl?: string
+  sourceStatus?: SourceStatus
+}
+
+export interface StudioTask {
+  id: string
+  projectId: string
+  title: string
+  status: 'todo' | 'doing' | 'blocked' | 'done'
+  processState: 'planned' | 'ready' | 'on-site' | 'blocked' | 'done'
+  owner: string
+  trade: string
+  priority: 'low' | 'medium' | 'high'
+  blocker?: string
+  startDate: string
+  endDate: string
+  progress: number
+  timelineSlot: string
+  siteCheck: 'required' | 'pending' | 'passed' | 'n/a'
+  notes?: string
+  sourceStatus?: SourceStatus
+}
+
+export interface StudioMilestone {
+  id: string
+  projectId: string
+  label: string
+  phase: string
+  dueDate: string
+  status: 'planned' | 'active' | 'complete' | 'at-risk'
+  progress: number
+  owner: string
+  notes?: string
+  sourceStatus?: SourceStatus
+}
+
+export interface StudioBillingGate {
+  id: string
+  projectId: string
+  label: string
+  amountTHB: number
+  percentage: number
+  dueDate: string
+  status: 'pending' | 'ready' | 'submitted' | 'paid' | 'blocked'
+  paymentLink?: string
+  owner: string
+  blocker?: string
+  notes?: string
+  sourceStatus?: SourceStatus
+}
+
+export interface StudioInspection {
+  id: string
+  projectId: string
+  title: string
+  scheduledAt: string
+  inspector: string
+  trade: string
+  type: 'site-walk' | 'qa' | 'handover' | 'snag' | 'safety'
+  status: 'scheduled' | 'done' | 'delayed'
+  checklist: string[]
+  notes?: string
+  plan?: string
+  sourceStatus?: SourceStatus
+}
+
+export interface StudioRisk {
+  id: string
+  projectId: string
+  title: string
+  blocker: string
+  severity: 'low' | 'medium' | 'high'
+  owner: string
+  trade: string
+  processState: 'watch' | 'blocked' | 'resolved'
+  dueDate: string
+  notes?: string
+  action: string
+  sourceStatus?: SourceStatus
+}
+
+export interface StudioMobileTab {
+  id: string
+  key: 'home' | 'calendar' | 'quick-add' | 'projects' | 'more'
+  label: string
+  icon: string
+}
+
 export interface StudioTimelinePhase {
   id: string
   projectId: string
@@ -639,6 +750,13 @@ export interface OsData {
   projects: Project[]
   tasks: Task[]
   timeline: TimelineItem[]
+  studioProjects: StudioProject[]
+  studioTasks: StudioTask[]
+  studioMilestones: StudioMilestone[]
+  studioBillingGates: StudioBillingGate[]
+  studioInspections: StudioInspection[]
+  studioRisks: StudioRisk[]
+  studioMobileTabs: StudioMobileTab[]
   studioTimelinePhases: StudioTimelinePhase[]
   documents: DocumentRecord[]
   siteIssues: SiteIssue[]

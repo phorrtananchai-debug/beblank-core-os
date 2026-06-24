@@ -11,9 +11,12 @@ import type {
   SiteWatchUpdate,
   SnapshotRecord,
   SourceStatus,
+  StudioInspection,
+  StudioMilestone,
+  StudioRisk,
+  StudioTask,
   StudioReview,
   StudioTimelinePhase,
-  Task,
   TimelineItem,
   TransactionRecord,
   TradingSignal,
@@ -31,6 +34,13 @@ const cloneData = (data: OsData): OsData => ({
   ...data,
   tasks: [...data.tasks],
   timeline: [...data.timeline],
+  studioProjects: [...data.studioProjects],
+  studioTasks: [...data.studioTasks],
+  studioMilestones: [...data.studioMilestones],
+  studioBillingGates: [...data.studioBillingGates],
+  studioInspections: [...data.studioInspections],
+  studioRisks: [...data.studioRisks],
+  studioMobileTabs: [...data.studioMobileTabs],
   studioTimelinePhases: [...data.studioTimelinePhases],
   documents: [...data.documents],
   siteIssues: [...data.siteIssues],
@@ -86,25 +96,115 @@ export const mockSheetWriteAdapter = (
   const now = new Date().toISOString()
 
   if (request.actionType === 'studio.addTask') {
-    const task: Task = {
-      id: generateId('task'),
-      projectId: 'p1',
-      title: String(request.payload.title ?? 'New studio task'),
-      status: 'todo',
+    const projectId = String(request.payload.projectId ?? nextData.studioProjects[0]?.id ?? 'p1')
+    const taskTitle = String(request.payload.title ?? 'New studio task')
+    const task: StudioTask = {
+      id: generateId('stk'),
+      projectId,
+      title: taskTitle,
+      status: String(request.payload.status ?? 'todo') as StudioTask['status'],
+      processState: String(request.payload.processState ?? 'planned') as StudioTask['processState'],
+      owner: String(request.payload.owner ?? 'Operator'),
+      trade: String(request.payload.trade ?? 'General'),
+      priority: String(request.payload.priority ?? 'medium') as StudioTask['priority'],
+      blocker: String(request.payload.blocker ?? ''),
+      startDate: String(request.payload.startDate ?? now.slice(0, 10)),
+      endDate: String(request.payload.endDate ?? now.slice(0, 10)),
+      progress: Number(request.payload.progress ?? 0),
+      timelineSlot: String(request.payload.timelineSlot ?? 'Today'),
+      siteCheck: String(request.payload.siteCheck ?? 'pending') as StudioTask['siteCheck'],
+      notes: String(request.payload.notes ?? 'Created from approved quick add task request.'),
+      sourceStatus: statusMap.studio,
     }
-    nextData.tasks.unshift(task)
+    nextData.studioTasks.unshift(task)
+    nextData.tasks.unshift({
+      id: generateId('task'),
+      projectId: projectId.replace(/^sp-/, 'p-'),
+      title: taskTitle,
+      status: task.status === 'blocked' ? 'doing' : task.status === 'done' ? 'done' : task.status === 'doing' ? 'doing' : 'todo',
+    })
     statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
   }
 
   if (request.actionType === 'studio.addTimeline') {
-    const item: TimelineItem = {
-      id: generateId('timeline'),
-      projectId: 'p1',
+    const projectId = String(request.payload.projectId ?? nextData.studioProjects[0]?.id ?? 'p1')
+    const item: StudioMilestone = {
+      id: generateId('ms'),
+      projectId,
       label: String(request.payload.label ?? 'Milestone'),
+      phase: String(request.payload.phase ?? 'planning'),
       dueDate: String(request.payload.dueDate ?? '2026-06-30'),
-      state: 'planned',
+      status: String(request.payload.status ?? 'planned') as StudioMilestone['status'],
+      progress: Number(request.payload.progress ?? 0),
+      owner: String(request.payload.owner ?? 'Operator'),
+      notes: String(request.payload.notes ?? 'Created from approved timeline request.'),
+      sourceStatus: statusMap.studio,
     }
-    nextData.timeline.unshift(item)
+    nextData.studioMilestones.unshift(item)
+    nextData.timeline.unshift({
+      id: generateId('timeline'),
+      projectId: projectId.replace(/^sp-/, 'p-'),
+      label: item.label,
+      dueDate: item.dueDate,
+      state: item.status === 'at-risk' ? 'at-risk' : item.status === 'complete' ? 'completed' : 'planned',
+    })
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.addIssue') {
+    const projectId = String(request.payload.projectId ?? nextData.studioProjects[0]?.id ?? 'p1')
+    const risk: StudioRisk = {
+      id: generateId('risk'),
+      projectId,
+      title: String(request.payload.title ?? 'New studio issue'),
+      blocker: String(request.payload.blocker ?? 'Pending site review'),
+      severity: String(request.payload.severity ?? 'medium') as StudioRisk['severity'],
+      owner: String(request.payload.owner ?? 'Operator'),
+      trade: String(request.payload.trade ?? 'General'),
+      processState: String(request.payload.processState ?? 'watch') as StudioRisk['processState'],
+      dueDate: String(request.payload.dueDate ?? now.slice(0, 10)),
+      notes: String(request.payload.notes ?? 'Created from approved quick add issue request.'),
+      action: String(request.payload.action ?? 'Review on the next site walk.'),
+      sourceStatus: statusMap.studio,
+    }
+    nextData.studioRisks.unshift(risk)
+    nextData.siteIssues.unshift({
+      id: generateId('issue'),
+      projectId: projectId.replace(/^sp-/, 'p-'),
+      issue: risk.title,
+      severity: risk.severity,
+      status: 'open',
+    })
+    statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
+  }
+
+  if (request.actionType === 'studio.addInspectionNote') {
+    const projectId = String(request.payload.projectId ?? nextData.studioProjects[0]?.id ?? 'p1')
+    const inspection: StudioInspection = {
+      id: generateId('insp'),
+      projectId,
+      title: String(request.payload.title ?? 'Inspection note'),
+      scheduledAt: String(request.payload.scheduledAt ?? now),
+      inspector: String(request.payload.inspector ?? 'Operator'),
+      trade: String(request.payload.trade ?? 'General'),
+      type: String(request.payload.type ?? 'site-walk') as StudioInspection['type'],
+      status: String(request.payload.status ?? 'scheduled') as StudioInspection['status'],
+      checklist: Array.isArray(request.payload.checklist) ? request.payload.checklist.map(String) : ['Photo log'],
+      notes: String(request.payload.notes ?? 'Created from approved quick add inspection request.'),
+      plan: String(request.payload.plan ?? ''),
+      sourceStatus: statusMap.studio,
+    }
+    nextData.studioInspections.unshift(inspection)
+    nextData.siteWatchUpdates.unshift({
+      id: generateId('watch'),
+      projectId: projectId.replace(/^sp-/, 'p-'),
+      title: inspection.title,
+      observedAt: inspection.scheduledAt,
+      severity: 'medium',
+      status: 'open',
+      note: inspection.notes ?? 'Inspection note created from Studio quick add.',
+      imagePlaceholder: inspection.plan ?? 'Site inspection note',
+    })
     statusMap.studio = { ...statusMap.studio, lastSyncedAt: now, isStale: false }
   }
 
@@ -263,6 +363,9 @@ export const mockSheetWriteAdapter = (
 
   if (request.actionType === 'studio.markMilestoneComplete') {
     const milestoneId = String(request.payload.milestoneId ?? '')
+    nextData.studioMilestones = nextData.studioMilestones.map((milestone): StudioMilestone =>
+      milestone.id === milestoneId ? { ...milestone, status: 'complete', progress: 100 } : milestone,
+    )
     nextData.timeline = nextData.timeline.map((item): TimelineItem =>
       item.id === milestoneId ? { ...item, state: 'completed' } : item,
     )

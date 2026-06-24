@@ -3,17 +3,17 @@ import { OSLayout } from '../layouts/OSLayout'
 import { PublicWebsiteLayout } from '../layouts/PublicWebsiteLayout'
 import { AIWorkflowPage } from '../pages/os/AIWorkflowPage'
 import { BridgeSettingsPage } from '../pages/os/BridgeSettingsPage'
-import { CommandCenterDivisionPage } from '../pages/os/CommandCenterDivisionPage'
 import { CommandCenterPage } from '../pages/os/CommandCenterPage'
 import { CapitalPage } from '../pages/os/CapitalPage'
 import { DividendHistoryPage } from '../pages/os/DividendHistoryPage'
 import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
 import { InvestmentsPage } from '../pages/os/InvestmentsPage'
+import { InvestmentsV2Page } from '../pages/os/InvestmentsV2Page'
 import { SettingsPage } from '../pages/os/SettingsPage'
-import { StudioPage } from '../pages/os/StudioPage'
-import { StudioProjectDetailPage } from '../pages/os/StudioProjectDetailPage'
-import { StudioWorkspacePage } from '../pages/os/StudioWorkspacePage'
+import { StudioMobilePage } from '../pages/os/StudioMobilePage'
+import { StudioProjectDetailPage } from '../pages/os/StudioProjectDetailView'
+import { StudioWorkspacePage } from '../pages/os/StudioControlRoomPage'
 import { TradingLabPage } from '../pages/os/TradingLabPage'
 import { AboutPage } from '../pages/public/AboutPage'
 import { CareersPage } from '../pages/public/CareersPage'
@@ -50,22 +50,20 @@ export const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="command-center" replace />} />
-        <Route path="command-center" element={<CommandCenterPage />} />
-        <Route path="command-center/:divisionId" element={<CommandCenterDivisionPage />} />
-        <Route path="studio" element={<Navigate to="/os/studio/projects" replace />} />
+        <Route index element={<CommandCenterPage />} />
+        <Route path="studio" element={<StudioWorkspacePage />} />
+        <Route path="studio/mobile" element={<StudioMobilePage />} />
         <Route path="studio/projects/:projectId" element={<StudioProjectDetailPage />} />
-        <Route path="studio/projects" element={<StudioWorkspacePage view="projects" />} />
-        <Route path="studio/legacy" element={<StudioWorkspacePage view="overview" />} />
-        <Route path="studio/legacy/timeline" element={<StudioWorkspacePage view="timeline" />} />
-        <Route path="studio/legacy/site-watch" element={<StudioWorkspacePage view="site-watch" />} />
-        <Route path="studio/legacy/documents" element={<StudioWorkspacePage view="documents" />} />
-        <Route path="studio/legacy/artwork" element={<StudioWorkspacePage view="artwork" />} />
-        <Route path="studio/legacy/briefs" element={<StudioWorkspacePage view="briefs" />} />
-        <Route path="studio/legacy/reviews" element={<StudioWorkspacePage view="reviews" />} />
-        <Route path="studio/workspace" element={<StudioPage />} />
+        <Route path="studio/projects" element={<StudioWorkspacePage />} />
+        <Route path="studio/timeline" element={<StudioWorkspacePage />} />
+        <Route path="studio/site-watch" element={<StudioWorkspacePage />} />
+        <Route path="studio/documents" element={<StudioWorkspacePage />} />
+        <Route path="studio/artwork" element={<StudioWorkspacePage />} />
+        <Route path="studio/briefs" element={<StudioWorkspacePage />} />
+        <Route path="studio/reviews" element={<StudioWorkspacePage />} />
         <Route path="finance" element={<FinancePage />} />
         <Route path="finance/investments" element={<InvestmentsPage />} />
+        <Route path="labs/investments-v2" element={<InvestmentsV2Page />} />
         <Route path="finance/investments/dividend-history" element={<DividendHistoryPage />} />
         <Route path="capital" element={<CapitalPage />} />
         <Route path="finance/family-office" element={<FamilyOfficePage />} />

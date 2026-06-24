@@ -31,11 +31,18 @@ export const createStudioDataProvider = (mode: 'mock' | 'live' | 'fallback' | 'e
   read: () => {
     const sourceStatus = mode === 'empty' ? emptyStatus('Studio Provider') : mockSourceStatuses.studio
     const data = mode === 'empty'
-      ? { projects: [], tasks: [], timeline: [], studioTimelinePhases: [], documents: [], siteIssues: [], workScopeSections: [], siteWatchUpdates: [], artworkRecords: [], creativeBriefs: [], studioReviews: [] }
+      ? { projects: [], tasks: [], timeline: [], studioProjects: [], studioTasks: [], studioMilestones: [], studioBillingGates: [], studioInspections: [], studioRisks: [], studioMobileTabs: [], studioTimelinePhases: [], documents: [], siteIssues: [], workScopeSections: [], siteWatchUpdates: [], artworkRecords: [], creativeBriefs: [], studioReviews: [] }
       : {
           projects: mockOsData.projects,
           tasks: mockOsData.tasks,
           timeline: mockOsData.timeline,
+          studioProjects: mockOsData.studioProjects,
+          studioTasks: mockOsData.studioTasks,
+          studioMilestones: mockOsData.studioMilestones,
+          studioBillingGates: mockOsData.studioBillingGates,
+          studioInspections: mockOsData.studioInspections,
+          studioRisks: mockOsData.studioRisks,
+          studioMobileTabs: mockOsData.studioMobileTabs,
           studioTimelinePhases: mockOsData.studioTimelinePhases,
           documents: mockOsData.documents,
           siteIssues: mockOsData.siteIssues,

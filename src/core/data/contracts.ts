@@ -37,7 +37,7 @@ export interface DomainDataProviders {
 }
 
 export interface StudioDataProvider {
-  read: () => ProviderResult<Pick<OsData, 'projects' | 'tasks' | 'timeline' | 'studioTimelinePhases' | 'documents' | 'siteIssues' | 'workScopeSections' | 'siteWatchUpdates' | 'artworkRecords' | 'creativeBriefs' | 'studioReviews'>>
+  read: () => ProviderResult<Pick<OsData, 'projects' | 'tasks' | 'timeline' | 'studioProjects' | 'studioTasks' | 'studioMilestones' | 'studioBillingGates' | 'studioInspections' | 'studioRisks' | 'studioMobileTabs' | 'studioTimelinePhases' | 'documents' | 'siteIssues' | 'workScopeSections' | 'siteWatchUpdates' | 'artworkRecords' | 'creativeBriefs' | 'studioReviews'>>
 }
 
 export interface FinanceDataProvider {

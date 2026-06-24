@@ -1,0 +1,58 @@
+export const bbhTokens = {
+  colors: {
+    canvas: '#F8F8F6',
+    shell: '#F5F5F2',
+    surface: '#FFFFFF',
+    surfaceSoft: '#F1F1EE',
+    surfaceMuted: '#FAFAF8',
+    border: '#DDD8CC',
+    borderStrong: '#C8C0B3',
+    text: '#1B1815',
+    textSoft: '#4F4740',
+    textMuted: '#70685D',
+    textFaint: '#9C9386',
+    accent: '#FF6A13',
+    accentSoft: '#FFF0E8',
+    accentBorder: '#FFC8B0',
+    live: '#1E9C6A',
+    liveSoft: '#E8F7F0',
+    liveBorder: '#B4E6CF',
+    watch: '#C98B00',
+    watchSoft: '#FFF4D7',
+    watchBorder: '#F0D08E',
+    blocked: '#CC4838',
+    blockedSoft: '#FDEBE8',
+    blockedBorder: '#F2B0A7',
+    complete: '#54606A',
+    completeSoft: '#EEF2F5',
+    completeBorder: '#CFD7DD',
+    archived: '#7B7369',
+    archivedSoft: '#F1EEE9',
+    archivedBorder: '#D8D1C7',
+  },
+  typography: {
+    interface: '"Space Grotesk", "Inter", system-ui, sans-serif',
+    technical: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace',
+  },
+  radius: {
+    panel: '28px',
+    card: '24px',
+    soft: '20px',
+    pill: '999px',
+  },
+  shadow: {
+    soft: '0 18px 50px rgba(25, 19, 14, 0.06)',
+    panel: '0 20px 60px rgba(25, 19, 14, 0.08)',
+  },
+  spacing: {
+    page: '1.5rem',
+    section: '1rem',
+    card: '1.1rem',
+  },
+  grid: {
+    overlay:
+      'linear-gradient(rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.66)), linear-gradient(90deg, rgba(27, 24, 21, 0.03) 1px, transparent 1px), linear-gradient(rgba(27, 24, 21, 0.03) 1px, transparent 1px)',
+    overlaySize: '100% 100%, 24px 24px, 24px 24px',
+  },
+} as const
+
