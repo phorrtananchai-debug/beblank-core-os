@@ -5,6 +5,7 @@ import { AIWorkflowPage } from '../pages/os/AIWorkflowPage'
 import { BridgeSettingsPage } from '../pages/os/BridgeSettingsPage'
 import { CommandCenterPage } from '../pages/os/CommandCenterPage'
 import { CapitalPage } from '../pages/os/CapitalPage'
+import { DesignSystemPage } from '../pages/os/DesignSystemPage'
 import { DividendHistoryPage } from '../pages/os/DividendHistoryPage'
 import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
@@ -75,6 +76,7 @@ export const AppRoutes = () => {
         <Route path="ai-workflow" element={<AIWorkflowPage view="overview" />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="bridge" element={<BridgeSettingsPage />} />
+        <Route path="design-system" element={<DesignSystemPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
