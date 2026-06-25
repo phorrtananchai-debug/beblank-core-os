@@ -46,3 +46,5 @@ export {
 } from './graph'
 
 export { pageManifests, getManifest, getManifestsByPriority } from './manifest'
+
+export { getRegistryVersion, isCompatible, REGISTRY_VERSION, COMPONENT_VERSION, TOKEN_VERSION, SCHEMA_VERSION } from './version'

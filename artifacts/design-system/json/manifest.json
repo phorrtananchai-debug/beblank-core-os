@@ -1,0 +1,57 @@
+{
+  "registryVersion": "2.0.0",
+  "generatedAt": "2026-06-25T16:05:02.214Z",
+  "count": 3,
+  "items": [
+    {
+      "id": "studio",
+      "name": "Studio OS",
+      "owner": "studio",
+      "status": "production",
+      "layout": "Project list + detail",
+      "components": [
+        "StudioWorkspacePage",
+        "StudioProjectDetailPage"
+      ],
+      "patterns": [
+        "approval",
+        "data-fetch"
+      ],
+      "migrationPriority": "low",
+      "migrationNotes": "Already migrated to project-first UI"
+    },
+    {
+      "id": "investments",
+      "name": "Investments OS",
+      "owner": "finance",
+      "status": "production",
+      "layout": "Hero + tabs",
+      "components": [
+        "PortfolioBucketView",
+        "AllocationDonut"
+      ],
+      "patterns": [
+        "data-fetch",
+        "model-build"
+      ],
+      "migrationPriority": "low",
+      "migrationNotes": "Uses design system primitives"
+    },
+    {
+      "id": "command-center",
+      "name": "Command Center",
+      "owner": "command-center",
+      "status": "production",
+      "layout": "Status strip + division grid",
+      "components": [
+        "DivisionTile",
+        "StatusRail"
+      ],
+      "patterns": [
+        "model-build"
+      ],
+      "migrationPriority": "low",
+      "migrationNotes": "Already aligned"
+    }
+  ]
+}
