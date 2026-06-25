@@ -43,6 +43,15 @@ const htmlFiles = [
   '04-patterns.html',
   '05-templates.html',
   '06-states.html',
+  '07-anatomy.html',
+  '08-scale.html',
+  '09-recipes.html',
+  '10-blueprints.html',
+  '11-interactions.html',
+  '12-responsive.html',
+  '13-accessibility.html',
+  '14-relationships.html',
+  '15-migration.html',
 ]
 
 async function run() {

@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "design:review": "node scripts/generate-design-system-review.mjs"
+    "design:review": "node scripts/generate-design-system-review.mjs && node scripts/generate-design-system-review-extras.mjs",
+    "design:screenshots": "node scripts/generate-design-system-screenshots.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
