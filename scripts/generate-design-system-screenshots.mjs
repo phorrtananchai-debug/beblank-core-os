@@ -52,6 +52,11 @@ const htmlFiles = [
   '13-accessibility.html',
   '14-relationships.html',
   '15-migration.html',
+  '16-color-tokens.html',
+  '17-typography-tokens.html',
+  '18-spacing-tokens.html',
+  '19-radius-shadow.html',
+  '20-layering-zindex.html',
 ]
 
 async function run() {

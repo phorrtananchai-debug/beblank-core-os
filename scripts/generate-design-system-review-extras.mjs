@@ -545,6 +545,125 @@ writeFileSync(resolve(outDir, '15-migration.html'), H('15 Migration') + `
 </div></div>
 ` + F)
 
+// === 16-color-tokens.html ===
+writeFileSync(resolve(outDir, '16-color-tokens.html'), H('16 Color Tokens') + `
+<h1>Color Tokens</h1><p class="subtitle">Semantic color tokens with CSS variables, Tailwind classes, and usage.</p>
+<div class="section" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem">
+${[
+['Brand','--bb-accent','#d97a34','bg-[var(--bb-accent)]','Primary accent. Buttons, links, active states. Max 10-15% of any surface.'],
+['Surface','--bb-surface-2','#ffffff','bg-[var(--bb-surface-2)]','Card and panel background. Default white.'],
+['Surface Elevated','--bb-surface-3','#faf9f8','bg-[var(--bb-surface-3)]','Subtle tint for secondary cards and hover states.'],
+['Background','--bb-shell','#f2efe9','bg-[var(--bb-shell)]','Page background. Warm off-white.'],
+['Border','--bb-border','#e6e0d5','border-[var(--bb-border)]','Default border. Cards, panels, dividers.'],
+['Divider','--bb-border','#e6e0d5','border-[var(--bb-border)]','Horizontal and vertical dividers between sections.'],
+['Text Primary','--bb-text','#1a1a1a','text-[var(--bb-text)]','Primary text on light surfaces. High contrast.'],
+['Text Muted','--bb-text-muted','#777777','text-[var(--bb-text-muted)]','Secondary text, labels, metadata.'],
+['Text Soft','--bb-text-soft','#666666','text-[var(--bb-text-soft)]','Body text on tinted surfaces.'],
+['Text Faint','--bb-text-faint','#999999','text-[var(--bb-text-faint)]','Placeholder and disabled text.'],
+['Success','--bb-green','#16a36a','text-[var(--bb-green)] bg-[var(--bb-green)]/10','Positive states, healthy status, completed.'],
+['Warning','--bb-amber','#c67f1e','text-[var(--bb-amber)] bg-[var(--bb-amber)]/10','Warning, pending review, medium risk.'],
+['Danger','--bb-red','#c2410c','text-[var(--bb-red)] bg-[var(--bb-red)]/10','Error, high risk, blocked, failed.'],
+['Info','--bb-blue','#2563eb','text-[var(--bb-blue)] bg-[var(--bb-blue)]/10','Informational states, external links.'],
+['Disabled','—','#d4cdc2','text-black/[0.25] bg-black/[0.05]','Disabled buttons, inputs, and controls.'],
+['Overlay','—','rgba(0,0,0,0.3)','bg-black/30','Modal and drawer backdrops.'],
+].map(t => `<div class="card" style="padding:0.75rem"><div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem"><div style="width:2rem;height:2rem;border-radius:0.375rem;border:1px solid #e6e0d5;background:${t[2]}"></div><div><div style="font-size:0.75rem;font-weight:600">${t[0]}</div><div class="meta">${t[1]}</div></div></div><div style="display:flex;gap:0.375rem;flex-wrap:wrap;margin-bottom:0.375rem"><span class="tag">${t[2]}</span><span class="tag">${t[3].split(' ')[0]}</span></div><div style="font-size:0.6875rem;color:#666">${t[4]}</div></div>`).join('\n')}
+</div>` + F)
+console.log('16-color-tokens.html')
+
+// === 17-typography-tokens.html ===
+writeFileSync(resolve(outDir, '17-typography-tokens.html'), H('17 Typography Tokens') + `
+<h1>Typography Tokens</h1><p class="subtitle">Complete typography scale. Font: IBM Plex Sans Thai. Mono: Geist Mono.</p>
+<div class="section">
+<table><tr><th>Token</th><th>Size</th><th>Weight</th><th>Line H</th><th>Letter Spacing</th><th>Usage</th></tr>
+<tr><td style="font-size:1.5rem;font-weight:700;font-family:'IBM Plex Sans Thai'">Display XL</td><td>2.4rem</td><td>700</td><td>1</td><td>-0.04em</td><td>Page hero title</td></tr>
+<tr><td style="font-size:1.25rem;font-weight:600;font-family:'IBM Plex Sans Thai'">Display LG</td><td>1.9rem</td><td>600</td><td>1</td><td>-0.03em</td><td>Section heading</td></tr>
+<tr><td style="font-size:1rem;font-weight:600;font-family:'IBM Plex Sans Thai'">Heading XL</td><td>1.1rem</td><td>600</td><td>1.3</td><td>0</td><td>Card title</td></tr>
+<tr><td style="font-size:0.875rem;font-weight:600;font-family:'IBM Plex Sans Thai'">Heading</td><td>0.875rem</td><td>600</td><td>1.4</td><td>0</td><td>Section header</td></tr>
+<tr><td style="font-size:0.875rem;font-weight:400;font-family:'IBM Plex Sans Thai'">Body</td><td>0.875rem</td><td>400</td><td>1.6</td><td>0</td><td>Default text</td></tr>
+<tr><td style="font-size:0.75rem;font-weight:400;font-family:'IBM Plex Sans Thai'">Body Small</td><td>0.75rem</td><td>400</td><td>1.5</td><td>0</td><td>Secondary, metadata</td></tr>
+<tr><td style="font-size:0.625rem;font-weight:500;font-family:'IBM Plex Sans Thai'">Caption</td><td>0.625rem</td><td>500</td><td>1.4</td><td>0.08em</td><td>Labels, uppercase</td></tr>
+<tr><td style="font-size:0.625rem;font-family:'Geist Mono',monospace">Mono</td><td>0.625rem</td><td>500</td><td>1.4</td><td>0</td><td>Code, metrics</td></tr>
+<tr><td style="font-size:0.5rem;font-family:'Geist Mono',monospace">Mono Small</td><td>0.5rem</td><td>500</td><td>1.3</td><td>0</td><td>Tiny data, %</td></tr>
+</table></div>` + F)
+console.log('17-typography-tokens.html')
+
+// === 18-spacing-tokens.html ===
+writeFileSync(resolve(outDir, '18-spacing-tokens.html'), H('18 Spacing Tokens') + `
+<h1>Spacing Tokens</h1><p class="subtitle">Complete spacing scale with padding, gap, and margin examples.</p>
+<div class="section">
+<table><tr><th>Token</th><th>Value</th><th>Padding Example</th><th>Gap Example</th><th>Margin Example</th></tr>
+${[
+['2xs','0.125rem(2px)','p-0.5','gap-0.5','m-0.5'],
+['xs','0.25rem(4px)','p-1','gap-1','m-1'],
+['sm','0.375rem(6px)','p-1.5','gap-1.5','m-1.5'],
+['md','0.5rem(8px)','p-2','gap-2','m-2'],
+['lg','0.75rem(12px)','p-3','gap-3','m-3'],
+['xl','1rem(16px)','p-4','gap-4','m-4'],
+['2xl','1.5rem(24px)','p-6','gap-6','m-6'],
+['3xl','2rem(32px)','p-8','gap-8','m-8'],
+['4xl','2.5rem(40px)','p-10','gap-10','m-10'],
+['5xl','3rem(48px)','p-12','gap-12','m-12'],
+['6xl','4rem(64px)','p-16','—','m-16'],
+].map(r => `<tr><td style="font-weight:600">${r[0]}</td><td class="meta">${r[1]}</td><td><div style="display:inline-block;background:#f0eeec;border-radius:2px"><div style="background:#d4cdc2;width:1.5rem;height:1.5rem"></div></div></td><td><div style="display:flex"><div style="width:0.75rem;height:0.75rem;background:#d4cdc2;border-radius:2px"></div><div style="width:0.375rem"></div><div style="width:0.75rem;height:0.75rem;background:#d4cdc2;border-radius:2px"></div></div></td><td class="meta">${r[4]}</td></tr>`).join('\n')}
+</table></div>` + F)
+console.log('18-spacing-tokens.html')
+
+// === 19-radius-shadow.html ===
+writeFileSync(resolve(outDir, '19-radius-shadow.html'), H('19 Radius + Shadow') + `
+<h1>Radius & Shadow Tokens</h1><p class="subtitle">Border radius scale and shadow elevation tokens.</p>
+<div class="section"><h2>Radius</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem">
+${[
+['xs','0.25rem(4px)','border-radius:0.25rem'],
+['sm','0.375rem(6px)','border-radius:0.375rem'],
+['md','0.5rem(8px)','border-radius:0.5rem'],
+['lg','0.75rem(12px)','border-radius:0.75rem'],
+['xl','1rem(16px)','border-radius:1rem'],
+['2xl','1.5rem(24px)','border-radius:1.5rem'],
+['pill','9999px','border-radius:9999px'],
+].map(r => `<div style="border:1px solid #e6e0d5;border-radius:0.75rem;padding:1.5rem;text-align:center;background:#fff"><div style="width:4rem;height:3rem;margin:0 auto 0.75rem;background:#f0eeec;${r[2]}"></div><div style="font-size:0.75rem;font-weight:600">${r[0]}</div><div class="meta">${r[1]}</div></div>`).join('\n')}
+</div></div>
+<div class="section"><h2>Shadow</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
+${[
+['sm','0 1px 3px rgba(0,0,0,0.06)','Small card elevation'],
+['md','0 4px 12px rgba(0,0,0,0.06)','Elevated card'],
+['lg','0 8px 24px rgba(0,0,0,0.08)','Floating panel'],
+['floating','0 12px 40px rgba(0,0,0,0.1)','Drawer'],
+['modal','0 24px 60px rgba(0,0,0,0.15)','Modal overlay'],
+].map(r => `<div style="border-radius:0.75rem;padding:1rem;background:#fff;box-shadow:${r[1]}"><div style="font-size:0.75rem;font-weight:600">${r[0]}</div><div class="meta" style="margin-top:0.25rem">${r[1]}</div><div style="font-size:0.6875rem;color:#666;margin-top:0.375rem">${r[2]}</div></div>`).join('\n')}
+</div></div>` + F)
+console.log('19-radius-shadow.html')
+
+// === 20-layering-zindex.html ===
+writeFileSync(resolve(outDir, '20-layering-zindex.html'), H('20 Layering & Z-Index') + `
+<h1>Layering & Z-Index</h1><p class="subtitle">Z-index hierarchy and layer visualization for BBH OS.</p>
+<div class="section">
+<div style="display:flex;flex-direction:column-reverse;gap:0.125rem">
+${[
+['Overlay / Backdrop','z-50','rgba(0,0,0,0.3)'],
+['Toast / Notification','z-40','#1a1a1a'],
+['Modal','z-30','#ffffff'],
+['Drawer','z-30','#ffffff'],
+['Popover / Tooltip','z-20','#ffffff'],
+['Dropdown','z-20','#ffffff'],
+['Sticky Header','z-10','#ffffff'],
+['Toolbar','z-10','#faf9f8'],
+['Content','z-0','#f2efe9'],
+].map((r,i) => `<div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;background:${r[2]};border:1px solid #e6e0d5;border-radius:0.375rem;position:relative"><span class="tag" style="min-width:3rem">${r[1]}</span><span style="font-size:0.75rem;font-weight:600">${r[0]}</span><span style="font-size:0.625rem;color:#666;margin-left:auto">layer ${i+1}</span></div>`).join('\n')}
+</div>
+<pre style="margin-top:1.5rem;font-size:0.6875rem;line-height:1.8">
+Layer 8  Overlay        z-50  (modal backdrop)
+Layer 7  Toast          z-40  (notifications)
+Layer 6  Modal          z-30  (dialog + backdrop)
+Layer 5  Drawer         z-30  (slide-over panel)
+Layer 4  Popover        z-20  (tooltips, dropdowns)
+Layer 3  Sticky/Toolbar z-10  (sticky nav, action bars)
+Layer 2  Content        z-0   (page content)
+Layer 1  Background     auto  (shell)
+</pre></div>` + F)
+console.log('20-layering-zindex.html')
+
 // === Update 00-index.html ===
 const indexPath = resolve(outDir, '00-index.html')
 let indexHtml = readFileSync(indexPath, 'utf-8')
@@ -570,6 +689,15 @@ const newGrid = `<div class="grid cols-3 section">
   <a href="13-accessibility.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">13 · Accessibility</h3></div><p style="font-size:0.75rem;color:#666">Keyboard nav, focus states, color usage, reduced motion, hit targets</p><div style="margin-top:0.5rem"><span class="tag">7 rules</span></div></a>
   <a href="14-relationships.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">14 · Relationships</h3></div><p style="font-size:0.75rem;color:#666">Component tree, page dependencies, registry summary</p><div style="margin-top:0.5rem"><span class="tag">map</span></div></a>
   <a href="15-migration.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">15 · Migration</h3></div><p style="font-size:0.75rem;color:#666">Production migration checklists for all 6 workspaces</p><div style="margin-top:0.5rem"><span class="tag">6 checklists</span></div></a>
+</div>
+
+<h2 style="margin-top:3rem">Design Tokens</h2>
+<div class="grid cols-3">
+  <a href="16-color-tokens.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">16 · Color Tokens</h3></div><p style="font-size:0.75rem;color:#666">Semantic color tokens — brand, surface, text, status, overlay</p><div style="margin-top:0.5rem"><span class="tag">16 tokens</span></div></a>
+  <a href="17-typography-tokens.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">17 · Typography Tokens</h3></div><p style="font-size:0.75rem;color:#666">Type scale — Display XL through Mono Small</p><div style="margin-top:0.5rem"><span class="tag">9 tokens</span></div></a>
+  <a href="18-spacing-tokens.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">18 · Spacing Tokens</h3></div><p style="font-size:0.75rem;color:#666">Spacing scale — 2px through 64px with examples</p><div style="margin-top:0.5rem"><span class="tag">12 tokens</span></div></a>
+  <a href="19-radius-shadow.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">19 · Radius & Shadow</h3></div><p style="font-size:0.75rem;color:#666">Border radius scale + shadow elevation tokens</p><div style="margin-top:0.5rem"><span class="tag">12 tokens</span></div></a>
+  <a href="20-layering-zindex.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">20 · Layering & Z-Index</h3></div><p style="font-size:0.75rem;color:#666">Z-index hierarchy — content through overlay</p><div style="margin-top:0.5rem"><span class="tag">8 layers</span></div></a>
 </div>`
 
 indexHtml = headerEnd + newGrid + footerStart
