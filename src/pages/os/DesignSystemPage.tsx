@@ -7,6 +7,9 @@ import { symbols } from '../../design-system/registry/symbols'
 import { templates } from '../../design-system/registry/templates'
 import { patterns } from '../../design-system/registry/patterns'
 import { workspaceComponents } from '../../design-system/registry/workspace'
+import { validateRegistry, resolveComponent } from '../../design-system/index'
+import { buildComponentUsageGraph } from '../../design-system/index'
+import { pageManifests } from '../../design-system/index'
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="space-y-3">
@@ -145,8 +148,73 @@ export const DesignSystemPage = () => {
         </div>
       </Section>
 
+      {/* Design Engine */}
+      <Section title="Design Engine">
+        <div className="grid gap-3">
+          <div className="rounded-xl border border-black/[0.05] bg-white p-4">
+            <p className="text-sm font-semibold">Registry Health</p>
+            {(() => {
+              const health = validateRegistry()
+              return (
+                <div className="mt-2 flex flex-wrap gap-3 text-xs">
+                  <span>Total: <strong>{health.total}</strong></span>
+                  <span className="text-[#16a36a]">Valid: <strong>{health.valid}</strong></span>
+                  {health.invalid > 0 && <span className="text-[#c2410c]">Issues: <strong>{health.invalid}</strong></span>}
+                </div>
+              )
+            })()}
+          </div>
+
+          <div className="rounded-xl border border-black/[0.05] bg-white p-4">
+            <p className="text-sm font-semibold">Resolver Example</p>
+            <div className="mt-2 space-y-1 text-xs font-mono text-[var(--bb-text-muted)]">
+              <p>resolveComponent(&apos;operational-status-chip&apos;) → <span className="text-[var(--bb-text)]">{resolveComponent('operational-status-chip')?.name ?? 'null'}</span></p>
+              <p>resolveComponent(&apos;empty-state&apos;) → <span className="text-[var(--bb-text)]">{resolveComponent('empty-state')?.name ?? 'null'}</span></p>
+              <p>resolveComponent(&apos;unknown-id&apos;) → <span className="text-[var(--bb-text)]">{resolveComponent('unknown-id') === null ? 'null' : 'found'}</span></p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-black/[0.05] bg-white p-4">
+            <p className="text-sm font-semibold">Dependency Graph Summary</p>
+            {(() => {
+              const graph = buildComponentUsageGraph()
+              return (
+                <div className="mt-2 space-y-1 text-xs">
+                  <p className="text-[var(--bb-text-muted)]">Nodes: <strong className="text-[var(--bb-text)]">{graph.nodes.length}</strong></p>
+                  <p className="text-[var(--bb-text-muted)]">Edges: <strong className="text-[var(--bb-text)]">{graph.edges.length}</strong></p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {graph.nodes.filter((n) => n.type === 'component').slice(0, 10).map((n) => (
+                      <span key={n.id} className="rounded bg-black/[0.04] px-1.5 py-0.5 font-mono text-[9px] text-[var(--bb-text-muted)]">{n.id}</span>
+                    ))}
+                    {graph.nodes.filter((n) => n.type === 'component').length > 10 && (
+                      <span className="text-[9px] text-[var(--bb-text-faint)]">+{graph.nodes.filter((n) => n.type === 'component').length - 10} more</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+
+          <div className="rounded-xl border border-black/[0.05] bg-white p-4">
+            <p className="text-sm font-semibold">Page Manifests</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {pageManifests.map((m) => (
+                <div key={m.id} className="rounded-lg border border-black/[0.04] bg-[#faf9f8] p-2.5">
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold">{m.name}</p>
+                    <span className={`text-[8px] font-mono uppercase tracking-wider rounded px-1 py-0.5 ${m.migrationPriority === 'high' ? 'bg-[#c2410c]/10 text-[#c2410c]' : m.migrationPriority === 'medium' ? 'bg-[var(--bb-amber)]/10 text-[var(--bb-amber)]' : 'bg-black/[0.04] text-[var(--bb-text-muted)]'}`}>{m.migrationPriority}</span>
+                  </div>
+                  <p className="mt-1 text-[10px] text-[var(--bb-text-muted)]">{m.components.length} components · {m.patterns.length} patterns</p>
+                  <p className="text-[10px] text-[var(--bb-text-faint)]">{m.migrationNotes.slice(0, 60)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
       <footer className="border-t border-black/[0.05] pt-4 text-[10px] text-[var(--bb-text-faint)]">
-        BBH Component Registry · Auto-generated from src/design-system/registry
+        BBH Component Registry · Design Engine · src/design-system/
       </footer>
     </section>
   )
