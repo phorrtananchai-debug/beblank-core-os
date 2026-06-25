@@ -18,6 +18,7 @@
 ## Phase 2.5 — Infrastructure (In Progress)
 - [x] Registry versioning
 - [x] JSON export
+- [x] Spatial Grid Language
 - [ ] Search index
 - [ ] Dependency export
 - [ ] Component fingerprint

@@ -664,6 +664,54 @@ Layer 1  Background     auto  (shell)
 </pre></div>` + F)
 console.log('20-layering-zindex.html')
 
+// === 21-spatial-grid.html ===
+writeFileSync(resolve(outDir, '21-spatial-grid.html'), H('21 Spatial Grid') + `
+<h1>Spatial Grid Language</h1><p class="subtitle">Grid tokens, variants, and layout reference for BBH OS.</p>
+
+<div class="section"><h2>Grid Variants</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem">
+${[
+['Architect','0.05','Layout composition','repeating-linear-gradient(0deg, rgba(0,0,0,0.04), rgba(0,0,0,0.04) 1px, transparent 1px, transparent 8px)'],
+['Operation','0.03','Daily workspace','repeating-linear-gradient(0deg, rgba(0,0,0,0.04), rgba(0,0,0,0.04) 1px, transparent 1px, transparent 8px)'],
+['Presentation','0.015','Client view','repeating-linear-gradient(0deg, rgba(0,0,0,0.04), rgba(0,0,0,0.04) 1px, transparent 1px, transparent 8px)'],
+['Print','0.08','Documentation','repeating-linear-gradient(0deg, rgba(0,0,0,0.08), rgba(0,0,0,0.08) 1px, transparent 1px, transparent 8px)'],
+].map(v => `<div style="border:1px solid #e6e0d5;border-radius:0.75rem;overflow:hidden;background:#fff">
+<div style="height:100px;background:#faf9f8;background-image:${v[3]};background-size:8px 8px;opacity:${v[1]}"></div>
+<div style="padding:0.75rem"><div style="font-size:0.75rem;font-weight:600">${v[0]}</div><div class="meta">opacity ${v[1]}</div><div style="font-size:0.6875rem;color:#666;margin-top:0.25rem">${v[2]}</div></div></div>`).join('\n')}
+</div></div>
+
+<div class="section"><h2>Grid Tokens</h2>
+<table><tr><th>Token</th><th>Default</th><th>CSS Variable</th></tr>
+<tr><td>Major grid</td><td>64px</td><td class="meta">--bb-grid-major</td></tr>
+<tr><td>Minor grid</td><td>8px</td><td class="meta">--bb-grid-minor</td></tr>
+<tr><td>Opacity</td><td>0.03</td><td class="meta">--bb-grid-opacity</td></tr>
+<tr><td>Line thickness</td><td>1px</td><td class="meta">--bb-grid-line</td></tr>
+<tr><td>Fade distance</td><td>120px</td><td class="meta">--bb-grid-fade</td></tr>
+</table></div>
+
+<div class="section"><h2>Opacity Comparison</h2>
+<div style="display:flex;flex-direction:column;gap:0.5rem">
+${[
+['0.01 (Minimal)','0.01'],
+['0.03 (Operation)','0.03'],
+['0.05 (Architect)','0.05'],
+['0.08 (Print)','0.08'],
+['0.10 (Maximum)','0.10'],
+].map(o => `<div style="display:flex;align-items:center;gap:1rem"><span class="meta" style="min-width:8rem">${o[0]}</span><div style="flex:1;height:2rem;border-radius:0.25rem;background:#faf9f8;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.06),rgba(0,0,0,0.06)1px,transparent 1px,transparent 8px),repeating-linear-gradient(90deg,rgba(0,0,0,0.06),rgba(0,0,0,0.06)1px,transparent 1px,transparent 8px);background-size:8px 8px;opacity:${o[1]}"></div></div>`).join('\n')}
+</div></div>
+
+<div class="section"><h2>Grid Rules</h2>
+<ul style="font-size:0.75rem;color:#666;margin-top:0.5rem;padding-left:1.25rem">
+<li>Grid is structural — never decorative</li>
+<li>Grid always renders below content</li>
+<li>Grid never blocks mouse events</li>
+<li>Opacity stays between 0.01 and 0.10</li>
+<li>Four variants: architect, operation, presentation, print</li>
+<li>GridCanvas wrapper injects GridOverlay automatically</li>
+</ul></div>
+` + F)
+console.log('21-spatial-grid.html')
+
 // === Update 00-index.html ===
 const indexPath = resolve(outDir, '00-index.html')
 let indexHtml = readFileSync(indexPath, 'utf-8')
@@ -698,6 +746,7 @@ const newGrid = `<div class="grid cols-3 section">
   <a href="18-spacing-tokens.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">18 · Spacing Tokens</h3></div><p style="font-size:0.75rem;color:#666">Spacing scale — 2px through 64px with examples</p><div style="margin-top:0.5rem"><span class="tag">12 tokens</span></div></a>
   <a href="19-radius-shadow.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">19 · Radius & Shadow</h3></div><p style="font-size:0.75rem;color:#666">Border radius scale + shadow elevation tokens</p><div style="margin-top:0.5rem"><span class="tag">12 tokens</span></div></a>
   <a href="20-layering-zindex.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">20 · Layering & Z-Index</h3></div><p style="font-size:0.75rem;color:#666">Z-index hierarchy — content through overlay</p><div style="margin-top:0.5rem"><span class="tag">8 layers</span></div></a>
+  <a href="21-spatial-grid.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">21 · Spatial Grid</h3></div><p style="font-size:0.75rem;color:#666">Grid tokens, variants, opacity comparison, layout rules</p><div style="margin-top:0.5rem"><span class="tag">grid</span></div></a>
 </div>`
 
 indexHtml = headerEnd + newGrid + footerStart

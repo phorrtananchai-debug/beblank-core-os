@@ -112,6 +112,13 @@
   --bb-radius-card: 14px;
   --bb-radius-panel: 18px;
   --bb-radius-pill: 999px;
+
+  --bb-grid-major: 64px;
+  --bb-grid-minor: 8px;
+  --bb-grid-opacity: 0.03;
+  --bb-grid-color: rgba(0, 0, 0, 0.03);
+  --bb-grid-line: 1px;
+  --bb-grid-fade: 120px;
 }
 
 @layer utilities {

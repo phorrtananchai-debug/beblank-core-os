@@ -57,6 +57,7 @@ const htmlFiles = [
   '18-spacing-tokens.html',
   '19-radius-shadow.html',
   '20-layering-zindex.html',
+  '21-spatial-grid.html',
 ]
 
 async function run() {
