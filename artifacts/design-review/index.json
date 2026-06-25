@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-25T16:19:22.292Z",
-  "total": 22,
+  "generatedAt": "2026-06-25T16:54:48.070Z",
+  "total": 23,
   "pages": [
     {
       "id": "00",
@@ -8,7 +8,7 @@
       "html": "html/00-index.html",
       "png": "screenshots/00-index.png",
       "thumbnail": "thumbnails/00-index.png",
-      "updatedAt": "2026-06-25T16:18:41.137Z"
+      "updatedAt": "2026-06-25T16:54:02.397Z"
     },
     {
       "id": "01",
@@ -16,7 +16,7 @@
       "html": "html/01-primitives.html",
       "png": "screenshots/01-primitives.png",
       "thumbnail": "thumbnails/01-primitives.png",
-      "updatedAt": "2026-06-25T16:18:43.051Z"
+      "updatedAt": "2026-06-25T16:54:04.423Z"
     },
     {
       "id": "02",
@@ -24,7 +24,7 @@
       "html": "html/02-workspace.html",
       "png": "screenshots/02-workspace.png",
       "thumbnail": "thumbnails/02-workspace.png",
-      "updatedAt": "2026-06-25T16:18:45.039Z"
+      "updatedAt": "2026-06-25T16:54:06.534Z"
     },
     {
       "id": "03",
@@ -32,7 +32,7 @@
       "html": "html/03-symbols.html",
       "png": "screenshots/03-symbols.png",
       "thumbnail": "thumbnails/03-symbols.png",
-      "updatedAt": "2026-06-25T16:18:46.895Z"
+      "updatedAt": "2026-06-25T16:54:08.582Z"
     },
     {
       "id": "04",
@@ -40,7 +40,7 @@
       "html": "html/04-patterns.html",
       "png": "screenshots/04-patterns.png",
       "thumbnail": "thumbnails/04-patterns.png",
-      "updatedAt": "2026-06-25T16:18:48.767Z"
+      "updatedAt": "2026-06-25T16:54:10.550Z"
     },
     {
       "id": "05",
@@ -48,7 +48,7 @@
       "html": "html/05-templates.html",
       "png": "screenshots/05-templates.png",
       "thumbnail": "thumbnails/05-templates.png",
-      "updatedAt": "2026-06-25T16:18:50.601Z"
+      "updatedAt": "2026-06-25T16:54:12.489Z"
     },
     {
       "id": "06",
@@ -56,7 +56,7 @@
       "html": "html/06-states.html",
       "png": "screenshots/06-states.png",
       "thumbnail": "thumbnails/06-states.png",
-      "updatedAt": "2026-06-25T16:18:52.473Z"
+      "updatedAt": "2026-06-25T16:54:14.534Z"
     },
     {
       "id": "07",
@@ -64,7 +64,7 @@
       "html": "html/07-anatomy.html",
       "png": "screenshots/07-anatomy.png",
       "thumbnail": "thumbnails/07-anatomy.png",
-      "updatedAt": "2026-06-25T16:18:54.327Z"
+      "updatedAt": "2026-06-25T16:54:16.544Z"
     },
     {
       "id": "08",
@@ -72,7 +72,7 @@
       "html": "html/08-scale.html",
       "png": "screenshots/08-scale.png",
       "thumbnail": "thumbnails/08-scale.png",
-      "updatedAt": "2026-06-25T16:18:56.178Z"
+      "updatedAt": "2026-06-25T16:54:18.559Z"
     },
     {
       "id": "09",
@@ -80,7 +80,7 @@
       "html": "html/09-recipes.html",
       "png": "screenshots/09-recipes.png",
       "thumbnail": "thumbnails/09-recipes.png",
-      "updatedAt": "2026-06-25T16:18:58.076Z"
+      "updatedAt": "2026-06-25T16:54:20.522Z"
     },
     {
       "id": "10",
@@ -88,7 +88,7 @@
       "html": "html/10-blueprints.html",
       "png": "screenshots/10-blueprints.png",
       "thumbnail": "thumbnails/10-blueprints.png",
-      "updatedAt": "2026-06-25T16:18:59.961Z"
+      "updatedAt": "2026-06-25T16:54:22.505Z"
     },
     {
       "id": "11",
@@ -96,7 +96,7 @@
       "html": "html/11-interactions.html",
       "png": "screenshots/11-interactions.png",
       "thumbnail": "thumbnails/11-interactions.png",
-      "updatedAt": "2026-06-25T16:19:01.846Z"
+      "updatedAt": "2026-06-25T16:54:24.552Z"
     },
     {
       "id": "12",
@@ -104,7 +104,7 @@
       "html": "html/12-responsive.html",
       "png": "screenshots/12-responsive.png",
       "thumbnail": "thumbnails/12-responsive.png",
-      "updatedAt": "2026-06-25T16:19:03.643Z"
+      "updatedAt": "2026-06-25T16:54:26.500Z"
     },
     {
       "id": "13",
@@ -112,7 +112,7 @@
       "html": "html/13-accessibility.html",
       "png": "screenshots/13-accessibility.png",
       "thumbnail": "thumbnails/13-accessibility.png",
-      "updatedAt": "2026-06-25T16:19:05.498Z"
+      "updatedAt": "2026-06-25T16:54:28.476Z"
     },
     {
       "id": "14",
@@ -120,7 +120,7 @@
       "html": "html/14-relationships.html",
       "png": "screenshots/14-relationships.png",
       "thumbnail": "thumbnails/14-relationships.png",
-      "updatedAt": "2026-06-25T16:19:07.423Z"
+      "updatedAt": "2026-06-25T16:54:30.487Z"
     },
     {
       "id": "15",
@@ -128,7 +128,7 @@
       "html": "html/15-migration.html",
       "png": "screenshots/15-migration.png",
       "thumbnail": "thumbnails/15-migration.png",
-      "updatedAt": "2026-06-25T16:19:09.325Z"
+      "updatedAt": "2026-06-25T16:54:32.498Z"
     },
     {
       "id": "16",
@@ -136,7 +136,7 @@
       "html": "html/16-color-tokens.html",
       "png": "screenshots/16-color-tokens.png",
       "thumbnail": "thumbnails/16-color-tokens.png",
-      "updatedAt": "2026-06-25T16:19:11.195Z"
+      "updatedAt": "2026-06-25T16:54:34.531Z"
     },
     {
       "id": "17",
@@ -144,7 +144,7 @@
       "html": "html/17-typography-tokens.html",
       "png": "screenshots/17-typography-tokens.png",
       "thumbnail": "thumbnails/17-typography-tokens.png",
-      "updatedAt": "2026-06-25T16:19:12.975Z"
+      "updatedAt": "2026-06-25T16:54:36.433Z"
     },
     {
       "id": "18",
@@ -152,7 +152,7 @@
       "html": "html/18-spacing-tokens.html",
       "png": "screenshots/18-spacing-tokens.png",
       "thumbnail": "thumbnails/18-spacing-tokens.png",
-      "updatedAt": "2026-06-25T16:19:14.783Z"
+      "updatedAt": "2026-06-25T16:54:38.340Z"
     },
     {
       "id": "19",
@@ -160,7 +160,7 @@
       "html": "html/19-radius-shadow.html",
       "png": "screenshots/19-radius-shadow.png",
       "thumbnail": "thumbnails/19-radius-shadow.png",
-      "updatedAt": "2026-06-25T16:19:16.674Z"
+      "updatedAt": "2026-06-25T16:54:40.292Z"
     },
     {
       "id": "20",
@@ -168,7 +168,7 @@
       "html": "html/20-layering-zindex.html",
       "png": "screenshots/20-layering-zindex.png",
       "thumbnail": "thumbnails/20-layering-zindex.png",
-      "updatedAt": "2026-06-25T16:19:18.576Z"
+      "updatedAt": "2026-06-25T16:54:42.236Z"
     },
     {
       "id": "21",
@@ -176,7 +176,15 @@
       "html": "html/21-spatial-grid.html",
       "png": "screenshots/21-spatial-grid.png",
       "thumbnail": "thumbnails/21-spatial-grid.png",
-      "updatedAt": "2026-06-25T16:19:20.615Z"
+      "updatedAt": "2026-06-25T16:54:44.286Z"
+    },
+    {
+      "id": "22",
+      "title": "Spatial Runtime",
+      "html": "html/22-spatial-runtime.html",
+      "png": "screenshots/22-spatial-runtime.png",
+      "thumbnail": "thumbnails/22-spatial-runtime.png",
+      "updatedAt": "2026-06-25T16:54:46.363Z"
     }
   ]
 }

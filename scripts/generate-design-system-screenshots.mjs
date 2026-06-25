@@ -40,7 +40,8 @@ const htmlFiles = [
   '05-templates', '06-states', '07-anatomy', '08-scale', '09-recipes',
   '10-blueprints', '11-interactions', '12-responsive', '13-accessibility',
   '14-relationships', '15-migration', '16-color-tokens', '17-typography-tokens',
-  '18-spacing-tokens', '19-radius-shadow', '20-layering-zindex', '21-spatial-grid',
+  '18-spacing-tokens', '19-radius-shadow', '20-layering-zindex',   '21-spatial-grid',
+  '22-spatial-runtime',
 ]
 
 const pageMeta = {
@@ -66,6 +67,7 @@ const pageMeta = {
   '19-radius-shadow': { title: 'Radius & Shadow', id: '19' },
   '20-layering-zindex': { title: 'Layering & Z-Index', id: '20' },
   '21-spatial-grid': { title: 'Spatial Grid', id: '21' },
+  '22-spatial-runtime': { title: 'Spatial Runtime', id: '22' },
 }
 
 async function generateArtifacts() {

@@ -39,6 +39,7 @@ artifacts/design-review/
 | 19 | Radius & Shadow | [PNG](screenshots/19-radius-shadow.png) | [THUMB](thumbnails/19-radius-shadow.png) |
 | 20 | Layering & Z-Index | [PNG](screenshots/20-layering-zindex.png) | [THUMB](thumbnails/20-layering-zindex.png) |
 | 21 | Spatial Grid | [PNG](screenshots/21-spatial-grid.png) | [THUMB](thumbnails/21-spatial-grid.png) |
+| 22 | Spatial Runtime | [PNG](screenshots/22-spatial-runtime.png) | [THUMB](thumbnails/22-spatial-runtime.png) |
 
 ## Generation
 

@@ -712,6 +712,59 @@ ${[
 ` + F)
 console.log('21-spatial-grid.html')
 
+// === 22-spatial-runtime.html ===
+writeFileSync(resolve(outDir, '22-spatial-runtime.html'), H('22 Spatial Runtime') + `
+<h1>Spatial Runtime Foundation</h1><p class="subtitle">Runtime spatial context, provider, hook, and component integration.</p>
+
+<div class="section"><h2>Architecture</h2>
+<pre style="font-size:0.6875rem;line-height:1.6">
+SpatialProvider (OSLayout)
+└── SpatialContext
+    ├── config: { variant, major, minor, baseline, opacity, columns, rhythm }
+    ├── isDebugMode
+    └── toggleDebug()
+        │
+        ├── useSpatial() — hook for any component
+        ├── GridOverlay — background grid (shell mode)
+        └── GridDebug — dev overlay (Ctrl+Shift+G)
+</pre></div>
+
+<div class="section"><h2>Flow</h2>
+<div class="step"><span class="step-num">1</span><div><strong>URL changes</strong><p class="meta">useLocation() detects route change</p></div></div>
+<div class="flow-arrow">↓</div>
+<div class="step"><span class="step-num">2</span><div><strong>SpatialProvider derives config</strong><p class="meta">variant from path: /os/studio → architect, else → operation</p></div></div>
+<div class="flow-arrow">↓</div>
+<div class="step"><span class="step-num">3</span><div><strong>Context provided to all children</strong><p class="meta">GridOverlay renders at z-index 0 · GridDebug listens for Ctrl+Shift+G</p></div></div>
+<div class="flow-arrow">↓</div>
+<div class="step"><span class="step-num">4</span><div><strong>Components consume via useSpatial()</strong><p class="meta">WorkspaceShell, WorkspaceSection, WorkspaceCard, MetricStrip, StatusRail</p></div></div>
+</div>
+
+<div class="section"><h2>Context Value</h2>
+<table><tr><th>Field</th><th>Type</th><th>Source</th></tr>
+<tr><td>variant</td><td>GridVariant</td><td>Derived from route path</td></tr>
+<tr><td>major</td><td>number (64)</td><td>Grid token</td></tr>
+<tr><td>minor</td><td>number (8)</td><td>Grid token</td></tr>
+<tr><td>baseline</td><td>{ height: 8, unit: 8 }</td><td>Grid token</td></tr>
+<tr><td>opacity</td><td>0.03 / 0.05</td><td>Variant-dependent</td></tr>
+<tr><td>columns</td><td>GridColumn[] (12)</td><td>Generated from major</td></tr>
+<tr><td>rhythm</td><td>SpacingRhythm</td><td>Variant-dependent</td></tr>
+</table></div>
+
+<div class="section"><h2>Component Consumption</h2>
+<table><tr><th>Component</th><th>Consumes</th><th>Effect</th></tr>
+<tr><td>WorkspaceShell</td><td>config.variant, config.rhythm</td><td>Adaptive padding</td></tr>
+<tr><td>WorkspaceSection</td><td>config.rhythm</td><td>Section spacing</td></tr>
+<tr><td>WorkspaceCard</td><td>config.rhythm</td><td>Card padding</td></tr>
+<tr><td>MetricStrip</td><td>config.rhythm</td><td>Strip gap</td></tr>
+<tr><td>StatusRail</td><td>config.rhythm</td><td>Rail spacing</td></tr>
+</table></div>
+
+<div class="section"><h2>GridDebug</h2>
+<p style="font-size:0.75rem;color:#666">Press <strong>Ctrl+Shift+G</strong> to toggle. Shows column numbers, grid variant, major/minor size, opacity, and column count in a compact overlay.</p>
+</div>
+` + F)
+console.log('22-spatial-runtime.html')
+
 // === Update 00-index.html ===
 const indexPath = resolve(outDir, '00-index.html')
 let indexHtml = readFileSync(indexPath, 'utf-8')
@@ -747,6 +800,7 @@ const newGrid = `<div class="grid cols-3 section">
   <a href="19-radius-shadow.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">19 · Radius & Shadow</h3></div><p style="font-size:0.75rem;color:#666">Border radius scale + shadow elevation tokens</p><div style="margin-top:0.5rem"><span class="tag">12 tokens</span></div></a>
   <a href="20-layering-zindex.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">20 · Layering & Z-Index</h3></div><p style="font-size:0.75rem;color:#666">Z-index hierarchy — content through overlay</p><div style="margin-top:0.5rem"><span class="tag">8 layers</span></div></a>
   <a href="21-spatial-grid.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">21 · Spatial Grid</h3></div><p style="font-size:0.75rem;color:#666">Grid tokens, variants, opacity comparison, layout rules</p><div style="margin-top:0.5rem"><span class="tag">grid</span></div></a>
+  <a href="22-spatial-runtime.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">22 · Spatial Runtime</h3></div><p style="font-size:0.75rem;color:#666">SpatialProvider, useSpatial hook, GridDebug, component consumption flow</p><div style="margin-top:0.5rem"><span class="tag">runtime</span></div></a>
 </div>`
 
 indexHtml = headerEnd + newGrid + footerStart
