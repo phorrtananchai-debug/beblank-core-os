@@ -1014,11 +1014,9 @@ const DocumentsView = ({
   workScope: WorkScopeSection[]
   onDocumentIssue: (document: DocumentRecord) => void
 }) => (
-  <section className="panel">
-    <div className="panel-header">
-      <h3>Document operations</h3>
-      <span className="pill">{documents.length} packages</span>
-    </div>
+  <WorkspaceSection
+    header={<WorkspaceHeader title="Document operations" endSlot={<span className="pill">{documents.length} packages</span>} />}
+  >
     <div className="space-y-4">
       {documents.map((document) => (
         <div key={document.id} className="grid gap-4 rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4 lg:grid-cols-[1fr_0.28fr]">
@@ -1036,19 +1034,19 @@ const DocumentsView = ({
         </div>
       ))}
     </div>
-  </section>
+  </WorkspaceSection>
 )
 
 const ArtworkView = ({ artwork, briefs, projects }: { artwork: ArtworkRecord[]; briefs: CreativeBrief[]; projects: Project[] }) => (
   <section className="grid gap-5 xl:grid-cols-4">
     {artwork.map((item) => (
-      <article key={item.id} className="panel panel-float">
+      <WorkspaceCard key={item.id} variant="float" as="article" className="flex flex-col">
         <div className={`studio-fragment-media studio-fragment-${item.previewTone}`} />
         <p className="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{projectName(projects, item.projectId)} / {item.group}</p>
         <h3 className="mt-2 text-lg font-semibold">{item.title}</h3>
         <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">{item.operationalNotes}</p>
         <p className="mt-3 text-xs text-[var(--bb-text-muted)]">Brief: {briefs.find((brief) => brief.id === item.briefId)?.title ?? 'Unlinked brief'}</p>
-      </article>
+      </WorkspaceCard>
     ))}
   </section>
 )
@@ -1066,7 +1064,7 @@ const BriefsView = ({
 }) => (
   <section className="grid gap-5 xl:grid-cols-2">
     {briefs.map((brief) => (
-      <article key={brief.id} className="panel panel-float">
+      <WorkspaceCard key={brief.id} variant="float" as="article">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{projectName(projects, brief.projectId)} / {brief.status}</p>
         <h3 className="mt-3 text-2xl font-bold">{brief.title}</h3>
         <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">{brief.direction}</p>
@@ -1080,7 +1078,7 @@ const BriefsView = ({
         <button className="btn-primary mt-5" type="button" onClick={() => onBriefApproval(brief)}>
           Queue Brief Approval
         </button>
-      </article>
+      </WorkspaceCard>
     ))}
   </section>
 )
