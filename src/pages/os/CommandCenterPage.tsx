@@ -4,6 +4,7 @@ import { ActivityFeed } from '../../components/command-center/ActivityFeed'
 import { CommandHeader } from '../../components/command-center/CommandHeader'
 import { DivisionTile } from '../../components/command-center/DivisionTile'
 import { PixelOfficeView } from '../../components/command-center/PixelOfficeView'
+import { WorkspaceHeader } from '../../components/shared/workspace/WorkspaceHeader'
 import { buildAequitasCapitalModel } from '../../core/aequitas/buildAequitasCapitalModel'
 import { useCreatorFactorySync } from '../../core/creator/useCreatorFactorySync'
 import { buildJarvisBModel } from '../../core/jarvis/buildJarvisBModel'
@@ -271,10 +272,7 @@ export const CommandCenterPage = () => {
 
       {viewMode === 'matrix' ? (
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 px-0.5">
-            <h3 className="text-sm font-semibold text-[var(--bb-text)]">Division Matrix</h3>
-            <span className="text-[10px] text-[var(--bb-text-faint)]">{divisions.length} divisions</span>
-          </div>
+          <WorkspaceHeader title="Division Matrix" endSlot={<span className="text-[10px] text-[var(--bb-text-faint)]">{divisions.length} divisions</span>} />
           <div className="grid gap-2 xl:grid-cols-2">
             {divisions.map((division) => (
               <DivisionTile key={division.id} division={division} />
@@ -292,10 +290,7 @@ export const CommandCenterPage = () => {
       )}
 
       <div className="space-y-1.5">
-        <div className="flex items-center gap-2 px-0.5">
-          <h3 className="text-sm font-semibold text-[var(--bb-text)]">Agent Queue</h3>
-          <span className="text-[10px] text-[var(--bb-text-faint)]">{agents.length} tracked</span>
-        </div>
+        <WorkspaceHeader title="Agent Queue" endSlot={<span className="text-[10px] text-[var(--bb-text-faint)]">{agents.length} tracked</span>} />
         <AgentQueueBoard
           runningNow={runningNow}
           waitingReview={waitingReview}
