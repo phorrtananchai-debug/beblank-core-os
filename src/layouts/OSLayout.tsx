@@ -1,7 +1,9 @@
-﻿import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+﻿import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { MiniLegend, RouteMark, SourceMark } from '../components/shared/workspace/marks'
 import { useAuth } from '../core/auth/useAuth'
 import { useProfile } from '../hooks/useProfile'
+import { GridOverlay } from '../components/shared/GridOverlay'
+import type { GridVariant } from '../design/grid'
 
 const groups = [
   {
@@ -39,9 +41,15 @@ export const OSLayout = () => {
   const { logout } = useAuth()
   const navigate = useNavigate()
   const { profile } = useProfile()
+  const location = useLocation()
+  const path = location.pathname
+
+  const gridVariant: GridVariant =
+    path.startsWith('/os/studio') || path.startsWith('/os/design-system') ? 'architect' : 'operation'
 
   return (
-    <div className="os-shell min-h-screen overflow-hidden bg-[var(--bb-shell)] px-3 py-3 text-[var(--bb-text)] md:px-6 md:py-5">
+    <div className="os-shell relative min-h-screen overflow-hidden bg-[var(--bb-shell)] px-3 py-3 text-[var(--bb-text)] md:px-6 md:py-5">
+      <GridOverlay enabled={true} variant={gridVariant} pointerEvents={false} shell={true} />
       <div className="os-ambient-plane" />
       <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[22px] border border-[var(--bb-border)]/80 bg-white/70 p-3 shadow-[var(--bb-shadow-sm)]">
         <aside className="os-sidebar sticky top-5 flex h-[calc(100vh-2.5rem)] w-[292px] flex-col overflow-x-hidden rounded-[18px] border border-[var(--bb-border)] bg-white/90 p-5 shadow-[var(--bb-shadow-sm)]">

@@ -54,7 +54,36 @@ The Spatial Grid Language provides a consistent structural reference for layout 
 
 ## Recommended Usage
 
-- Enable grid globally during development via localStorage or environment variable
-- Use `GridCanvas` for pages under active layout review
-- Use `GridOverlay` directly for per-section grid display
+- Grid is active by default in all OS workspaces via `OSLayout`
+- Studio and Design System pages use **architect** mode (0.05)
+- All other workspaces use **operation** mode (0.03)
+- Grid renders as an absolutely-positioned background (`shell` mode)
+- No layout shift — grid is behind all content
+- `pointer-events: none` — grid never blocks interaction
 - Keyboard shortcut: `Ctrl+G` to toggle grid visibility (future)
+
+## Runtime Integration
+
+The grid is injected at the `OSLayout` level. Every route under `/os/` gets automatic grid rendering.
+
+```tsx
+// In OSLayout.tsx — automatic per-route grid mode
+const gridVariant =
+  path.startsWith('/os/studio') || path.startsWith('/os/design-system')
+    ? 'architect'
+    : 'operation'
+
+<GridOverlay enabled={true} variant={gridVariant} shell={true} />
+```
+
+The `shell={true}` prop uses `position: absolute; z-index: 0` so the grid sits behind all content naturally.
+
+## GridCanvas
+
+For per-page grid wrapping:
+
+```tsx
+<GridCanvas gridEnabled gridVariant="architect">
+  <YourPageContent />
+</GridCanvas>
+```

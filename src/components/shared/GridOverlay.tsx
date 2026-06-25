@@ -9,6 +9,7 @@ interface Props {
   minor?: number
   fadeEdges?: boolean
   pointerEvents?: boolean
+  shell?: boolean
 }
 
 const GRID_LINE_COLOR = 'rgba(0,0,0,0.04)'
@@ -21,6 +22,7 @@ export const GridOverlay = ({
   minor,
   fadeEdges = true,
   pointerEvents = false,
+  shell = false,
 }: Props) => {
   if (!enabled) return null
 
@@ -30,19 +32,17 @@ export const GridOverlay = ({
   const minorPx = minor ?? config.minor
 
   const baseStyle: CSSProperties = {
-    position: 'fixed',
+    position: shell ? 'absolute' : 'fixed',
     inset: 0,
-    zIndex: 9999,
-    opacity: 0,
+    zIndex: shell ? 0 : 9999,
     pointerEvents: pointerEvents ? 'auto' : 'none',
-    transition: 'opacity 0.2s ease',
   }
 
   const majorStyle: CSSProperties = {
     position: 'absolute',
     inset: 0,
-    backgroundImage: `repeating-linear-gradient(0deg, ${GRID_LINE_COLOR}, ${GRID_LINE_COLOR} ${gridOpacity > 0 ? '1px' : '0px'}, transparent ${gridOpacity > 0 ? '1px' : '0px'}, transparent ${majorPx}px),
-                       repeating-linear-gradient(90deg, ${GRID_LINE_COLOR}, ${GRID_LINE_COLOR} ${gridOpacity > 0 ? '1px' : '0px'}, transparent ${gridOpacity > 0 ? '1px' : '0px'}, transparent ${majorPx}px)`,
+    backgroundImage: `repeating-linear-gradient(0deg, ${GRID_LINE_COLOR}, ${GRID_LINE_COLOR} 1px, transparent 1px, transparent ${majorPx}px),
+                       repeating-linear-gradient(90deg, ${GRID_LINE_COLOR}, ${GRID_LINE_COLOR} 1px, transparent 1px, transparent ${majorPx}px)`,
     backgroundSize: `${majorPx}px ${majorPx}px`,
     opacity: gridOpacity * 2,
   }
