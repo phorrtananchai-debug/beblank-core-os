@@ -1,0 +1,89 @@
+import { writeFileSync } from 'fs'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const root = resolve(__dirname, '..')
+const reviewDir = resolve(root, 'artifacts', 'design-system-review')
+
+const CSS = `* { margin:0;padding:0;box-sizing:border-box }
+body { font-family:'IBM Plex Sans Thai',system-ui,sans-serif;background:#f2efe9;color:#1a1a1a;padding:2rem }
+.container { max-width:1200px;margin:0 auto }
+h1 { font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.25rem }
+h2 { font-size:1.1rem;font-weight:600;margin-top:2rem;margin-bottom:0.75rem }
+.subtitle { color:#666;font-size:0.875rem;margin-bottom:2rem }
+.meta { font-family:'Geist Mono',monospace;font-size:0.625rem;color:#999 }
+.card { border:1px solid #e6e0d5;border-radius:0.75rem;background:#fff;padding:1rem }
+.grid { display:grid;gap:1rem }
+.cols-2 { grid-template-columns:repeat(2,1fr) }
+.cols-3 { grid-template-columns:repeat(3,1fr) }
+.cols-4 { grid-template-columns:repeat(4,1fr) }
+table { width:100%;border-collapse:collapse;font-size:0.75rem }
+th { text-align:left;padding:0.5rem;font-weight:600;color:#999;font-size:0.625rem;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #e6e0d5 }
+td { padding:0.5rem;border-bottom:1px solid #e6e0d5 }
+.section { margin-top:3rem }
+.tag { display:inline-block;background:#f0eeec;border-radius:0.25rem;padding:0.125rem 0.375rem;font-family:'Geist Mono',monospace;font-size:0.5rem;color:#666 }
+pre { font-family:'Geist Mono',monospace;font-size:0.6875rem;background:#faf9f8;padding:0.75rem;border-radius:0.5rem;border:1px solid #e6e0d5 }
+`
+
+const H = (t) => `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${t}</title><style>${CSS}</style></head><body><div class="container">`
+const F = `</div></body></html>`
+
+writeFileSync(resolve(reviewDir, '23-editorial-layout.html'), H('23 Editorial Layout') + `
+<h1>Editorial Layout Engine</h1>
+<p class="subtitle">Layout tokens, column system, editorial components, baseline grid, layout inspector.</p>
+
+<div class="section"><h2>Layout Tokens</h2>
+<table><tr><th>Mode</th><th>Max Width</th><th>Columns</th><th>Padding</th><th>Gap</th><th>Margin</th></tr>
+<tr><td>hero</td><td>1200px</td><td>12</td><td>32px</td><td>24px</td><td>48px</td></tr>
+<tr><td>article</td><td>960px</td><td>12</td><td>24px</td><td>16px</td><td>32px</td></tr>
+<tr><td>rail</td><td>100%</td><td>12</td><td>16px</td><td>12px</td><td>24px</td></tr>
+<tr><td>gallery</td><td>1400px</td><td>12</td><td>8px</td><td>6px</td><td>12px</td></tr>
+<tr><td>presentation</td><td>1440px</td><td>12</td><td>24px</td><td>16px</td><td>48px</td></tr>
+<tr><td>narrative</td><td>800px</td><td>12</td><td>24px</td><td>16px</td><td>32px</td></tr>
+</table></div>
+
+<div class="section"><h2>Column System</h2>
+<p style="font-size:0.75rem;color:#666">12-column CSS Grid system. Sections declare columnSpan and columnStart. Common splits:</p>
+<pre>
+Hero:       8 / 4     (feature + rail)
+Article:    7 / 5     (content + sidebar)
+Overview:   3 / 6 / 3 (left rail + content + right rail)
+Gallery:    4 / 4 / 4 (equal thirds)
+Full:       12        (single column)
+</pre></div>
+
+<div class="section"><h2>Editorial Components</h2>
+<table><tr><th>Component</th><th>File</th><th>Purpose</th></tr>
+<tr><td>EditorialSection</td><td>workspace/EditorialSection.tsx</td><td>Section wrapper with layout config</td></tr>
+<tr><td>EditorialRail</td><td>workspace/EditorialRail.tsx</td><td>CSS Grid rail with column count</td></tr>
+</table></div>
+
+<div class="section"><h2>Baseline Grid</h2>
+<p style="font-size:0.75rem;color:#666">8px baseline grid. Toggleable via GridDebug (Ctrl+Shift+G). Layers:</p>
+<ul style="font-size:0.75rem;color:#666;margin-top:0.5rem;padding-left:1.25rem">
+<li>Major grid (64px)</li>
+<li>Minor grid (8px)</li>
+<li>Column guides (12 columns)</li>
+<li>Baseline (8px horizontal lines)</li>
+<li>Margin guides (48px inline margins)</li>
+</ul></div>
+
+<div class="section"><h2>Grid Visibility</h2>
+<table><tr><th>Mode</th><th>Major Opacity</th><th>Minor Opacity</th><th>Feeling</th></tr>
+<tr><td>Architect</td><td>0.06</td><td>0.025</td><td>Visible trace paper</td></tr>
+<tr><td>Operation</td><td>0.03</td><td>0.012</td><td>Subtle reference</td></tr>
+<tr><td>Presentation</td><td>0</td><td>0</td><td>No grid</td></tr>
+<tr><td>Print</td><td>0.08</td><td>0.032</td><td>Clear for print</td></tr>
+</table></div>
+
+<div class="section"><h2>Layout Inspector</h2>
+<p style="font-size:0.75rem;color:#666">Press Ctrl+Shift+L to toggle. Shows:</p>
+<ul style="font-size:0.75rem;color:#666;margin-top:0.5rem;padding-left:1.25rem">
+<li>Current variant, major/minor, baseline</li>
+<li>Column count, opacity, rhythm values</li>
+<li>Overlay layers (major, minor, columns, baseline, margins)</li>
+<li>Each layer can be toggled individually</li>
+</ul></div>
+` + F)
+console.log('23-editorial-layout.html')

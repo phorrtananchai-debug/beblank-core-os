@@ -339,7 +339,7 @@ const Overview = ({
 
   return (
     <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <main className="space-y-5">
+      <main style={{ padding: '16px 0' }} className="space-y-5">
         {/* OPERATING RHYTHM — daily executive brief */}
         <OperatingRhythm projects={projects} phases={phases} timeline={timeline} pendingApprovals={pendingApprovals} projectApprovals={projectApprovals} />
 
