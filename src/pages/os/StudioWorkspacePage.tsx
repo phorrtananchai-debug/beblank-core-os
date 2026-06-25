@@ -11,6 +11,9 @@ import { OperatingRhythm } from '../../components/studio/OperatingRhythm'
 import { WorkspaceDrawer } from '../../components/shared/WorkspaceDrawer'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
+import { WorkspaceSection } from '../../components/shared/workspace/WorkspaceSection'
+import { WorkspaceHeader } from '../../components/shared/workspace/WorkspaceHeader'
+import { WorkspaceCard } from '../../components/shared/workspace/WorkspaceCard'
 import { useOs } from '../../core/os/useOs'
 import type {
   ActionRequest,
@@ -351,15 +354,13 @@ const Overview = ({
         </WorkspaceDrawer>
 
         {/* L1: Active Projects — detailed project inventory */}
-        <section className="os-card-primary">
-          <div className="panel-header">
-            <div>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Studio Portfolio</p>
-              <h3>Active Projects</h3>
+        <WorkspaceSection
+          header={
+            <WorkspaceHeader label="Studio Portfolio" title="Active Projects" endSlot={<span className="pill">{projects.length} projects</span>}>
               <p className="text-xs text-[var(--bb-text-soft)]">Project inventory with scope, documents, artwork, and site watch counts.</p>
-            </div>
-            <span className="pill">{projects.length} projects</span>
-          </div>
+            </WorkspaceHeader>
+          }
+        >
           <div className="grid gap-4 md:grid-cols-2">
             {projects.map((project) => {
               const isAtRisk = atRiskProjects.some((p) => p.id === project.id)
@@ -419,18 +420,14 @@ const Overview = ({
               )
             })}
           </div>
-        </section>
+        </WorkspaceSection>
 
         {/* L2: Studio Master Timeline + Upcoming Openings */}
         <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="panel panel-float">
-            <div className="panel-header">
-              <div>
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Timeline</p>
-                <h3>Studio Master Timeline</h3>
-              </div>
-              <span className="pill">{sortedEvents.length}</span>
-            </div>
+          <WorkspaceSection
+            variant="float"
+            header={<WorkspaceHeader label="Timeline" title="Studio Master Timeline" endSlot={<span className="pill">{sortedEvents.length}</span>} />}
+          >
             <div className="space-y-2">
               {sortedEvents.map((event) => (
                 <div key={event.id} className="grid gap-2 border-b border-black/[0.04] pb-2 last:border-b-0 md:grid-cols-[90px_1fr_auto] md:items-center">
@@ -446,17 +443,13 @@ const Overview = ({
                 <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีเหตุการณ์ในช่วงนี้</p>
               )}
             </div>
-          </div>
+          </WorkspaceSection>
 
           <div className="space-y-5">
-            <div className="panel panel-float">
-              <div className="panel-header">
-                <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Openings</p>
-                  <h3>Upcoming Openings</h3>
-                </div>
-                <span className="pill">{openingsSorted.length}</span>
-              </div>
+            <WorkspaceSection
+              variant="float"
+              header={<WorkspaceHeader label="Openings" title="Upcoming Openings" endSlot={<span className="pill">{openingsSorted.length}</span>} />}
+            >
               <div className="space-y-3">
                   {openingsSorted.length === 0 ? (
                   <p className="text-sm text-[var(--bb-text-muted)]">ไม่มีการเปิดงานที่รออยู่</p>
@@ -476,44 +469,41 @@ const Overview = ({
                   ))
                 )}
               </div>
-            </div>
+            </WorkspaceSection>
 
-            <div className="panel panel-float">
-              <div className="panel-header">
-                <div>
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Capacity</p>
-                  <h3>Resource Capacity</h3>
-                </div>
-              </div>
+            <WorkspaceSection
+              variant="float"
+              header={<WorkspaceHeader label="Capacity" title="Resource Capacity" />}
+            >
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                <WorkspaceCard variant="compact" padding="sm" className="text-center">
                   <p className="text-2xl font-bold">{activeScope.length}</p>
                   <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">WorkScope</p>
-                </div>
-                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                </WorkspaceCard>
+                <WorkspaceCard variant="compact" padding="sm" className="text-center">
                   <p className="text-2xl font-bold">{openSiteWatch.length}</p>
                   <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">Site Watch</p>
-                </div>
-                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                </WorkspaceCard>
+                <WorkspaceCard variant="compact" padding="sm" className="text-center">
                   <p className="text-2xl font-bold">{pendingStudioReviews.length}</p>
                   <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">Reviews</p>
-                </div>
-                <div className="rounded-2xl border border-black/[0.04] bg-white/80 p-3 text-center">
+                </WorkspaceCard>
+                <WorkspaceCard variant="compact" padding="sm" className="text-center">
                   <p className="text-2xl font-bold">{taskCount}</p>
                   <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--bb-text-muted)]">Tasks</p>
-                </div>
+                </WorkspaceCard>
               </div>
-            </div>
+            </WorkspaceSection>
           </div>
         </section>
 
       </main>
 
       <aside className="intelligence-rail space-y-4">
-        <div className="rounded-[30px] border border-black/[0.05] bg-white/85 p-5">
+        <WorkspaceCard variant="default" padding="lg" className="rounded-[30px]">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">Reviews</p>
           <p className="mt-1 text-xs text-[var(--bb-text-muted)]">{pendingStudioReviews.length} pending</p>
-        </div>
+        </WorkspaceCard>
         {pendingStudioReviews.map((review) => (
           <ReviewCard key={review.id} review={review} projectName={projectName(projects, review.projectId)} />
         ))}
