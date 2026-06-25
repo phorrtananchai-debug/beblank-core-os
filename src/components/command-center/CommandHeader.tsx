@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { MiniLegend, OperatingMarker, StatusMark } from '../shared/workspace/marks'
 
 type Mood = 'calm' | 'busy' | 'review-needed' | 'offline'
 
@@ -8,11 +9,11 @@ const moodStatusColor: Record<string, string> = {
   Calm: 'bg-[#16a36a]',
 }
 
-const moodBorder: Record<Mood, string> = {
-  calm: 'border-l-[#16a36a]',
-  busy: 'border-l-[var(--bb-accent)]',
-  'review-needed': 'border-l-[#c2410c]',
-  offline: 'border-l-black/[0.12]',
+const moodStatus: Record<Mood, string> = {
+  calm: 'LIVE',
+  busy: 'ACTIVE',
+  'review-needed': 'WATCH',
+  offline: 'ARCHIVED',
 }
 
 export const CommandHeader = ({
@@ -41,9 +42,7 @@ export const CommandHeader = ({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-faint)]">
-              Command Center / Operational Matrix
-            </p>
+            <OperatingMarker index="01">Command Center / Operational Matrix</OperatingMarker>
             {systemMood !== 'Calm' ? (
               <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white ${moodStatusColor[systemMood] ?? ''}`}>
                 <span className="inline-block h-1 w-1 rounded-full bg-white animate-pulse" />
@@ -57,22 +56,27 @@ export const CommandHeader = ({
           </div>
         </div>
         <div className="flex flex-col items-start gap-2 xl:items-end">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="pill">{divisionsCount} divisions</span>
-            <span className="pill">{agentsCount} agents</span>
-            <span className="pill-accent">{modeLabel}</span>
-          </div>
+          <MiniLegend
+            items={[
+              { label: `${divisionsCount} divisions`, mark: <StatusMark status="ACTIVE" label="DV" /> },
+              { label: `${agentsCount} agents`, mark: <StatusMark status="LIVE" label="AG" /> },
+              { label: modeLabel, mark: <StatusMark status="WATCH" label="MX" /> },
+            ]}
+          />
           {viewToggle ? <div>{viewToggle}</div> : null}
         </div>
       </div>
     </header>
 
-    <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+    <div className="grid border-y border-[var(--bb-border)] sm:grid-cols-3 lg:grid-cols-6">
       {statusStrip.map((item) => {
         const isMood = item.label === 'System Mood'
         return (
-          <div key={item.label} className={`rounded-[10px] border border-[var(--bb-border)] bg-[var(--bb-surface-2)] px-3.5 py-2.5 ${isMood ? `border-l-2 ${moodBorder[systemMoodSource]}` : ''}`}>
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.label}</p>
+          <div key={item.label} className="border-b border-r border-[var(--bb-border)] bg-transparent px-3.5 py-2.5 last:border-r-0 lg:border-b-0">
+            <div className="flex items-center gap-2">
+              {isMood ? <StatusMark status={moodStatus[systemMoodSource]} /> : null}
+              <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-faint)]">{item.label}</p>
+            </div>
             <div className="mt-1.5 flex items-baseline gap-1.5">
               <span className={`text-lg font-semibold leading-none tracking-[-0.02em] text-[var(--bb-text)] ${isMood ? (systemMoodSource === 'review-needed' ? 'text-[#c2410c]' : systemMoodSource === 'busy' ? 'text-[var(--bb-accent)]' : '') : ''}`}>{item.value}</span>
             </div>

@@ -4,6 +4,7 @@ import { EmptyState } from '../../components/shared/EmptyState'
 import { MockSheetSyncStatus } from '../../components/shared/MockSheetSyncStatus'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
+import { OperatingMarker, SectionIndex } from '../../components/shared/workspace/marks'
 import { useOs } from '../../core/os/useOs'
 import { useProfile } from '../../hooks/useProfile'
 import type { SyncQueueItem } from '../../types/models'
@@ -32,7 +33,7 @@ const EditRow = ({ label, value, onChange, maxLength }: { label: string; value: 
 )
 
 const MiniRow = ({ meta, status, title }: { meta: string; status: string; title: string }) => (
-  <div className="rounded-2xl border border-black/[0.05] bg-white/75 p-4">
+  <div className="border-t border-[var(--bb-border)] py-3">
     <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-sm font-semibold">{title}</p>
@@ -77,7 +78,7 @@ export const SettingsPage = () => {
   return (
     <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">??????????????</p>
+        <OperatingMarker index="01">System Configuration</OperatingMarker>
         <h2 className="mt-2 text-2xl font-extrabold">Settings</h2>
         <p className="mt-1 text-sm leading-6 text-[var(--bb-text-soft)]">Profile, workspace preferences, appearance, and system configuration</p>
       </header>
@@ -86,7 +87,7 @@ export const SettingsPage = () => {
       <section className="os-card-primary">
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">PROFILE</p>
+            <div className="flex items-center gap-2"><SectionIndex value="02" /><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">PROFILE</p></div>
             <h3>Personal Workspace</h3>
           </div>
           <div className="flex gap-2">
@@ -127,7 +128,7 @@ export const SettingsPage = () => {
       <section className="os-card-primary">
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">WORKSPACE</p>
+            <div className="flex items-center gap-2"><SectionIndex value="03" /><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">WORKSPACE</p></div>
             <h3>Workspace Preferences</h3>
           </div>
         </div>
@@ -143,15 +144,15 @@ export const SettingsPage = () => {
       <section className="os-card-primary">
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">APPEARANCE</p>
+            <div className="flex items-center gap-2"><SectionIndex value="04" /><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">APPEARANCE</p></div>
             <h3>Interface Preferences</h3>
           </div>
         </div>
         <div className="space-y-3">
           <ConfigRow label="Surface Palette" value="Warm Neutral" />
           <ConfigRow label="Accent Color" value="Orange" />
-          <ConfigRow label="Card Style" value="Rounded + Shadow" />
-          <ConfigRow label="Font Display" value="Prompt (Thai) / Inter (EN)" />
+          <ConfigRow label="Card Style" value="Thin Rules + Workspace" />
+          <ConfigRow label="Font Display" value="Space Grotesk / Geist Mono" />
         </div>
       </section>
 
@@ -159,7 +160,7 @@ export const SettingsPage = () => {
       <section className="os-card-primary">
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">SYSTEM</p>
+            <div className="flex items-center gap-2"><SectionIndex value="05" /><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">SYSTEM</p></div>
             <h3>Connector & Bridge Configuration</h3>
           </div>
           <span className="pill">{data.connectors.length} connectors</span>

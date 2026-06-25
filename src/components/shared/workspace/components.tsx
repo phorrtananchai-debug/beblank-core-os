@@ -34,7 +34,7 @@ export const PageHeader = ({
   title: string
 }) => (
   <header
-    className="grid gap-4 border border-[color:var(--bbh-border)]/70 bg-[color:var(--bbh-surface)] p-5 md:p-6"
+    className="grid gap-5 border border-[color:var(--bbh-border)]/80 bg-[color:var(--bbh-surface)] p-5 md:p-7"
     style={panelStyle}
   >
     <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
@@ -100,7 +100,7 @@ export const WorkspacePanel = ({
   title?: string
 }) => (
   <article
-    className={`grid gap-4 border bg-[color:var(--bbh-surface)] p-5 md:p-6 ${highlight ? 'border-[color:var(--bbh-accent)]/35' : 'border-[color:var(--bbh-border)]/70'} ${className}`}
+    className={`grid gap-5 border bg-[color:var(--bbh-surface)] p-5 md:p-6 ${highlight ? 'border-[color:var(--bbh-accent)]/35' : 'border-[color:var(--bbh-border)]/80'} ${className}`}
     style={{
       ...panelStyle,
       boxShadow: highlight ? bbhTokens.shadow.panel : panelStyle.boxShadow,
@@ -166,7 +166,7 @@ export const MetricLine = ({
   status?: WorkspaceStatus | string
   value: ReactNode
 }) => (
-  <div className="grid gap-1 rounded-[22px] border border-[color:var(--bbh-border)]/60 bg-[color:var(--bbh-surface-muted)] px-4 py-3">
+  <div className="grid gap-1 rounded-[12px] border border-[color:var(--bbh-border)]/70 bg-[color:var(--bbh-surface-muted)] px-4 py-3">
     <div className="flex items-center justify-between gap-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={labelStyle}>
         {label}
@@ -193,7 +193,7 @@ export const TimelineRow = ({
   status?: WorkspaceStatus | string
   title: string
 }) => (
-  <div className="flex items-start gap-4 rounded-[22px] border border-[color:var(--bbh-border)]/50 bg-[color:var(--bbh-surface-muted)] px-4 py-3">
+  <div className="flex items-start gap-4 rounded-[12px] border border-[color:var(--bbh-border)]/60 bg-[color:var(--bbh-surface-muted)] px-4 py-3">
     <div className="min-w-[4.25rem] shrink-0">
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={labelStyle}>
         {date}
@@ -231,7 +231,7 @@ export const DecisionCard = ({
   status?: WorkspaceStatus | string
   title: string
 }) => (
-  <article className="grid gap-3 rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] px-4 py-4">
+  <article className="grid gap-3 rounded-[14px] border border-[color:var(--bbh-border)]/65 bg-[color:var(--bbh-surface-muted)] px-4 py-4">
     <div className="flex items-start justify-between gap-3">
       <div className="grid gap-1">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={labelStyle}>
@@ -280,7 +280,7 @@ export const ProjectCard = ({
   title: string
   trade?: string
 }) => (
-  <article className="grid gap-4 rounded-[28px] border border-[color:var(--bbh-border)]/65 bg-[color:var(--bbh-surface)] p-5 shadow-[0_20px_60px_rgba(25,19,14,0.06)]">
+  <article className="grid gap-5 rounded-[18px] border border-[color:var(--bbh-border)]/75 bg-[color:var(--bbh-surface)] p-5 shadow-[0_1px_0_rgba(25,19,14,0.03)]">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="grid gap-1">
         {code ? <ReferenceLabel label="Project" value={code} /> : null}
@@ -310,7 +310,7 @@ export const ProjectCard = ({
       </div>
     ) : null}
     {blocker ? (
-      <p className="rounded-[22px] border border-[color:var(--bbh-accent-border)] bg-[color:var(--bbh-accent-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--bbh-text-soft)]">
+      <p className="rounded-[12px] border border-[color:var(--bbh-accent-border)] bg-[color:var(--bbh-accent-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--bbh-text-soft)]">
         {blocker}
       </p>
     ) : null}
@@ -326,7 +326,7 @@ export const FilterBar = ({
   filters: Array<{ active?: boolean; count?: number; label: string; key: string }>
   onChange?: (key: string) => void
 }) => (
-  <div className="flex flex-wrap gap-2 rounded-[24px] border border-[color:var(--bbh-border)]/60 bg-[color:var(--bbh-surface)] p-2">
+  <div className="flex flex-wrap gap-2 rounded-[14px] border border-[color:var(--bbh-border)]/70 bg-[color:var(--bbh-surface)] p-2">
     {filters.map((filter) => (
       <button
         key={filter.key}
@@ -357,7 +357,7 @@ export const DataTable = ({
   if (rows.length === 0) return <>{emptyState ?? null}</>
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface)]">
+    <div className="overflow-hidden rounded-[14px] border border-[color:var(--bbh-border)]/65 bg-[color:var(--bbh-surface)]">
       <table className="w-full border-collapse text-left">
         <thead className="bg-[color:var(--bbh-surface-muted)]">
           <tr>
@@ -403,7 +403,7 @@ export const EmptyState = ({
   body: string
   title: string
 }) => (
-  <section className="grid gap-4 rounded-[28px] border border-dashed border-[color:var(--bbh-border)] bg-[color:var(--bbh-surface-muted)] px-6 py-8 text-center">
+  <section className="grid gap-4 rounded-[18px] border border-dashed border-[color:var(--bbh-border)] bg-[color:var(--bbh-surface-muted)] px-6 py-8 text-center">
     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={labelStyle}>
       Empty workspace
     </p>

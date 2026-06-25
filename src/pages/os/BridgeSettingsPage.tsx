@@ -8,6 +8,7 @@ import { saveFullHistoryCache } from '../../core/investments/dividendFullHistory
 import { saveHoldingsCache } from '../../core/investments/holdingsCache'
 import { SourceHealthMonitorFull } from '../../components/shared/SourceHealthMonitor'
 import { BridgeDiagnostics } from '../../components/bridge/BridgeDiagnostics'
+import { OperatingMarker, SourceMark, StatusMark } from '../../components/shared/workspace/marks'
 
 const ResourceCard = ({
   resource,
@@ -24,7 +25,7 @@ const ResourceCard = ({
   fetching: boolean
   hasEndpoint: boolean
 }) => (
-  <div className="rounded-[24px] border border-black/[0.05] bg-[#faf9f8] p-4">
+  <div className="border-t border-[var(--bb-border)] py-4">
     <div className="flex items-start justify-between gap-3">
       <div>
         <p className="font-semibold">{resource.name}</p>
@@ -285,7 +286,7 @@ export const BridgeSettingsPage = () => {
   return (
     <section className="space-y-5">
       <header className="command-hero rounded-[36px] border border-black/[0.05] bg-[#faf9f8] p-6 md:p-9">
-        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--bb-text-muted)]">Google Sheet Bridge</p>
+        <OperatingMarker index="01">Google Sheet Bridge</OperatingMarker>
         <h2 className="mt-2 text-2xl font-extrabold">Bridge Settings</h2>
         <p className="mt-1 text-sm leading-6 text-[var(--bb-text-soft)]">
           Configure manual Google Sheet connection. No autosync. No silent overwrite.
@@ -296,7 +297,7 @@ export const BridgeSettingsPage = () => {
       <section className="os-card-primary">
         <div className="panel-header">
           <div>
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">CONNECTION</p>
+            <div className="flex items-center gap-2"><SourceMark /><p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">CONNECTION</p></div>
             <h3>Sheet Connection</h3>
           </div>
           <div className="flex gap-2">
@@ -309,7 +310,7 @@ export const BridgeSettingsPage = () => {
 
         <div className="space-y-4">
           <div className="os-list-row">
-            <label className="text-sm font-medium text-[var(--bb-text-muted)]">Sheet URL / ID</label>
+            <label className="flex items-center gap-2 text-sm font-medium text-[var(--bb-text-muted)]"><SourceMark />Sheet URL / ID</label>
             <div className="flex-1">
               <input
                 className={`w-full max-w-md rounded-xl border px-3 py-1.5 text-sm outline-none transition focus:bg-white ${sheetUrlWarning ? 'border-red/50 bg-red/5' : 'border-black/[0.08] bg-white/80 focus:border-[var(--bb-accent-border)]'}`}
@@ -322,7 +323,7 @@ export const BridgeSettingsPage = () => {
           </div>
 
           <div className="os-list-row">
-            <label className="text-sm font-medium text-[var(--bb-text-muted)]">Apps Script Endpoint</label>
+            <label className="flex items-center gap-2 text-sm font-medium text-[var(--bb-text-muted)]"><SourceMark live />Apps Script Endpoint</label>
             <div className="flex-1">
               <input
                 className={`w-full max-w-md rounded-xl border px-3 py-1.5 text-sm outline-none transition focus:bg-white ${endpointWarning ? 'border-red/50 bg-red/5' : 'border-black/[0.08] bg-white/80 focus:border-[var(--bb-accent-border)]'}`}
@@ -335,7 +336,7 @@ export const BridgeSettingsPage = () => {
           </div>
 
           <div className="os-list-row">
-            <label className="text-sm font-medium text-[var(--bb-text-muted)]">Sync Mode</label>
+            <label className="flex items-center gap-2 text-sm font-medium text-[var(--bb-text-muted)]"><StatusMark status="WATCH" label="MD" />Sync Mode</label>
             <div className="flex gap-3">
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -369,7 +370,7 @@ export const BridgeSettingsPage = () => {
             </button>
 
             <div className="flex items-center gap-2">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${connectionLabel.color}`} />
+              <StatusMark status={connectionLabel.status === 'connected' ? 'LIVE' : connectionLabel.status === 'error' ? 'BLOCKED' : 'WATCH'} />
               <span className="text-xs text-[var(--bb-text-muted)]">{connectionLabel.label}</span>
             </div>
 

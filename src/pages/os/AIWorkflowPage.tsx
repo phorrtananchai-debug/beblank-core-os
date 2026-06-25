@@ -4,6 +4,7 @@ import { ChangeLogList } from '../../components/shared/ChangeLogList'
 import { EmptyState } from '../../components/shared/EmptyState'
 import { PendingApprovalPanel } from '../../components/shared/PendingApprovalPanel'
 import { SnapshotLog } from '../../components/shared/SnapshotLog'
+import { ApprovalMark, EvidenceMark, OperatingMarker, StatusMark } from '../../components/shared/workspace/marks'
 import { useOs } from '../../core/os/useOs'
 import type { AIDigestRecord, AIExportRecord, AIImportRecord, AIMemoryRecord, AIObservationRecord } from '../../types/models'
 
@@ -57,10 +58,10 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
             <h2 className="mt-4 max-w-4xl text-5xl font-extrabold leading-[0.92] tracking-tight md:text-7xl">Context first. Review always.</h2>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--bb-text-soft)]">Manual AI context exports, imported suggestions, review queues, memory scaffolding, and cross-module observations. No autonomous agents, no direct LLM calls, no hidden automation.</p>
           </div>
-          <div className="rounded-[30px] border border-black/[0.06] bg-[#111111] p-5 text-white">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white/50">Operating principle</p>
+          <div className="border-y border-[var(--bb-border)] py-5">
+            <OperatingMarker index="02">Operating principle</OperatingMarker>
             <p className="mt-4 text-xl font-semibold leading-snug">AI prepares judgment. Por approves action.</p>
-            <p className="mt-3 text-sm leading-6 text-white/70">Every AI result is a context row, review row, memory row, or ActionRequest. Nothing writes directly.</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--bb-text-soft)]">Every AI result is a context row, review row, memory row, or ActionRequest. Nothing writes directly.</p>
           </div>
         </div>
 
@@ -68,7 +69,7 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <div className="os-hero-metric os-hero-metric-amber">
             <div className="flex items-center gap-3">
-              <span className="os-icon-badge os-icon-badge-amber">✦</span>
+              <ApprovalMark />
               <div className="min-w-0 flex-1">
                 <p className="os-hero-value">{aiIsEmpty ? '—' : pendingImports.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Pending Imports</p>
@@ -78,7 +79,7 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
           </div>
           <div className="os-hero-metric os-hero-metric-blue">
             <div className="flex items-center gap-3">
-              <span className="os-icon-badge os-icon-badge-blue">◎</span>
+              <EvidenceMark />
               <div className="min-w-0 flex-1">
                 <p className="os-hero-value">{aiIsEmpty ? '—' : data.aiExports.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Context Exports</p>
@@ -88,7 +89,7 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
           </div>
           <div className="os-hero-metric os-hero-metric-purple">
             <div className="flex items-center gap-3">
-              <span className="os-icon-badge os-icon-badge-purple">◇</span>
+              <StatusMark status="ACTIVE" label="MM" />
               <div className="min-w-0 flex-1">
                 <p className="os-hero-value">{aiIsEmpty ? '—' : activeMemories.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Memory Items</p>
@@ -98,7 +99,7 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
           </div>
           <div className="os-hero-metric os-hero-metric-green">
             <div className="flex items-center gap-3">
-              <span className="os-icon-badge os-icon-badge-green">!</span>
+              <StatusMark status="WATCH" label="OB" />
               <div className="min-w-0 flex-1">
                 <p className="os-hero-value">{aiIsEmpty ? '—' : openObservations.length}</p>
                 <p className="mt-0.5 truncate font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--bb-text-muted)]">Observations</p>
@@ -110,7 +111,7 @@ export const AIWorkflowPage = ({ view = 'overview' }: { view?: AIWorkflowView })
 
         <nav className="mt-6 flex flex-wrap gap-2">
           {aiTabs.map((tab) => (
-            <NavLink key={tab.to} to={tab.to} end={tab.view === 'overview'} className={({ isActive }) => `rounded-full px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition ${isActive ? 'bg-black text-white' : 'bg-white/70 text-[var(--bb-text-muted)] hover:bg-black/[0.05] hover:text-[var(--bb-text)]'}`}>{tab.label}</NavLink>
+            <NavLink key={tab.to} to={tab.to} end={tab.view === 'overview'} className={({ isActive }) => `rounded-lg border px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] transition ${isActive ? 'border-[var(--bb-accent-border)] bg-[var(--bb-accent-soft)] text-[var(--bb-accent-strong)]' : 'border-transparent bg-transparent text-[var(--bb-text-muted)] hover:border-[var(--bb-border)] hover:text-[var(--bb-text)]'}`}>{tab.label}</NavLink>
           ))}
         </nav>
         <button className="btn-primary mt-5" type="button" onClick={queueContextExport}>Queue Context Export</button>
