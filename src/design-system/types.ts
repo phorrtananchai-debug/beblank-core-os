@@ -27,6 +27,7 @@ export interface ComponentMeta {
   deprecated?: string
   breaking?: boolean
   compatibleWith?: string[]
+  implementationStatus?: 'standalone' | 'composite' | 'documented'
 }
 
 export interface SymbolDef {

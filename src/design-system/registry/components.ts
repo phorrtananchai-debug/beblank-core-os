@@ -210,6 +210,7 @@ export const components: ComponentMeta[] = [
     do: ['Show section label in muted meta text', 'Show title prominently', 'Slot actions on the right'],
     doNot: ['Do not use without a title', 'Do not add more than 2-3 actions'],
     tags: ['header', 'section', 'workspace'],
+    implementationStatus: 'documented',
   },
   {
     id: 'workspace-card',
@@ -225,6 +226,7 @@ export const components: ComponentMeta[] = [
     do: ['Use accent variant for highlight items', 'Tags at bottom for metadata'],
     doNot: ['Do not nest cards more than 2 levels deep'],
     tags: ['card', 'content', 'workspace'],
+    implementationStatus: 'documented',
   },
   {
     id: 'status-rail',
@@ -240,6 +242,7 @@ export const components: ComponentMeta[] = [
     do: ['Show 3-8 status items', 'Use colored dots for quick scanning', 'Wrap naturally on narrow screens'],
     doNot: ['Do not use for interactive filters', 'Do not exceed 12 items'],
     tags: ['status', 'rail', 'strip'],
+    implementationStatus: 'documented',
   },
   {
     id: 'metric-strip',
@@ -255,6 +258,7 @@ export const components: ComponentMeta[] = [
     do: ['Show 3-6 metrics', 'Right-align numeric values', 'Color-code significant values'],
     doNot: ['Do not exceed 8 metrics', 'Do not add icons or badges inside'],
     tags: ['metric', 'kpi', 'strip'],
+    implementationStatus: 'documented',
   },
   {
     id: 'activity-feed',
@@ -270,6 +274,7 @@ export const components: ComponentMeta[] = [
     do: ['Show timestamp', 'Use status dot colors', 'Keep entries to 3-8 items'],
     doNot: ['Do not show more than 20 items without pagination', 'Do not make editable'],
     tags: ['activity', 'feed', 'timeline'],
+    implementationStatus: 'documented',
   },
   {
     id: 'data-list',

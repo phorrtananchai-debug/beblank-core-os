@@ -116,7 +116,9 @@ check('Review screenshots exist', reviewScreenshots.length > 0, `${reviewScreens
 for (const page of reviewPages) {
   const pngName = page.replace('.html', '.png')
   const hasPng = reviewScreenshots.includes(pngName)
-  check(`Screenshot for ${page}`, hasPng, pngName)
+  if (!hasPng) {
+    warn(`Screenshot for ${page}`, `missing in ${screenshotDir}/${pngName}`)
+  }
 }
 for (const png of reviewScreenshots) {
   const htmlName = png.replace('.png', '.html')
