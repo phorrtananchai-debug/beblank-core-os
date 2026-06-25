@@ -1,0 +1,153 @@
+[
+  {
+    "key": "command-center",
+    "name": "Command Center",
+    "url": "http://127.0.0.1:5200/os",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\command-center-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nCOMMAND CENTER / OPERATIONAL MATRIX\n\nBeBlank Core OS\n\nSystem is calm. 3 of 4 divisions active. 15 task(s) running. 6 review(s) pending. 1 source(s) stale. 4 read-only integration(s).\n\n5 divisions\n22 agents\nMatrix View\nMATRIX VIEW\nPIXEL VIEW\n\nSYSTEM MOOD\n\nCalm\n\nACTIVE AGENTS\n\n11\n\nRUNNING TASKS\n\n15\n\nWAITING REVIEWS\n\n6\n\nCOMPLETED TODAY\n\n22\n\nLAST UPDATED\n\nJun 2, 11:55 AM\nDivision Matrix\n5 divisions\nJR\nJarvis B HQ\n\nSystem is calm. 3 of 4 divisions active. 15 task(s) running. 6 review(s) pending...\n\nCalm\nInferred\nStale\n\nAGENTS\n\n11\n\nTASKS\n\n15\n\nREVIEWS\n\n6\n\nDONE\n\n22\n\nActive Divisions: 3\nStale Sources: 1\nPriorities: 4\nAQ\nAequitas Capital\n\nRead-only Aequitas view from current holdings, dividends, and sandbox trading su...\n\nReview Needed\nFallback\nStale\nR/O\n\nAGENTS\n\n3\n\nTASKS\n\n3\n\nREVIEWS\n\n2\n\nDONE\n\n3\n\nScanner: 2\nStrong Watch: 0\nMarket Bias: Selective\nCF\nCreator Factory\n\nCreator Factory is wired as a read-only adapter, but no Creator OS sna",
+      "h1": [
+        "BE BLANK OS"
+      ],
+      "h2": [
+        "BeBlank Core OS"
+      ]
+    }
+  },
+  {
+    "key": "studio",
+    "name": "Studio",
+    "url": "http://127.0.0.1:5200/os/studio",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\studio-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/studio",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nSTUDIO / WORKSPACE\n\nKarun Central Khon Kaen\n\nStudio now opens as a project operating system. The first read is the active project, the current site move, and the next decision.\n\nOpen primary project\nLaunch mobile workspace\nPROJECT\nsp-kcc-main\nSOURCE\nMock sheet\nAPPROVALS\n3\n\nPROJECT COMMAND SURFACE\n\nKarun Central Khon Kaen\n\nEnter Studio here. The project card stays primary and the actions stay close to the active job.\n\nOpen project detail\nPROJECT\nsp-kcc-main\nKarun Central Khon Kaen\n\nMain tower closeout, ceiling repairs, and handover punch list are all moving in one lane.\n\nWATCH\n\nOWNER\n\nNok\n\nTRADE\n\nFit-out + MEP\n\nPHASE\n\nHandover prep and snag closure\n\nPROGRESS\n\n68%\n\nFacade patch sign-off waiting on afternoon site photos\n\nTIMELINE\n\n08 May - 30 Jun\n\nCeiling closeout, MEP correction, punch list, handover review.\n\nSITE CHECK\n\nscheduled\n\nMon, Wed, Fri 08:30 site walk, afternoon photo log, Friday billing check.\n\nBILLING\n\nACTIVE\nReady",
+      "h1": [
+        "BE BLANK OS",
+        "Karun Central Khon Kaen"
+      ],
+      "h2": []
+    }
+  },
+  {
+    "key": "studio-project-detail",
+    "name": "Studio Project Detail",
+    "url": "http://127.0.0.1:5200/os/studio/projects/karun-central-khon-kaen",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\studio-project-detail-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/studio/projects/karun-central-khon-kaen",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nSTUDIO / PROJECT DETAIL\n\nKarun Central Khon Kaen\n\nMain tower closeout, ceiling repairs, and handover punch list are all moving in one lane.\n\nBack to studio\nLaunch mobile\nPROJECT\nsp-kcc-main\nSITE\nKhon Kaen\nSTATE\npunch-list\n\nPROJECT COMMAND SURFACE\n\nAttention first\n\nThe project detail opens with the next move, the current blockage, the pending call, and the next inspection.\n\nPROJECT\nsp-kcc-main\nKarun Central Khon Kaen\n\nMain tower closeout, ceiling repairs, and handover punch list are all moving in one lane.\n\nWATCH\n\nOWNER\n\nNok\n\nTRADE\n\nFit-out + MEP\n\nPHASE\n\nHandover prep and snag closure\n\nPROGRESS\n\n68%\n\nFacade patch sign-off waiting on afternoon site photos\n\nWHAT NEEDS ATTENTION NOW?\n\nClear\n\nNo task is blocked right now\n\nWHAT IS BLOCKED?\n\nFacade patch sign-off is late\n\nNo final photo set from the east elevation\n\nWHAT DECISION IS PENDING?\n\nPending approval\n\nApprove facade photo pack\n\nWHAT INSPECTION IS NEXT?\n\n26 Jun, 15:00\n\nHando",
+      "h1": [
+        "BE BLANK OS",
+        "Karun Central Khon Kaen"
+      ],
+      "h2": []
+    }
+  },
+  {
+    "key": "finance",
+    "name": "Finance",
+    "url": "http://127.0.0.1:5200/os/finance",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\finance-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/finance",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nFINANCE OS / HUMAN-CONTROLLED WEALTH OPERATIONS\n\nCalm money systems, Sheet-first.\n\nInvestments, family-office finance, and a paper-only trading lab. No realtime terminal, no broker execution, no auto trading.\n\nInvestments Sheet\nMOCK\nLast synced: 2 Jun 2026, 11:45\nLatest mock source sync\nWARNING\nREVIEW-REQUIRED\nSHEET\n\nFinnhub refresh is delayed/manual only.\n\nFamily Office Sheet\nMOCK\nLast synced: 2 Jun 2026, 11:44\nLatest mock source sync\nHEALTHY\nIDLE\nSHEET\nTrading Lab Sheet\nMOCK\nLast synced: 2 Jun 2026, 11:43\nStale source row requires review\nWARNING\nPENDING\nMANUAL\n\nTrading Lab data is sandbox-only and stale by design.\n\n18 ALLOCATION REVIEWS\n\nInvestments\n\nLong-term allocation, DCA, dividends, holdings.\n\n6,030 THB\n\nยังไม่มีข้อมูลทางการเงิน\n\nCapital\n\nOverview, studio office ledger, family finance, reserves.\n\n—\n\nยังไม่มีสัญญาณ\n\nTrading Lab\n\nPaper-only signals, watchlist, sandbox strategy notes.\n\n—\n\nFoundation posture\nmanual-first\n",
+      "h1": [
+        "BE BLANK OS"
+      ],
+      "h2": [
+        "Calm money systems, Sheet-first."
+      ]
+    }
+  },
+  {
+    "key": "investments",
+    "name": "Investments",
+    "url": "http://127.0.0.1:5200/os/finance/investments",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\investments-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/finance/investments",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nการลงทุน / แกนหลัก Aequitas\n\nการลงทุน / หุ้น\n◆\n\n153,650\n\nTHB\n\nTOTAL PORTFOLIO\n\n$4,553\n\n◈\n\n139,112\n\nTHB\n\nINVESTED CAPITAL (EX CASH)\n\n90.5%\n\n☆\n\n1,101\n\nTHB\n\nLIFETIME DIVIDENDS\n\n$33.97 USD\n\n◈\n\n216 THB/mo\n\nPASSIVE INCOME\n\n$6.68/mo · $80/yr\n\n±\n\n+7.2%\n\nPORTFOLIO RETURN\n\n+$277 USD\n\nFINNHUB KEY MISSING\n·\nPrices use manual cost basis / fallback\n·\nUSD/THB\n32.4\nFALLBACK\nEdit\n\nINVESTMENT RHYTHM\n\n35\n\nPORTFOLIO VALUE\n\n153,650 THB\n\n$4,739 secondary\n\n19 positions\n\nDRIFT\n\n6\n\nHoldings drifted ≥2%\n\nDCA DUE\n\n0\n\nNo DCA scheduled\n\nWATCHLIST\n\n0\n\nEmpty\n\nNEEDS ATTENTION\n\nTarget allocation totals 115% — needs review\n\n6 holdings drifted ≥2%\n\nCash reserve 0% — below 10% target\n\nNo active DCA plan\n\n2 high-risk positions\n\n2 high-risk positions\n\nSANDBOX & WATCHLIST\n\nNo sandbox positions\n\nINVESTMENT CRITICAL PATH\n\nTarget allocation 115% — review targets\n\nTotal should be 100%, currently 115%\n\nRECORD TRANSACTION\n\nTYPE\n\nbuy\nsell\ndividend\ndeposit\nwithdraw\nfee\n\n",
+      "h1": [
+        "BE BLANK OS"
+      ],
+      "h2": [
+        "การลงทุน / หุ้น"
+      ]
+    }
+  },
+  {
+    "key": "capital",
+    "name": "Capital",
+    "url": "http://127.0.0.1:5200/os/capital",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\capital-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/capital",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nCAPITAL / FINANCIAL DISCIPLINE\n\nเงินทุน / วินัยการเงิน\n\nยังไม่มีข้อมูลทางการเงิน\n\nเพิ่มรายการเดินบัญชีแรก หรือเพิ่มสินทรัพย์การลงทุนเพื่อดูภาพรวมทางการเงิน\n\nไปที่ Investments\n\nCAPITAL RHYTHM\n\n—\n\nCapital setup required\n\nAdd financial data to enable the Capital operating system. The following data is needed:\n\nCASH RESERVE\n\nSet up reserve buckets in sheet\n\nMONTHLY BURN\n\nTrack bills & expenses\n\nRECEIVABLES\n\nRecord incoming payments\n\nPAYABLES\n\nRecord outgoing payments\n\nCAPITAL CRITICAL PATH\n\nNo cash reserve configured\n\nSet up reserve buckets in sheet\n\nภาพรวม\nสตูดิโอ\nครอบครัว\n\nEMPTY FINANCE STATE\n\nยังไม่มีข้อมูลทางการเงิน\n\nเพิ่มรายการเดินบัญชีแรกของคุณ หรือเชื่อมต่อข้อมูลจาก Investments\n\nไปที่ Investments\nคิวอนุมัติ\n3\n\nกำลังรอสถานะ การอนุมัติจะทำงานผ่าน mock adapter การปฏิเสธจะบันทึก audit row โดยไม่เปลี่ยนข้อมูล\n\nApprove facade photo pack\n\nstudio / studio.approvalReview / 25 Jun 2026, 08:00\n\nปฏิเสธ\nอนุมัติ\n\nApprove lobby stone sa",
+      "h1": [
+        "BE BLANK OS"
+      ],
+      "h2": [
+        "เงินทุน / วินัยการเงิน"
+      ]
+    }
+  },
+  {
+    "key": "ai-workspace",
+    "name": "AI Workspace",
+    "url": "http://127.0.0.1:5200/os/ai",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\ai-workspace-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/ai",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nAI WORKSPACE / OPERATIONAL CO-PILOT LAYER\n\nContext first. Review always.\n\nManual AI context exports, imported suggestions, review queues, memory scaffolding, and cross-module observations. No autonomous agents, no direct LLM calls, no hidden automation.\n\nOPERATING PRINCIPLE\n\nAI prepares judgment. Por approves action.\n\nEvery AI result is a context row, review row, memory row, or ActionRequest. Nothing writes directly.\n\n✦\n\n—\n\nPENDING IMPORTS\n\nยังไม่มีข้อมูล\n\n◎\n\n—\n\nCONTEXT EXPORTS\n\nไม่มีข้อมูล\n\n◇\n\n—\n\nMEMORY ITEMS\n\nไม่มีข้อมูล\n\n!\n\n—\n\nOBSERVATIONS\n\nไม่มีข้อมูล\n\nOVERVIEW\nCONTEXT\nREVIEWS\nMEMORY\nEXPORTS\nIMPORTS\nQueue Context Export\n\nEMPTY PROVIDER STATE\n\nยังไม่มีบริบท AI\n\nส่งออก context หรือ import ข้อเสนอจาก AI เพื่อเริ่มใช้งาน\n\nสร้าง context แรก\n\nDAILY AI BRIEF\n\nQuiet daily intelligence\n0 digests\n\nNo operational digests yet\n\nCROSS-MODULE AWARENESS\n\nObservations\n0 observations\n\nNo observations recorded\n\nCONTEXT EXPORTS\n\n0\n\nStructur",
+      "h1": [
+        "BE BLANK OS"
+      ],
+      "h2": [
+        "Context first. Review always."
+      ]
+    }
+  },
+  {
+    "key": "settings",
+    "name": "Settings",
+    "url": "http://127.0.0.1:5200/os/settings",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\settings-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/settings",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\n??????????????\n\nSettings\n\nProfile, workspace preferences, appearance, and system configuration\n\nPROFILE\n\nPersonal Workspace\nSave Profile\nReset to Default\nP\n+\nName\nRole\nWorkspace\nInitials\n\nWORKSPACE\n\nWorkspace Preferences\n\nDefault Landing\n\nCommand Center\n\nStudio View\n\nProjects\n\nFinance View\n\nCapital\n\nSidebar Behavior\n\nExpanded\n\nAPPEARANCE\n\nInterface Preferences\n\nSurface Palette\n\nWarm Neutral\n\nAccent Color\n\nOrange\n\nCard Style\n\nThin Rules + Workspace\n\nFont Display\n\nSpace Grotesk / Geist Mono\n\nSYSTEM\n\nConnector & Bridge Configuration\n0 connectors\n\nCONNECTOR DEFINITIONS\n\nRegistry\n0 connectors\nSheet source ownership\nsource-of-truth map\nSync queue\nmanual review\nBridge contracts\nfuture adapters\nFinnhub symbols\ndelayed/manual\n\nREAD-ONLY BRIDGE\n\nKarun Phuket Apps Script read bridge\nRefresh Karun Bridge\n\nKarun Phuket Apps Script Read Bridge\n\nfallback / fallback yes\n\nSTALE\n\nEndpoint config\n\nVITE_APPS_SCRIPT_KARUN_ENDPOINT is not configu",
+      "h1": [
+        "BE BLANK OS"
+      ],
+      "h2": [
+        "Settings"
+      ]
+    }
+  },
+  {
+    "key": "bridge",
+    "name": "Bridge",
+    "url": "http://127.0.0.1:5200/os/bridge",
+    "file": "C:\\Users\\UsEr\\Documents\\BE BLANK OS Production Audit\\artifacts\\ui-audit\\screenshots\\bridge-current.png",
+    "finalUrl": "http://127.0.0.1:5200/os/bridge",
+    "title": "Be Blank OS",
+    "info": {
+      "body": "Studio environment\n\nBE BLANK OS\n\nConnected workspace for teams\n\nSYNC\n\nAI\n\nSHEET\n\nOPERATE\n\nCC\nCommand Center\nST\nStudio\n\nWEALTH\n\nCA\nCapital\nIN\nInvestments\nRS\nReserves\n\nLAB\n\nTL\nTrading Lab\nAI\nAI Workspace\n\nSYSTEM\n\nSE\nSettings\nBR\nBridge\nP\n\nPor\n\nDirector\n\nv\nLog out\n\nGOOGLE SHEET BRIDGE\n\nBridge Settings\n\nConfigure manual Google Sheet connection. No autosync. No silent overwrite.\n\nCONNECTION\n\nSheet Connection\nNot configured\nReset\nSheet URL / ID\nApps Script Endpoint\nSync Mode\nManual\nRead-only\nTest Connection\nNot configured\nNOT CONFIGURED\n\nENVIRONMENT\n\nApps Script Endpoint Setup\nACTIVE: NONE\nNo Env Var\n\nThe bridge connects to a Google Sheet via an Apps Script Web App endpoint. Priority: Manual entry (highest) → Environment variable → Not configured. You can configure the endpoint URL in two ways:\n\n1. Environment Variable\n\nSet VITE_APPS_SCRIPT_KARUN_ENDPOINT in .env.local or Vercel Environment Variables.\n\n2. Manual Entry\n\nPaste any HTTPS endpoint URL into the field above. Stored in browser localStorage only. Not committed.\n\n⚠ Never commit private endpoint URLs to git.\n\nUse .env.local (gitignored) or enter manually in this UI.\n\nExpected Response Shape\n\nSHEET RESOURCES\n\nDefined Tabs\n9 resource",
+      "h1": [
+        "BE BLANK OS"
+      ],
+      "h2": [
+        "Bridge Settings"
+      ]
+    }
+  }
+]
