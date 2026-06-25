@@ -259,7 +259,7 @@ export const components: ComponentMeta[] = [
     do: ['Show 3-8 status items', 'Use colored dots for quick scanning', 'Wrap naturally on narrow screens'],
     doNot: ['Do not use for interactive filters', 'Do not exceed 12 items'],
     tags: ['status', 'rail', 'strip'],
-    implementationStatus: 'documented',
+    implementationStatus: 'standalone',
   },
   {
     id: 'metric-strip',
@@ -275,7 +275,7 @@ export const components: ComponentMeta[] = [
     do: ['Show 3-6 metrics', 'Right-align numeric values', 'Color-code significant values'],
     doNot: ['Do not exceed 8 metrics', 'Do not add icons or badges inside'],
     tags: ['metric', 'kpi', 'strip'],
-    implementationStatus: 'documented',
+    implementationStatus: 'standalone',
   },
   {
     id: 'activity-feed',
@@ -291,7 +291,7 @@ export const components: ComponentMeta[] = [
     do: ['Show timestamp', 'Use status dot colors', 'Keep entries to 3-8 items'],
     doNot: ['Do not show more than 20 items without pagination', 'Do not make editable'],
     tags: ['activity', 'feed', 'timeline'],
-    implementationStatus: 'documented',
+    implementationStatus: 'standalone',
   },
   {
     id: 'data-list',
