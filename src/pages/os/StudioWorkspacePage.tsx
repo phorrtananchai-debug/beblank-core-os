@@ -989,7 +989,7 @@ const SiteWatchView = ({
 }) => (
   <section className="grid gap-5 xl:grid-cols-3">
     {siteWatch.map((update) => (
-      <article key={update.id} className="panel panel-float">
+      <WorkspaceCard key={update.id} variant="float" as="article" className="flex flex-col">
         <div className={`studio-fragment-media studio-fragment-${update.severity === 'high' ? 'ink' : update.severity === 'medium' ? 'paper' : 'stone'}`} />
         <p className="mt-4 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{projectName(projects, update.projectId)} / {update.status}</p>
         <h3 className="mt-2 text-xl font-semibold">{update.title}</h3>
@@ -998,7 +998,7 @@ const SiteWatchView = ({
         <button className="btn-primary mt-5" type="button" onClick={() => onSiteResolution(update)}>
           Queue Site Resolution
         </button>
-      </article>
+      </WorkspaceCard>
     ))}
   </section>
 )
@@ -1097,32 +1097,30 @@ const ReviewsView = ({
   onReject: (requestId: string) => void
 }) => (
   <section className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
-    <div className="panel">
-      <div className="panel-header">
-        <h3>Studio review queue</h3>
-        <span className="pill">{reviews.filter((review) => review.status === 'pending').length} pending</span>
-      </div>
+    <WorkspaceSection
+      header={<WorkspaceHeader title="Studio review queue" endSlot={<span className="pill">{reviews.filter((review) => review.status === 'pending').length} pending</span>} />}
+    >
       <div className="space-y-3">
         {reviews.map((review) => <ReviewCard key={review.id} review={review} projectName={projectName(projects, review.projectId)} />)}
       </div>
-    </div>
+    </WorkspaceSection>
     <PendingApprovalPanel items={pendingApprovals} onApprove={onApprove} onReject={onReject} />
   </section>
 )
 
 const PreviewBlock = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-2xl border border-black/[0.04] bg-[#faf9f8] p-3">
+  <WorkspaceCard variant="tinted" padding="sm">
     <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{label}</p>
     <p className="mt-2 text-sm font-semibold">{value}</p>
-  </div>
+  </WorkspaceCard>
 )
 
 const ReviewCard = ({ projectName, review }: { projectName: string; review: StudioReview }) => (
-  <div className="surface-hover rounded-2xl border border-black/[0.05] bg-[#faf9f8] p-4">
+  <WorkspaceCard variant="float" padding="md">
     <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bb-text-muted)]">{projectName} / {review.type}</p>
     <p className="mt-2 text-sm font-semibold">{review.title}</p>
     <p className={`mt-2 font-mono text-[10px] font-semibold uppercase ${statusClass(review.status)}`}>{review.status} / due {review.dueAt}</p>
-  </div>
+  </WorkspaceCard>
 )
 
 
