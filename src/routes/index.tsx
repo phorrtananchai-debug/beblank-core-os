@@ -9,7 +9,6 @@ import { DividendHistoryPage } from '../pages/os/DividendHistoryPage'
 import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
 import { InvestmentsPage } from '../pages/os/InvestmentsPage'
-import { InvestmentsV2Page } from '../pages/os/InvestmentsV2Page'
 import { SettingsPage } from '../pages/os/SettingsPage'
 import { StudioMobilePage } from '../pages/os/StudioMobilePage'
 import { StudioProjectDetailPage } from '../pages/os/StudioProjectDetailView'
@@ -63,7 +62,6 @@ export const AppRoutes = () => {
         <Route path="studio/reviews" element={<StudioWorkspacePage />} />
         <Route path="finance" element={<FinancePage />} />
         <Route path="finance/investments" element={<InvestmentsPage />} />
-        <Route path="labs/investments-v2" element={<InvestmentsV2Page />} />
         <Route path="finance/investments/dividend-history" element={<DividendHistoryPage />} />
         <Route path="capital" element={<CapitalPage />} />
         <Route path="finance/family-office" element={<FamilyOfficePage />} />
