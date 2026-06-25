@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>00 Index — BBH Design System Review</title><style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'IBM Plex Sans Thai', system-ui, sans-serif; background: #f2efe9; color: #1a1a1a; padding: 2rem; }
+.container { max-width: 1200px; margin: 0 auto; }
+h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+h2 { font-size: 1.1rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; }
+h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+.subtitle { color: #666; font-size: 0.875rem; margin-bottom: 2rem; }
+.meta { font-family: 'Geist Mono', monospace; font-size: 0.625rem; color: #999; }
+.grid { display: grid; gap: 1rem; }
+.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.card { border: 1px solid #e6e0d5; border-radius: 0.75rem; background: #fff; padding: 1rem; }
+.card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.tag { display: inline-block; background: #f0eeec; border-radius: 0.25rem; padding: 0.125rem 0.375rem; font-family: 'Geist Mono', monospace; font-size: 0.5rem; color: #666; }
+.tag-green { background: #16a36a1a; color: #16a36a; }
+.tag-amber { background: #c67f1e1a; color: #c67f1e; }
+.badge { display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 9999px; padding: 0.125rem 0.5rem; font-size: 0.625rem; font-weight: 600; border: 1px solid #e6e0d5; background: #fff; color: #1a1a1a; }
+.badge-green { background: #16a36a; color: #fff; border-color: #16a36a; }
+.badge-amber { background: #c67f1e; color: #fff; border-color: #c67f1e; }
+.badge-red { background: #c2410c; color: #fff; border-color: #c2410c; }
+.dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 9999px; }
+.dot-green { background: #16a36a; }
+.dot-amber { background: #c67f1e; }
+.dot-red { background: #c2410c; }
+.dot-gray { background: #d4cdc2; }
+.pill { display: inline-block; border-radius: 9999px; padding: 0.125rem 0.5rem; font-size: 0.625rem; font-weight: 600; background: #f0eeec; color: #666; border: 1px solid #e6e0d5; }
+.pill-green { background: #16a36a1a; color: #16a36a; border-color: #16a36a33; }
+.pill-amber { background: #c67f1e1a; color: #c67f1e; border-color: #c67f1e33; }
+.pill-accent { background: #d97a341a; color: #d97a34; border-color: #d97a3433; }
+.btn { display: inline-flex; align-items: center; gap: 0.375rem; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border: 1px solid #e6e0d5; background: #fff; color: #1a1a1a; cursor: default; }
+.btn-primary { background: #d97a34; color: #fff; border-color: #d97a34; }
+.progress { height: 0.375rem; border-radius: 9999px; background: #f0eeec; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 9999px; background: #d97a34; }
+.progress-green .progress-fill { background: #16a36a; }
+.progress-amber .progress-fill { background: #c67f1e; }
+table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+th { text-align: left; padding: 0.5rem; font-weight: 600; color: #999; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #e6e0d5; }
+td { padding: 0.5rem; border-bottom: 1px solid #e6e0d5; }
+.section { margin-top: 3rem; }
+pre { font-family: 'Geist Mono', monospace; font-size: 0.625rem; background: #faf9f8; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e6e0d5; overflow-x: auto; }
+</style></head><body><div class="container">
+<h1>BBH Design System — Review Pack</h1>
+<p class="subtitle">Component library visual review. All components use BBH design tokens and are renderable outside the app.</p>
+
+<div class="grid cols-3 section">
+  <a href="01-primitives.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">01 · Primitives</h3></div><p style="font-size:0.75rem;color:#666">Buttons, inputs, badges, pills, tables, tabs, dividers, skeletons, avatars</p><div style="margin-top:0.5rem"><span class="tag">17 components</span></div></a>
+  <a href="02-workspace.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">02 · Workspace</h3></div><p style="font-size:0.75rem;color:#666">Shell, header, cards, panels, toolbar, sidebar, inspector, notice, empty, loading, data list</p><div style="margin-top:0.5rem"><span class="tag">26 components</span></div></a>
+  <a href="03-symbols.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">03 · Symbols</h3></div><p style="font-size:0.75rem;color:#666">Status, priority, finance, AI, architecture symbols</p><div style="margin-top:0.5rem"><span class="tag">10 groups</span></div></a>
+  <a href="04-patterns.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">04 · Patterns</h3></div><p style="font-size:0.75rem;color:#666">Data fetch, approval, model build, navigation</p><div style="margin-top:0.5rem"><span class="tag">4 patterns</span></div></a>
+  <a href="05-templates.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">05 · Templates</h3></div><p style="font-size:0.75rem;color:#666">Command Center, Investments, Studio, Bridge</p><div style="margin-top:0.5rem"><span class="tag">4 templates</span></div></a>
+  <a href="06-states.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">06 · States</h3></div><p style="font-size:0.75rem;color:#666">Loading, empty, error, success, disabled, offline</p><div style="margin-top:0.5rem"><span class="tag">10 states</span></div></a>
+  <a href="07-anatomy.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">07 · Anatomy</h3></div><p style="font-size:0.75rem;color:#666">Component structure diagrams — Shell, DataList, Feed, Modal</p><div style="margin-top:0.5rem"><span class="tag">8 diagrams</span></div></a>
+  <a href="08-scale.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">08 · Scale</h3></div><p style="font-size:0.75rem;color:#666">Button sizes, card density, typography, spacing, radius, table density</p><div style="margin-top:0.5rem"><span class="tag">6 scales</span></div></a>
+  <a href="09-recipes.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">09 · Recipes</h3></div><p style="font-size:0.75rem;color:#666">Project list, approval review, bridge monitor, command center compositions</p><div style="margin-top:0.5rem"><span class="tag">4 recipes</span></div></a>
+  <a href="10-blueprints.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">10 · Blueprints</h3></div><p style="font-size:0.75rem;color:#666">Studio OS, Investments, Command Center wireframe layouts</p><div style="margin-top:0.5rem"><span class="tag">3 blueprints</span></div></a>
+  <a href="11-interactions.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">11 · Interactions</h3></div><p style="font-size:0.75rem;color:#666">Loading→Success, Draft→Approved, Online→Offline, Empty→Populated flows</p><div style="margin-top:0.5rem"><span class="tag">6 flows</span></div></a>
+  <a href="12-responsive.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">12 · Responsive</h3></div><p style="font-size:0.75rem;color:#666">Sidebar collapse, grid adaptation, table-to-list, priority ordering</p><div style="margin-top:0.5rem"><span class="tag">4 breakpoints</span></div></a>
+  <a href="13-accessibility.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">13 · Accessibility</h3></div><p style="font-size:0.75rem;color:#666">Keyboard nav, focus states, color usage, reduced motion, hit targets</p><div style="margin-top:0.5rem"><span class="tag">7 rules</span></div></a>
+  <a href="14-relationships.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">14 · Relationships</h3></div><p style="font-size:0.75rem;color:#666">Component tree, page dependencies, registry summary</p><div style="margin-top:0.5rem"><span class="tag">map</span></div></a>
+  <a href="15-migration.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">15 · Migration</h3></div><p style="font-size:0.75rem;color:#666">Production migration checklists for all 6 workspaces</p><div style="margin-top:0.5rem"><span class="tag">6 checklists</span></div></a>
+</div>
+
+<h2 style="margin-top:3rem">Design Tokens</h2>
+<div class="grid cols-3">
+  <a href="16-color-tokens.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">16 · Color Tokens</h3></div><p style="font-size:0.75rem;color:#666">Semantic color tokens — brand, surface, text, status, overlay</p><div style="margin-top:0.5rem"><span class="tag">16 tokens</span></div></a>
+  <a href="17-typography-tokens.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">17 · Typography Tokens</h3></div><p style="font-size:0.75rem;color:#666">Type scale — Display XL through Mono Small</p><div style="margin-top:0.5rem"><span class="tag">9 tokens</span></div></a>
+  <a href="18-spacing-tokens.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">18 · Spacing Tokens</h3></div><p style="font-size:0.75rem;color:#666">Spacing scale — 2px through 64px with examples</p><div style="margin-top:0.5rem"><span class="tag">12 tokens</span></div></a>
+  <a href="19-radius-shadow.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">19 · Radius & Shadow</h3></div><p style="font-size:0.75rem;color:#666">Border radius scale + shadow elevation tokens</p><div style="margin-top:0.5rem"><span class="tag">12 tokens</span></div></a>
+  <a href="20-layering-zindex.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">20 · Layering & Z-Index</h3></div><p style="font-size:0.75rem;color:#666">Z-index hierarchy — content through overlay</p><div style="margin-top:0.5rem"><span class="tag">8 layers</span></div></a>
+  <a href="21-spatial-grid.html" class="card" style="text-decoration:none;color:inherit"><div class="card-header"><span class="dot dot-gray"></span><h3 style="margin:0">21 · Spatial Grid</h3></div><p style="font-size:0.75rem;color:#666">Grid tokens, variants, opacity comparison, layout rules</p><div style="margin-top:0.5rem"><span class="tag">grid</span></div></a>
+</div><div class="section">
+  <h2>Registry Metadata</h2>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Primitive Components</td><td>17</td></tr>
+    <tr><td>Workspace Components</td><td>26</td></tr>
+    <tr><td>Symbol Groups</td><td>10</td></tr>
+    <tr><td>Operating Patterns</td><td>4</td></tr>
+    <tr><td>Page Templates</td><td>4</td></tr>
+    <tr><td>Component States</td><td>10</td></tr>
+    <tr><td>Total Components</td><td>47</td></tr>
+  </table>
+</div>
+<div style="margin-top:3rem;padding-top:1rem;border-top:1px solid #e6e0d5;font-family:'Geist Mono',monospace;font-size:0.625rem;color:#999">BBH Design System Review · Generated from src/design-system/registry</div></div></body></html>

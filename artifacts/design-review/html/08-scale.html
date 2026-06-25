@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>08 Scale — BBH Design System</title><style>* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'IBM Plex Sans Thai', system-ui, sans-serif; background: #f2efe9; color: #1a1a1a; padding: 2rem; }
+.container { max-width: 1200px; margin: 0 auto; }
+h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+h2 { font-size: 1.1rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; }
+h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+.subtitle { color: #666; font-size: 0.875rem; margin-bottom: 2rem; }
+.meta { font-family: 'Geist Mono', monospace; font-size: 0.625rem; color: #999; }
+.card { border: 1px solid #e6e0d5; border-radius: 0.75rem; background: #fff; padding: 1rem; }
+.grid { display: grid; gap: 1rem; }
+.cols-2 { grid-template-columns: repeat(2, 1fr); }.cols-3 { grid-template-columns: repeat(3, 1fr); }.cols-4 { grid-template-columns: repeat(4, 1fr); }.cols-5 { grid-template-columns: repeat(5, 1fr); }
+.badge { display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 9999px; padding: 0.125rem 0.5rem; font-size: 0.625rem; font-weight: 600; border: 1px solid #e6e0d5; background: #fff; color: #1a1a1a; }
+.tag { display: inline-block; background: #f0eeec; border-radius: 0.25rem; padding: 0.125rem 0.375rem; font-family: 'Geist Mono', monospace; font-size: 0.5rem; color: #666; }
+.tag-green { background: #16a36a1a; color: #16a36a; }
+.pill { display: inline-block; border-radius: 9999px; padding: 0.125rem 0.5rem; font-size: 0.625rem; font-weight: 600; background: #f0eeec; color: #666; border: 1px solid #e6e0d5; }
+.pill-green { background: #16a36a1a; color: #16a36a; border-color: #16a36a33; }
+.pill-amber { background: #c67f1e1a; color: #c67f1e; border-color: #c67f1e33; }
+.dot { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 9999px; }
+.dot-green { background: #16a36a; }.dot-amber { background: #c67f1e; }.dot-red { background: #c2410c; }.dot-gray { background: #d4cdc2; }
+.btn { display: inline-flex; align-items: center; gap: 0.375rem; border-radius: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border: 1px solid #e6e0d5; background: #fff; color: #1a1a1a; }
+.btn-primary { background: #d97a34; color: #fff; border-color: #d97a34; }
+table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+th { text-align: left; padding: 0.5rem; font-weight: 600; color: #999; font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #e6e0d5; }
+td { padding: 0.5rem; border-bottom: 1px solid #e6e0d5; }
+pre { font-family: 'Geist Mono', monospace; font-size: 0.625rem; background: #faf9f8; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e6e0d5; overflow-x: auto; }
+.section { margin-top: 3rem; }
+.step { display: flex; gap: 0.75rem; padding: 0.75rem; border: 1px solid #e6e0d5; border-radius: 0.5rem; background: #fff; margin-bottom: 0.5rem; }
+.step-num { width: 1.5rem; height: 1.5rem; border-radius: 9999px; background: #f0eeec; display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; color: #666; font-family: 'Geist Mono', monospace; }
+.flow-arrow { text-align: center; font-size: 0.75rem; color: #999; padding: 0.25rem 0; }
+.box { border: 1px solid #e6e0d5; border-radius: 0.375rem; padding: 0.5rem; background: #faf9f8; font-size: 0.625rem; font-family: 'Geist Mono', monospace; color: #666; }
+</style></head><body><div class="container">
+<h1>Component Scale</h1><p class="subtitle">Size, density, and spacing scales across all BBH components.</p>
+
+<div class="section"><h2>Button Sizes</h2>
+<div class="grid cols-3">
+  <div class="card"><div class="btn" style="padding:0.25rem 0.5rem;font-size:0.625rem">Small</div><p class="meta" style="margin-top:0.5rem">px-2 py-1 · 10px</p></div>
+  <div class="card"><div class="btn">Default</div><p class="meta" style="margin-top:0.5rem">px-3 py-1.5 · 12px</p></div>
+  <div class="card"><div class="btn btn-primary" style="padding:0.5rem 1rem;font-size:0.875rem">Large</div><p class="meta" style="margin-top:0.5rem">px-4 py-2 · 14px</p></div>
+</div></div>
+
+<div class="section"><h2>Card Density</h2>
+<div class="grid cols-3">
+  <div class="card" style="padding:0.5rem"><div style="font-size:0.75rem;font-weight:600">Compact</div><div class="meta" style="margin-top:0.25rem">p-2 · dense lists</div></div>
+  <div class="card" style="padding:0.75rem"><div style="font-size:0.75rem;font-weight:600">Default</div><div class="meta" style="margin-top:0.25rem">p-3 · standard cards</div></div>
+  <div class="card" style="padding:1rem"><div style="font-size:0.75rem;font-weight:600">Relaxed</div><div class="meta" style="margin-top:0.25rem">p-4 · detail views</div></div>
+</div></div>
+
+<div class="section"><h2>Typography Scale</h2>
+<table><tr><th>Name</th><th>Size</th><th>Weight</th><th>Usage</th></tr>
+<tr><td>Display 1</td><td>2.4rem</td><td>700</td><td>Page title</td></tr>
+<tr><td>Display 2</td><td>1.9rem</td><td>600</td><td>Section heading</td></tr>
+<tr><td>Heading 3</td><td>1.1rem</td><td>600</td><td>Card title</td></tr>
+<tr><td>Body</td><td>0.875rem</td><td>400</td><td>Default text</td></tr>
+<tr><td>Body Small</td><td>0.75rem</td><td>400</td><td>Secondary text</td></tr>
+<tr><td>Caption</td><td>0.625rem</td><td>500</td><td>Labels, badges</td></tr>
+<tr><td>Mono</td><td>0.625rem</td><td>500</td><td>Code, metrics</td></tr>
+<tr><td>Mono Small</td><td>0.5rem</td><td>500</td><td>Tiny labels</td></tr>
+</table></div>
+
+<div class="section"><h2>Radius Scale</h2>
+<div class="grid cols-3">
+  <div style="border:1px solid #e6e0d5;border-radius:0.25rem;padding:1rem;text-align:center"><span class="meta">sm · 4px</span></div>
+  <div style="border:1px solid #e6e0d5;border-radius:0.5rem;padding:1rem;text-align:center"><span class="meta">md · 8px</span></div>
+  <div style="border:1px solid #e6e0d5;border-radius:0.75rem;padding:1rem;text-align:center"><span class="meta">lg · 12px</span></div>
+  <div style="border:1px solid #e6e0d5;border-radius:1rem;padding:1rem;text-align:center"><span class="meta">xl · 16px</span></div>
+  <div style="border:1px solid #e6e0d5;border-radius:1.5rem;padding:1rem;text-align:center"><span class="meta">2xl · 24px</span></div>
+  <div style="border:1px solid #e6e0d5;border-radius:9999px;padding:1rem;text-align:center"><span class="meta">full · pill</span></div>
+</div></div>
+
+<div class="section"><h2>Table Density</h2>
+<table><tr><th>Density</th><th>Padding</th><th>Usage</th></tr>
+<tr><td>Compact</td><td>px-3 py-1.5</td><td>Dense data tables</td></tr>
+<tr><td>Default</td><td>px-3 py-2.5</td><td>Standard list rows</td></tr>
+<tr><td>Relaxed</td><td>px-4 py-3</td><td>Detail lists</td></tr>
+</table></div>
+</div></body></html>
