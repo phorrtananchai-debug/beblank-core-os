@@ -1,678 +1,676 @@
-import { useState } from 'react'
-import type { ActionRequest, OsData, StudioBillingGate, StudioInspection, StudioMilestone, StudioMobileTab, StudioProject, StudioRisk, StudioTask } from '../../../types/models'
-import {
-  EmptyState,
-  FilterBar,
-  MetricLine,
-  ProjectCard,
-  ReferenceLabel,
-  SectionHeader,
-  StatusBadge,
-  WorkspacePanel,
-} from '../../shared/workspace'
-import {
-  gateStatusToWorkspaceStatus,
-  inspectionStatusToWorkspaceStatus,
-  milestoneStatusToWorkspaceStatus,
-  projectHealthToWorkspaceStatus,
-  riskStatusToWorkspaceStatus,
-  taskStatusToWorkspaceStatus,
-} from '../../shared/workspace'
-import {
-  STUDIO_SAMPLE_DATE,
-  formatStudioDate,
-  formatStudioDateTime,
-  isStudioThisWeekDate,
-  isStudioTodayDate,
-  isStudioTodayTask,
-  projectById,
-} from '../studioHelpers'
+import { useMemo, useState } from 'react'
+import type { ActionRequest, OsData, StudioMobileTab, StudioProject, StudioTask } from '../../../types/models'
 
 type CreateActionRequest = (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
-
 type MobileTabKey = StudioMobileTab['key']
+type CalendarMode = 'Week' | 'Month' | 'Year'
 
 interface MobileStudioAppProps {
   data: OsData
   createActionRequest: CreateActionRequest
 }
 
-const navLabel: Record<MobileTabKey, string> = {
-  home: 'Home',
-  calendar: 'Calendar',
-  'quick-add': '+',
-  projects: 'Projects',
-  more: 'More',
+type MobileProject = {
+  id: string
+  name: string
+  phase: string
+  status: 'IN PROGRESS' | 'PLANNED' | 'OVERDUE' | 'DONE'
+  startDate: string
+  endDate: string
+  progress: number
+  note: string
 }
 
-const tabIcon: Record<MobileTabKey, string> = {
-  home: 'H',
-  calendar: 'C',
-  'quick-add': '+',
-  projects: 'P',
-  more: 'M',
+type MobileTask = {
+  id: string
+  projectId: string
+  title: string
+  detail: string
+  phase: string
+  date: string
+  startDate: string
+  endDate: string
+  time?: string
+  status: 'todo' | 'doing' | 'later' | 'done' | 'overdue'
+  type?: 'phase' | 'task'
 }
 
-export const MobileStudioApp = ({ data, createActionRequest }: MobileStudioAppProps) => {
-  const tabs = data.studioMobileTabs.length > 0 ? data.studioMobileTabs : defaultTabs
+const navItems: Array<{ key: MobileTabKey; label: string }> = [
+  { key: 'home', label: 'Home' },
+  { key: 'calendar', label: 'Calendar' },
+  { key: 'quick-add', label: '+' },
+  { key: 'projects', label: 'Projects' },
+  { key: 'more', label: 'More' },
+]
+
+const focusDate = new Date(2026, 4, 12)
+const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const timeGroups = ['Morning', 'Afternoon', 'Evening', 'No time'] as const
+const dayMs = 24 * 60 * 60 * 1000
+
+export const MobileStudioApp = ({ data }: MobileStudioAppProps) => {
   const [activeTab, setActiveTab] = useState<MobileTabKey>('home')
-  const [selectedProjectId, setSelectedProjectId] = useState(data.studioProjects[0]?.id ?? '')
-
-  const selectedProject = projectById(data.studioProjects, selectedProjectId) ?? data.studioProjects[0] ?? null
-  const urgentTasks = [...data.studioTasks]
-    .filter((task) => task.status !== 'done' && isStudioTodayTask(task))
-    .sort((a, b) => (a.priority === b.priority ? a.endDate.localeCompare(b.endDate) : priorityOrder(b.priority) - priorityOrder(a.priority)))
-    .slice(0, 4)
-
-  const todayInspection = [...data.studioInspections]
-    .filter((inspection) => isStudioTodayDate(inspection.scheduledAt))
-    .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt))[0]
+  const [selectedDate, setSelectedDate] = useState(focusDate)
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>('Month')
+  const [selectedProjectId, setSelectedProjectId] = useState('')
+  const { projects, tasks } = useMemo(() => buildMobileData(data), [data])
+  const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
 
   return (
-    <section className="mx-auto grid min-h-[calc(100vh-1.5rem)] w-full max-w-[460px] gap-4 rounded-[34px] border border-[color:var(--bbh-border)] bg-[color:var(--bbh-canvas)] p-3 shadow-[0_24px_70px_rgba(25,19,14,0.08)]">
-      <MobileDashboard
-        activeTab={activeTab}
-        selectedProject={selectedProject}
-        urgentTasks={urgentTasks}
-        onTabChange={setActiveTab}
-        tabs={tabs}
-        todayInspection={todayInspection}
-      />
-
-      <div className="grid gap-4 pb-2">
-        {activeTab === 'home' ? (
-          <MobileHome
-            createActionRequest={createActionRequest}
-            onProjectSelect={setSelectedProjectId}
-            projects={data.studioProjects}
-            selectedProject={selectedProject}
-            tasks={urgentTasks}
-            todayInspection={todayInspection}
-          />
-        ) : null}
-
-        {activeTab === 'calendar' ? (
-          <MobileCalendar inspections={data.studioInspections} milestones={data.studioMilestones} projects={data.studioProjects} />
-        ) : null}
-
-        {activeTab === 'quick-add' ? <MobileQuickAdd createActionRequest={createActionRequest} projects={data.studioProjects} /> : null}
-
-        {activeTab === 'projects' ? (
-          <MobileProjects onProjectSelect={setSelectedProjectId} projects={data.studioProjects} selectedProjectId={selectedProjectId} />
-        ) : null}
-
-        {activeTab === 'more' ? (
-          <MobileMore approvals={data.approvals.length} inspections={data.studioInspections} projects={data.studioProjects} />
-        ) : null}
+    <main className="mobile-studio-app-shell relative mx-auto flex h-[100dvh] min-h-screen w-full max-w-[430px] flex-col overflow-hidden bg-[#F5F5FA] text-[#212121] shadow-[0_18px_60px_rgba(17,17,17,0.14)] sm:my-4 sm:h-[calc(100vh-2rem)] sm:min-h-0 sm:rounded-[34px]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <MobileTopBar />
+        <section className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pb-32 pt-5">
+          {activeTab === 'home' ? (
+            <TodayView
+              projects={projects}
+              selectedDate={selectedDate}
+              tasks={tasks}
+              onOpenProject={(projectId) => {
+                setSelectedProjectId(projectId)
+                setActiveTab('projects')
+              }}
+              onSelectDate={setSelectedDate}
+            />
+          ) : null}
+          {activeTab === 'calendar' ? (
+            <CalendarView
+              mode={calendarMode}
+              projects={projects}
+              selectedDate={selectedDate}
+              tasks={tasks}
+              onModeChange={setCalendarMode}
+              onSelectDate={setSelectedDate}
+            />
+          ) : null}
+          {activeTab === 'quick-add' ? <QuickAddView projects={projects} /> : null}
+          {activeTab === 'projects' ? (
+            <ProjectsView
+              projects={projects}
+              selectedProject={selectedProject}
+              tasks={tasks}
+              onBack={() => setSelectedProjectId('')}
+              onSelectProject={setSelectedProjectId}
+            />
+          ) : null}
+          {activeTab === 'more' ? <MoreView projects={projects} tasks={tasks} /> : null}
+        </section>
       </div>
 
-      {selectedProject ? (
-        <MobileTaskSheet
-          gates={gatesByProject(data.studioBillingGates, selectedProject.id)}
-          inspections={inspectionsByProject(data.studioInspections, selectedProject.id)}
-          milestones={milestonesByProject(data.studioMilestones, selectedProject.id)}
-          project={selectedProject}
-          risks={risksByProject(data.studioRisks, selectedProject.id)}
-          tasks={tasksByProject(data.studioTasks, selectedProject.id)}
-        />
-      ) : null}
-    </section>
-  )
-}
-
-export const MobileDashboard = ({
-  activeTab,
-  onTabChange,
-  selectedProject,
-  tabs,
-  urgentTasks,
-  todayInspection,
-}: {
-  activeTab: MobileTabKey
-  onTabChange: (tab: MobileTabKey) => void
-  selectedProject: StudioProject | null
-  tabs: StudioMobileTab[]
-  urgentTasks: StudioTask[]
-  todayInspection?: StudioInspection
-}) => {
-  const health = selectedProject?.projectHealth ?? 'healthy'
-  return (
-    <header className="grid gap-3 rounded-[28px] bg-[color:var(--bbh-surface)] p-4 shadow-[0_18px_50px_rgba(25,19,14,0.05)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="grid gap-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={{ fontFamily: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace' }}>
-            Studio OS / Khon Kaen
-          </p>
-          <h1 className="text-[1.6rem] font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-            Control room
-          </h1>
-        </div>
-        <StatusBadge status={projectHealthToWorkspaceStatus(health)} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <MetricLine label="Urgent" value={urgentTasks.length} detail="Open work" />
-        <MetricLine
-          label="Today"
-          value={todayInspection ? formatMobileInspectionTime(todayInspection.scheduledAt) : 'No inspect'}
-          detail={todayInspection?.title ?? 'Clear'}
-        />
-      </div>
-
-      <nav className="grid grid-cols-5 gap-2 rounded-[24px] border border-[color:var(--bbh-border)]/70 bg-[color:var(--bbh-surface-muted)] p-2" aria-label="Studio navigation">
-        {tabs.map((tab) => {
-          const key = tab.key as MobileTabKey
-          const active = activeTab === key
+      <nav className="absolute bottom-5 left-1/2 z-50 grid h-[64px] w-[calc(100%-2rem)] max-w-[398px] -translate-x-1/2 grid-cols-5 items-center rounded-full bg-[#212121] px-3 text-white/55 shadow-[0_18px_40px_rgba(17,17,17,0.18)]" aria-label="Studio mobile navigation">
+        {navItems.map((item) => {
+          const active = activeTab === item.key
           return (
             <button
-              key={tab.id}
-              className={`flex flex-col items-center justify-center gap-1 rounded-[18px] px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] transition ${
-                key === 'quick-add'
-                  ? 'bg-[color:var(--bbh-accent)] text-white'
+              key={item.key}
+              aria-current={active ? 'page' : undefined}
+              className={`flex min-h-11 items-center justify-center rounded-[18px] text-[11px] font-semibold tracking-tight transition duration-150 active:scale-95 ${
+                item.key === 'quick-add'
+                  ? 'mx-auto size-12 rounded-full bg-[#FFF0A3] text-xl text-[#212121] shadow-[0_8px_22px_rgba(255,240,163,0.22)]'
                   : active
-                    ? 'bg-[color:var(--bbh-accent-soft)] text-[color:var(--bbh-text)]'
-                    : 'text-[color:var(--bbh-text-muted)] hover:bg-white'
+                    ? 'scale-105 text-[#FFF0A3]'
+                    : 'text-white/55'
               }`}
               type="button"
-              onClick={() => onTabChange(key)}
+              onClick={() => setActiveTab(item.key)}
             >
-              <span style={{ fontFamily: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace' }}>{tabIcon[key]}</span>
-              <span>{navLabel[key]}</span>
+              {item.label}
             </button>
           )
         })}
       </nav>
-    </header>
+    </main>
   )
 }
 
-export const MobileHome = ({
-  createActionRequest,
-  onProjectSelect,
+const MobileTopBar = () => (
+  <header className="flex h-16 w-full shrink-0 items-center justify-between bg-transparent px-4">
+    <button className="grid size-10 place-items-center rounded-full bg-white text-[#212121] shadow-sm transition active:scale-95" type="button" aria-label="Open menu">
+      <span className="grid gap-1">
+        <span className="block h-px w-4 bg-[#212121]" />
+        <span className="block h-px w-4 bg-[#212121]" />
+      </span>
+    </button>
+    <h1 className="text-sm font-medium tracking-tight">Studio OS</h1>
+    <button className="grid size-10 place-items-center rounded-full bg-[#212121] text-xs font-semibold text-white shadow-sm" type="button" aria-label="Profile">
+      P
+    </button>
+  </header>
+)
+
+const TodayView = ({
+  onOpenProject,
+  onSelectDate,
   projects,
-  selectedProject,
+  selectedDate,
   tasks,
-  todayInspection,
 }: {
-  createActionRequest: CreateActionRequest
-  onProjectSelect: (projectId: string) => void
-  projects: StudioProject[]
-  selectedProject: StudioProject | null
-  tasks: StudioTask[]
-  todayInspection?: StudioInspection
+  onOpenProject: (projectId: string) => void
+  onSelectDate: (date: Date) => void
+  projects: MobileProject[]
+  selectedDate: Date
+  tasks: MobileTask[]
 }) => {
-  const heroTask = tasks[0]
-  const projectLoad = projects.reduce((sum, project) => sum + project.progress, 0) / Math.max(projects.length, 1)
-  const gateCount = projects.reduce((sum, project) => sum + project.progressBillingGateIds.length, 0)
+  const weekDays = getWeekDays(selectedDate)
+  const activeTasks = tasks.filter((task) => isSameDay(parseDate(task.date), selectedDate) && task.type !== 'phase' && task.status !== 'done')
+  const rangeTasks = tasks.filter((task) => task.type === 'phase' && occursOn(task, selectedDate) && task.status !== 'done')
+  const laterTasks = tasks.filter((task) => parseDate(task.date) > selectedDate && task.type !== 'phase').slice(0, 3)
+  const doneTasks = tasks.filter((task) => task.status === 'done')
+  const insight = activeTasks.length === 0 && rangeTasks.length === 0 ? 'Free day, good time to reset.' : 'Design work is active. Keep one clean next step.'
 
   return (
-    <div className="grid gap-4">
-      <WorkspacePanel
-        eyebrow="Today focus"
-        title={selectedProject?.name ?? 'Karun Central Khon Kaen'}
-        summary={selectedProject?.taskTimeline ?? 'Daily site checks, owner sign-off, and billing gates stay in one calm lane.'}
-      >
-        <div className="grid gap-2 md:grid-cols-3">
-          <MetricLine label="Avg progress" value={`${Math.round(projectLoad)}%`} detail="Across active projects" />
-          <MetricLine label="Billing gates" value={gateCount} detail="Progress checkpoints" />
-          <MetricLine label="Inspection" value={todayInspection ? 'Today' : 'None'} detail={todayInspection?.title ?? 'No inspection due'} />
+    <div className="animate-[workspace-rise_500ms_ease_both]">
+      <section className="pt-4">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-[56px] font-bold lowercase leading-none tracking-normal text-[#212121]">today</h2>
+          <div className="flex gap-2 pb-1">
+            <span className="rounded-full bg-[#CFDECA] px-4 py-2 text-[11px] font-semibold text-[#212121]">{doneTasks.length} done</span>
+            <span className="rounded-full bg-[#DBDFE9] px-4 py-2 text-[11px] font-semibold text-[#212121]">{activeTasks.length} tasks</span>
+          </div>
         </div>
-      </WorkspacePanel>
+        <WeekStrip selectedDate={selectedDate} tasks={tasks} weekDays={weekDays} onSelectDate={onSelectDate} />
+      </section>
 
-      <WorkspacePanel eyebrow="Urgent tasks" title="Open work" summary="Only the items that need a decision or a site move are shown here.">
+      <button className="mt-8 w-full rounded-[28px] border border-black/5 bg-[#FFF0A3] p-6 text-left shadow-sm transition active:scale-[0.99]" type="button">
+        <p className="text-[11px] font-semibold text-[#212121]/60">Insight</p>
+        <p className="mt-3 text-3xl font-medium leading-tight tracking-normal text-[#111111]">{insight}</p>
+        <span className="mt-6 flex items-center justify-between gap-4">
+          <span className="text-xs italic text-[#212121]/60">Stay spacious. Move only what matters.</span>
+          <span className="shrink-0 rounded-full bg-white/55 px-4 py-2 text-[11px] font-semibold text-[#212121]">View active</span>
+        </span>
+      </button>
+
+      <section className="mt-9">
+        <SectionHead count={rangeTasks.length} title="IN PROGRESS" />
         <div className="grid gap-3">
-          {tasks.length > 0 ? (
-            tasks.map((task) => (
-              <button
-                key={task.id}
-                className="flex items-start justify-between gap-3 rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] p-4 text-left"
-                type="button"
-                onClick={() => onProjectSelect(task.projectId)}
-              >
-                <div className="grid gap-1">
-                  <p className="text-sm font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-                    {task.title}
-                  </p>
-                  <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">
-                    {task.owner} / {task.trade} / {task.timelineSlot}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <ReferenceLabel label="Site" value={task.siteCheck} />
-                    <ReferenceLabel label="State" value={task.processState} />
-                  </div>
-                </div>
-                <StatusBadge status={taskStatusToWorkspaceStatus(task.status)} label={task.priority.toUpperCase()} />
-              </button>
-            ))
-          ) : (
-            <EmptyState title="No urgent tasks" body="The mobile home is clear." />
-          )}
+          {rangeTasks.map((task) => <RangeCard key={task.id} projects={projects} selectedDate={selectedDate} task={task} onOpenProject={onOpenProject} />)}
         </div>
-      </WorkspacePanel>
+      </section>
 
-      <WorkspacePanel eyebrow="Next step" title="Site move" summary={heroTask?.blocker ?? 'Open the next job and keep the schedule moving one check at a time.'}>
-        <button
-          className="studio-mobile-action"
-          type="button"
-          onClick={() =>
-            createActionRequest({
-              module: 'studio',
-              actionType: 'studio.addTask',
-              description: 'Create a quick follow-up task from mobile home',
-              payload: {
-                projectId: selectedProject?.id ?? projects[0]?.id ?? '',
-                title: 'Mobile follow-up task',
-                priority: 'high',
-                owner: selectedProject?.owner ?? 'Operator',
-                trade: selectedProject?.trade ?? 'General',
-                processState: 'planned',
-                siteCheck: 'required',
-                timelineSlot: 'Today',
-              },
-            })
-          }
-        >
-          Queue follow-up task
-        </button>
-      </WorkspacePanel>
-    </div>
-  )
-}
-
-export const MobileCalendar = ({
-  inspections,
-  milestones,
-  projects,
-}: {
-  inspections: StudioInspection[]
-  milestones: StudioMilestone[]
-  projects: StudioProject[]
-}) => {
-  const rows = [
-    ...inspections.map((inspection) => ({
-      kind: 'inspection' as const,
-      date: inspection.scheduledAt.slice(0, 10),
-      title: inspection.title,
-      meta: `${projectById(projects, inspection.projectId)?.name ?? 'Project'} / ${inspection.trade}`,
-      status: inspection.status,
-      detail: inspection.notes ?? inspection.plan,
-    })),
-    ...milestones.map((milestone) => ({
-      kind: 'milestone' as const,
-      date: milestone.dueDate,
-      title: milestone.label,
-      meta: `${projectById(projects, milestone.projectId)?.name ?? 'Project'} / ${milestone.phase}`,
-      status: milestone.status,
-      detail: milestone.notes,
-    })),
-  ].filter((row) => isStudioThisWeekDate(row.date) || row.date === STUDIO_SAMPLE_DATE).sort((a, b) => byDateAsc(a.date, b.date))
-
-  return (
-    <div className="grid gap-4">
-      <WorkspacePanel eyebrow="Timeline" title="Inspections and milestones" summary="A single list for the next control points.">
+      <section className="mt-9">
+        <SectionHead count={activeTasks.length} title="Tasks Today" />
         <div className="grid gap-3">
-          {rows.map((row, index) => (
-            <div key={`${row.kind}-${row.date}-${index}`} className="rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="grid gap-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={{ fontFamily: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace' }}>
-                    {formatStudioDate(row.date)}
-                  </p>
-                  <p className="text-sm font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-                    {row.title}
-                  </p>
-                  <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">{row.meta}</p>
-                </div>
-                <StatusBadge status={row.kind === 'inspection' ? inspectionStatusToWorkspaceStatus(row.status as StudioInspection['status']) : milestoneStatusToWorkspaceStatus(row.status as StudioMilestone['status'])} />
-              </div>
-              {row.detail ? <p className="mt-3 text-sm leading-6 text-[color:var(--bbh-text-soft)]">{row.detail}</p> : null}
-            </div>
-          ))}
+          {activeTasks.map((task) => <TaskCard key={task.id} projects={projects} task={task} />)}
+          {!activeTasks.length ? <EmptyCard lines={['Nothing scheduled today.', 'Add one clear next step when ready.']} /> : null}
         </div>
-      </WorkspacePanel>
+      </section>
+
+      <section className="mt-9">
+        <SectionHead count={laterTasks.length} title="Later" />
+        <div className="grid gap-3">
+          {laterTasks.map((task) => <TaskCard key={task.id} projects={projects} task={task} />)}
+        </div>
+      </section>
+
+      <section className="mt-9">
+        <SectionHead count={projects.length} title="PROJECTS" />
+        <div className="grid gap-3">
+          {projects.slice(0, 5).map((project) => <ProjectRow key={project.id} project={project} onOpenProject={onOpenProject} />)}
+        </div>
+      </section>
     </div>
   )
 }
 
-export const MobileQuickAdd = ({
-  createActionRequest,
+const CalendarView = ({
+  mode,
+  onModeChange,
+  onSelectDate,
   projects,
+  selectedDate,
+  tasks,
 }: {
-  createActionRequest: CreateActionRequest
-  projects: StudioProject[]
+  mode: CalendarMode
+  onModeChange: (mode: CalendarMode) => void
+  onSelectDate: (date: Date) => void
+  projects: MobileProject[]
+  selectedDate: Date
+  tasks: MobileTask[]
 }) => {
-  const [mode, setMode] = useState<'task' | 'issue' | 'inspection'>('task')
-  const [projectId, setProjectId] = useState(projects[0]?.id ?? '')
-  const [title, setTitle] = useState('')
-  const [detail, setDetail] = useState('')
-
-  const submit = () => {
-    if (!projectId || !title.trim()) return
-
-    if (mode === 'task') {
-      createActionRequest({
-        module: 'studio',
-        actionType: 'studio.addTask',
-        description: `Queue quick task: ${title}`,
-        payload: {
-          projectId,
-          title,
-          notes: detail,
-          owner: projectById(projects, projectId)?.owner ?? 'Operator',
-          trade: projectById(projects, projectId)?.trade ?? 'General',
-          priority: 'high',
-          processState: 'planned',
-          siteCheck: 'required',
-          timelineSlot: 'Today',
-        },
-      })
-    } else if (mode === 'issue') {
-      createActionRequest({
-        module: 'studio',
-        actionType: 'studio.addIssue',
-        description: `Queue site issue: ${title}`,
-        payload: {
-          projectId,
-          title,
-          blocker: detail || 'Needs a site review',
-          owner: projectById(projects, projectId)?.owner ?? 'Operator',
-          trade: projectById(projects, projectId)?.trade ?? 'General',
-          severity: 'medium',
-          processState: 'watch',
-          action: 'Inspect on the next visit.',
-          notes: detail,
-        },
-      })
-    } else {
-      createActionRequest({
-        module: 'studio',
-        actionType: 'studio.addInspectionNote',
-        description: `Queue inspection note: ${title}`,
-        payload: {
-          projectId,
-          title,
-          inspector: projectById(projects, projectId)?.owner ?? 'Operator',
-          trade: projectById(projects, projectId)?.trade ?? 'General',
-          type: 'site-walk',
-          status: 'scheduled',
-          scheduledAt: new Date().toISOString(),
-          checklist: ['Photo log', 'Issue note'],
-          plan: detail,
-          notes: detail,
-        },
-      })
-    }
-
-    setTitle('')
-    setDetail('')
-  }
+  const monthDays = getMonthDays(selectedDate)
+  const selectedTasks = tasks.filter((task) => occursOn(task, selectedDate))
 
   return (
-    <div className="grid gap-4">
-      <WorkspacePanel eyebrow="Quick add" title="Create work" summary="Short writes stay behind approval.">
-        <FilterBar
-          filters={[
-            { key: 'task', label: 'Task', active: mode === 'task' },
-            { key: 'issue', label: 'Issue', active: mode === 'issue' },
-            { key: 'inspection', label: 'Inspection', active: mode === 'inspection' },
-          ]}
-          onChange={(key) => setMode(key as typeof mode)}
-        />
-        <label className="grid gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={{ fontFamily: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace' }}>
-            Project
-          </span>
-          <select className="w-full rounded-[18px] border border-[color:var(--bbh-border)] bg-[color:var(--bbh-surface)] px-4 py-3 text-sm text-[color:var(--bbh-text)] outline-none" value={projectId} onChange={(event) => setProjectId(event.target.value)}>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={{ fontFamily: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace' }}>
-            Title
-          </span>
-          <input className="w-full rounded-[18px] border border-[color:var(--bbh-border)] bg-[color:var(--bbh-surface)] px-4 py-3 text-sm text-[color:var(--bbh-text)] outline-none" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Brief task or issue title" />
-        </label>
-        <label className="grid gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={{ fontFamily: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace' }}>
-            Notes
-          </span>
-          <textarea className="min-h-28 w-full rounded-[18px] border border-[color:var(--bbh-border)] bg-[color:var(--bbh-surface)] px-4 py-3 text-sm text-[color:var(--bbh-text)] outline-none" value={detail} onChange={(event) => setDetail(event.target.value)} rows={4} placeholder="Short note for the approval queue" />
-        </label>
-        <button className="studio-mobile-action" type="button" onClick={submit}>
-          Queue for approval
-        </button>
-      </WorkspacePanel>
-    </div>
-  )
-}
-
-export const MobileProjects = ({
-  onProjectSelect,
-  projects,
-  selectedProjectId,
-}: {
-  onProjectSelect: (projectId: string) => void
-  projects: StudioProject[]
-  selectedProjectId: string
-}) => (
-  <div className="grid gap-4">
-    <WorkspacePanel eyebrow="Projects" title="Project cards" summary="This is the main entry point on mobile.">
-      <div className="grid gap-3">
-        {projects.map((project) => (
-          <button
-            key={project.id}
-            className={`rounded-[28px] text-left ${selectedProjectId === project.id ? 'ring-1 ring-[color:var(--bbh-accent)]' : ''}`}
-            type="button"
-            onClick={() => onProjectSelect(project.id)}
-          >
-            <ProjectCard
-              code={project.id}
-              status={projectHealthToWorkspaceStatus(project.projectHealth)}
-              title={project.name}
-              owner={project.owner}
-              trade={project.trade}
-              phase={project.phase}
-              progress={project.progress}
-              summary={project.notes}
-              blocker={project.blocker}
-              detail={
-                <div className="flex flex-wrap items-center gap-2">
-                  <ReferenceLabel label="Site" value={project.location ?? 'Khon Kaen'} />
-                  <ReferenceLabel label="State" value={project.processState} />
-                </div>
-              }
-            />
+    <div className="pb-4">
+      <div className="sticky top-0 z-20 grid grid-cols-3 rounded-full border border-[rgba(33,33,33,0.08)] bg-white/95 p-1 shadow-[0_10px_24px_rgba(33,33,33,0.04)] backdrop-blur-xl">
+        {(['Week', 'Month', 'Year'] as CalendarMode[]).map((item) => (
+          <button key={item} className={`h-10 rounded-full text-sm font-medium transition active:scale-95 ${mode === item ? 'bg-[#212121] text-[#F5F5FA]' : 'text-[#777777]'}`} type="button" onClick={() => onModeChange(item)}>
+            {item}
           </button>
         ))}
       </div>
-    </WorkspacePanel>
-  </div>
-)
 
-export const MobileTaskSheet = ({
-  project,
-  tasks,
-  milestones,
-  inspections,
-  gates,
-  risks,
-}: {
-  project: StudioProject
-  tasks: StudioTask[]
-  milestones: StudioMilestone[]
-  inspections: StudioInspection[]
-  gates: StudioBillingGate[]
-  risks: StudioRisk[]
-}) => (
-  <WorkspacePanel eyebrow="Project detail" title={project.name} summary={project.notes ?? 'Project detail in the pocket.'}>
-    <div className="grid gap-3">
-      <div className="grid gap-2 md:grid-cols-2">
-        <MetricLine label="Owner" value={project.owner} />
-        <MetricLine label="Trade" value={project.trade} />
-        <MetricLine label="Progress" value={`${project.progress}%`} />
-        <MetricLine label="Site check" value={project.siteCheck} />
-      </div>
+      {mode === 'Week' ? <WeekCalendar selectedDate={selectedDate} tasks={tasks} onSelectDate={onSelectDate} /> : null}
+      {mode === 'Month' ? <MonthCalendar monthDays={monthDays} projects={projects} selectedDate={selectedDate} tasks={tasks} onSelectDate={onSelectDate} /> : null}
+      {mode === 'Year' ? <YearCalendar selectedDate={selectedDate} tasks={tasks} onSelectMonth={(date) => { onSelectDate(date); onModeChange('Month') }} /> : null}
 
-      <section className="grid gap-2 rounded-[24px] bg-[color:var(--bbh-surface-muted)] p-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--bbh-text-muted)]" style={{ fontFamily: '"Geist Mono", "Intel One Mono", "JetBrains Mono", ui-monospace, monospace' }}>
-          Blocker
-        </p>
-        <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">{project.blocker ?? 'None'}</p>
-      </section>
-
-      <section className="grid gap-2">
-        <SectionHeader eyebrow="Tasks" title="Current tasks" />
-        <div className="grid gap-2">
-          {tasks.slice(0, 3).map((task) => (
-            <div key={task.id} className="flex items-start justify-between gap-3 rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] p-4">
-              <div className="grid gap-1">
-                <p className="text-sm font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-                  {task.title}
-                </p>
-                <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">
-                  {task.owner} / {task.timelineSlot}
-                </p>
-              </div>
-              <StatusBadge status={taskStatusToWorkspaceStatus(task.status)} label={task.priority.toUpperCase()} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-2">
-        <SectionHeader eyebrow="Billing" title="Progress gates" />
-        <div className="grid gap-2">
-          {gates.slice(0, 3).map((gate) => (
-            <div key={gate.id} className="flex items-start justify-between gap-3 rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] p-4">
-              <div className="grid gap-1">
-                <p className="text-sm font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-                  {gate.label}
-                </p>
-                <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">
-                  THB {gate.amountTHB.toLocaleString('en-US')} / {gate.owner}
-                </p>
-              </div>
-              <StatusBadge status={gateStatusToWorkspaceStatus(gate.status)} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-2">
-        <SectionHeader eyebrow="Inspections" title="Site visits" />
-        <div className="grid gap-2">
-          {inspections.slice(0, 2).map((inspection) => (
-            <div key={inspection.id} className="flex items-start justify-between gap-3 rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] p-4">
-              <div className="grid gap-1">
-                <p className="text-sm font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-                  {inspection.title}
-                </p>
-                <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">
-                  {formatStudioDateTime(inspection.scheduledAt)} / {inspection.inspector}
-                </p>
-              </div>
-              <StatusBadge status={inspectionStatusToWorkspaceStatus(inspection.status)} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-2">
-        <SectionHeader eyebrow="Risks" title="Blockers" />
-        <div className="grid gap-2">
-          {risks.slice(0, 2).map((risk) => (
-            <div key={risk.id} className="flex items-start justify-between gap-3 rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] p-4">
-              <div className="grid gap-1">
-                <p className="text-sm font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-                  {risk.title}
-                </p>
-                <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">{risk.blocker}</p>
-              </div>
-              <StatusBadge status={riskStatusToWorkspaceStatus(risk.severity === 'high' ? 'high' : risk.processState)} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-2">
-        <SectionHeader eyebrow="Timeline" title="Milestones" />
-        <div className="grid gap-2">
-          {milestones.slice(0, 2).map((milestone) => (
-            <div key={milestone.id} className="flex items-start justify-between gap-3 rounded-[24px] border border-[color:var(--bbh-border)]/55 bg-[color:var(--bbh-surface-muted)] p-4">
-              <div className="grid gap-1">
-                <p className="text-sm font-semibold tracking-tight text-[color:var(--bbh-text)]" style={{ fontFamily: '"Space Grotesk", "Inter", system-ui, sans-serif' }}>
-                  {milestone.label}
-                </p>
-                <p className="text-sm leading-6 text-[color:var(--bbh-text-soft)]">
-                  {milestone.phase} / {formatStudioDate(milestone.dueDate)}
-                </p>
-              </div>
-              <StatusBadge status={milestoneStatusToWorkspaceStatus(milestone.status)} />
-            </div>
-          ))}
-        </div>
+      <section className="mt-8">
+        <SectionHead count={selectedTasks.length} title={`Selected: ${formatShortDate(selectedDate)}`} />
+        <TaskDayGroups projects={projects} selectedDate={selectedDate} tasks={selectedTasks} />
       </section>
     </div>
-  </WorkspacePanel>
+  )
+}
+
+const WeekCalendar = ({ selectedDate, tasks, onSelectDate }: { selectedDate: Date; tasks: MobileTask[]; onSelectDate: (date: Date) => void }) => {
+  const weekDays = getWeekDays(selectedDate)
+  return (
+    <section className="mt-6">
+      <div className="mb-5 rounded-[28px] border border-[rgba(33,33,33,0.08)] bg-white p-5">
+        <p className="text-[11px] font-medium uppercase tracking-tight text-[#777777]">This week</p>
+        <div className="mt-3 flex items-end justify-between gap-4">
+          <h2 className="text-2xl font-semibold leading-tight text-[#212121]">{formatShortDate(weekDays[0])} - {formatShortDate(weekDays[6])}</h2>
+          <p className="shrink-0 text-right text-sm text-[#777777]">{tasks.filter((task) => weekDays.some((day) => occursOn(task, day))).length} tasks</p>
+        </div>
+      </div>
+      <WeekStrip selectedDate={selectedDate} tasks={tasks} weekDays={weekDays} onSelectDate={onSelectDate} />
+    </section>
+  )
+}
+
+const MonthCalendar = ({
+  monthDays,
+  onSelectDate,
+  projects,
+  selectedDate,
+  tasks,
+}: {
+  monthDays: Date[]
+  onSelectDate: (date: Date) => void
+  projects: MobileProject[]
+  selectedDate: Date
+  tasks: MobileTask[]
+}) => {
+  const weeks = Array.from({ length: 6 }, (_, index) => monthDays.slice(index * 7, index * 7 + 7))
+  return (
+    <section className="mt-6">
+      <div className="mb-4 flex items-center justify-between px-1">
+        <span className="grid size-11 place-items-center rounded-full bg-white text-lg text-[#777777]">{'<'}</span>
+        <p className="text-lg font-semibold text-[#212121]">{selectedDate.toLocaleDateString([], { month: 'long', year: 'numeric' })}</p>
+        <span className="grid size-11 place-items-center rounded-full bg-white text-lg text-[#777777]">{'>'}</span>
+      </div>
+      <div className="rounded-[28px] border border-[rgba(33,33,33,0.08)] bg-white px-3 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.05)]">
+        <div className="grid grid-cols-7">
+          {dayLabels.map((label) => <span key={label} className="grid min-h-8 place-items-center text-[10px] font-semibold uppercase tracking-tight text-[#777777]">{label.slice(0, 2)}</span>)}
+        </div>
+        <div className="space-y-3">
+          {weeks.map((week) => <MonthWeek key={week[0].toISOString()} projects={projects} selectedDate={selectedDate} tasks={tasks} week={week} onSelectDate={onSelectDate} />)}
+        </div>
+      </div>
+      <Legend />
+    </section>
+  )
+}
+
+const MonthWeek = ({ projects, selectedDate, tasks, week, onSelectDate }: { projects: MobileProject[]; selectedDate: Date; tasks: MobileTask[]; week: Date[]; onSelectDate: (date: Date) => void }) => {
+  const range = tasks.find((task) => task.type === 'phase' && parseDate(task.startDate) <= week[6] && parseDate(task.endDate) >= week[0])
+  const startIndex = range ? Math.max(0, week.findIndex((date) => date >= parseDate(range.startDate))) : -1
+  const endReverseIndex = range ? [...week].reverse().findIndex((date) => date <= parseDate(range.endDate)) : -1
+  const endIndex = endReverseIndex === -1 ? 6 : 6 - endReverseIndex
+  return (
+    <div className="relative grid min-h-[98px] grid-cols-7">
+      {week.map((date) => {
+        const isSelected = isSameDay(date, selectedDate)
+        const count = tasks.filter((task) => occursOn(task, date) && task.type !== 'phase').length
+        return (
+          <button key={date.toISOString()} className={`relative z-10 flex min-h-[98px] w-full flex-col items-center gap-1 rounded-[14px] p-1 text-center ${date.getMonth() === selectedDate.getMonth() ? 'text-[#212121]' : 'text-[#c0c0c0]'}`} type="button" onClick={() => onSelectDate(date)}>
+            <span className={`mt-1 grid size-7 place-items-center rounded-full text-xs ${isSelected ? 'bg-[#212121] text-white shadow-md' : ''}`}>{date.getDate()}</span>
+            {count ? <span className={`mt-1 size-1.5 rounded-full ${isSelected ? 'bg-[#FFF0A3]' : 'bg-[#212121]/65'}`} /> : null}
+          </button>
+        )
+      })}
+      {range ? (
+        <div
+          className="pointer-events-none absolute bottom-8 z-20 flex h-3 items-center overflow-hidden rounded-full border border-black/5 bg-[#DBDFE9] px-2 text-[10px] font-medium leading-none text-[#212121]"
+          style={{ left: `${(Math.max(0, startIndex) / 7) * 100}%`, width: `${((endIndex - Math.max(0, startIndex) + 1) / 7) * 100}%` }}
+        >
+          <span className="truncate">{projectName(projects, range.projectId)} / {range.status === 'overdue' ? 'Overdue' : 'Active'}</span>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+const YearCalendar = ({ selectedDate, tasks, onSelectMonth }: { selectedDate: Date; tasks: MobileTask[]; onSelectMonth: (date: Date) => void }) => (
+  <section className="mt-6 grid grid-cols-2 gap-3">
+    {monthLabels.map((month, monthIndex) => {
+      const count = tasks.filter((task) => touchesMonth(task, selectedDate.getFullYear(), monthIndex)).length
+      return (
+        <button key={month} className="min-h-[118px] rounded-[22px] border border-[rgba(33,33,33,0.08)] bg-white p-4 text-left transition active:scale-95" type="button" onClick={() => onSelectMonth(new Date(selectedDate.getFullYear(), monthIndex, 1))}>
+          <span className="flex items-center justify-between gap-2">
+            <span className="block text-lg font-semibold text-[#212121]">{month}</span>
+            {count ? <span className="size-2 rounded-full bg-[#FFF0A3]" /> : null}
+          </span>
+          <span className="mt-2 block text-sm text-[#777777]">{count} tasks</span>
+          <span className="mt-4 flex flex-wrap gap-1.5">
+            {Array.from({ length: Math.min(Math.max(count, 1), 10) }, (_, index) => <span key={index} className={`size-1.5 rounded-full ${count ? 'bg-[#DBDFE9]' : 'bg-[#212121] opacity-[0.08]'}`} />)}
+          </span>
+        </button>
+      )
+    })}
+  </section>
 )
 
-export const MobileMore = ({
-  approvals,
-  inspections,
+const TaskDayGroups = ({ projects, selectedDate, tasks }: { projects: MobileProject[]; selectedDate: Date; tasks: MobileTask[] }) => {
+  const rangeTasks = tasks.filter((task) => task.type === 'phase')
+  const normalTasks = tasks.filter((task) => task.type !== 'phase' && task.status !== 'done')
+  const groups = timeGroups.map((label) => ({ label, tasks: normalTasks.filter((task) => getTimeGroup(task) === label) }))
+  return (
+    <div className="space-y-4">
+      {rangeTasks.length ? (
+        <section>
+          <h3 className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-tight text-[#777777]">In Progress</h3>
+          <div className="space-y-3">{rangeTasks.map((task) => <RangeCard key={task.id} projects={projects} selectedDate={selectedDate} task={task} />)}</div>
+        </section>
+      ) : null}
+      {groups.map((group) => (
+        <section key={group.label}>
+          <h3 className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-tight text-[#777777]">{group.label}</h3>
+          <div className="space-y-3">
+            {group.tasks.length ? group.tasks.map((task) => <TaskCard key={task.id} projects={projects} task={task} />) : <EmptyCard lines={[`No ${group.label.toLowerCase()} tasks.`]} compact />}
+          </div>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+const ProjectsView = ({
+  onBack,
+  onSelectProject,
   projects,
+  selectedProject,
+  tasks,
 }: {
-  approvals: number
-  inspections: StudioInspection[]
-  projects: StudioProject[]
-}) => (
-  <div className="grid gap-4">
-    <WorkspacePanel eyebrow="More" title="Source and settings" summary="Sync status stays calm and readable.">
-      <div className="grid gap-2">
-        <MetricLine label="Source" value="Mock sheet" detail="Karun Central Khon Kaen" />
-        <MetricLine label="Projects" value={projects.length} detail={`${inspections.length} inspections linked`} />
-        <MetricLine label="Approvals" value={approvals} detail="Writes stay behind review" />
+  onBack: () => void
+  onSelectProject: (projectId: string) => void
+  projects: MobileProject[]
+  selectedProject: MobileProject | null
+  tasks: MobileTask[]
+}) => {
+  if (selectedProject) {
+    const projectTasks = tasks.filter((task) => task.projectId === selectedProject.id && task.type !== 'phase')
+    return (
+      <div className="pb-4">
+        <button className="rounded-full border border-black/5 bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-tight text-[#777777]" type="button" onClick={onBack}>Back to projects</button>
+        <section className="mt-6 rounded-[28px] border border-black/5 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="truncate text-3xl font-bold leading-tight text-[#212121]">{selectedProject.name}</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <StatusChip label={`Phase: ${selectedProject.phase}`} />
+                <StatusChip label={selectedProject.status} />
+              </div>
+            </div>
+            <span className="shrink-0 text-xl font-semibold text-[#212121]">{selectedProject.progress}%</span>
+          </div>
+          <Progress value={selectedProject.progress} />
+          <p className="mt-4 text-sm leading-6 text-[#777777]">{selectedProject.note}</p>
+        </section>
+        <section className="mt-6">
+          <SectionHead count={projectTasks.length} title="Tasks" />
+          <div className="grid gap-3">{projectTasks.map((task) => <TaskCard key={task.id} projects={projects} task={task} />)}</div>
+        </section>
       </div>
-      <div className="grid gap-2 rounded-[24px] bg-[color:var(--bbh-surface-muted)] p-4">
-        <ReferenceLabel label="Mode" value="Mock" />
-        <ReferenceLabel label="Sync" value="Pending" />
-        <ReferenceLabel label="Authority" value="Sheet" />
+    )
+  }
+
+  const groups = ['OVERDUE', 'IN PROGRESS', 'PLANNED', 'DONE'] as const
+  return (
+    <div className="pb-4">
+      <div className="flex items-end justify-between gap-4">
+        <h2 className="text-5xl font-bold lowercase leading-none tracking-normal text-[#212121]">projects</h2>
+        <p className="text-[11px] font-medium uppercase tracking-tight text-[#777777]">{projects.length} total</p>
       </div>
-    </WorkspacePanel>
+      <div className="mt-6 space-y-7">
+        {groups.map((group) => {
+          const groupProjects = projects.filter((project) => project.status === group)
+          if (!groupProjects.length) return null
+          return (
+            <section key={group}>
+              <SectionHead count={groupProjects.length} title={group} />
+              <div className="space-y-3">{groupProjects.map((project) => <ProjectCard key={project.id} project={project} onSelectProject={onSelectProject} />)}</div>
+            </section>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const QuickAddView = ({ projects }: { projects: MobileProject[] }) => (
+  <div className="pb-4">
+    <h2 className="text-5xl font-bold lowercase leading-none tracking-normal text-[#212121]">quick add</h2>
+    <section className="mt-6 rounded-[28px] border border-black/5 bg-white p-5 shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-tight text-[#777777]">Capture</p>
+      <input className="mt-4 h-12 w-full rounded-[18px] border border-black/5 bg-[#F5F5FA] px-4 text-sm outline-none" readOnly value={projects[0]?.name ?? 'Karun Phuket'} />
+      <textarea className="mt-3 min-h-28 w-full rounded-[18px] border border-black/5 bg-[#F5F5FA] px-4 py-3 text-sm outline-none" placeholder="Site note, reminder, or next action" />
+      <button className="mt-4 h-12 w-full rounded-[18px] bg-[#212121] text-sm font-semibold text-white" type="button">Save draft</button>
+    </section>
   </div>
 )
 
-const defaultTabs: StudioMobileTab[] = [
-  { id: 'tab-home', key: 'home', label: 'Home', icon: 'H' },
-  { id: 'tab-calendar', key: 'calendar', label: 'Calendar', icon: 'C' },
-  { id: 'tab-quick-add', key: 'quick-add', label: '+', icon: '+' },
-  { id: 'tab-projects', key: 'projects', label: 'Projects', icon: 'P' },
-  { id: 'tab-more', key: 'more', label: 'More', icon: 'M' },
+const MoreView = ({ projects, tasks }: { projects: MobileProject[]; tasks: MobileTask[] }) => (
+  <div className="pb-4">
+    <h2 className="text-5xl font-bold lowercase leading-none tracking-normal text-[#212121]">more</h2>
+    <section className="mt-6 rounded-[28px] border border-black/5 bg-white p-5 shadow-sm">
+      <SectionHead count={2} title="Workspace" />
+      <div className="grid grid-cols-2 gap-3">
+        <MetricCard label="Projects" value={projects.length} />
+        <MetricCard label="Open tasks" value={tasks.filter((task) => task.status !== 'done').length} />
+      </div>
+      <p className="mt-5 rounded-[22px] bg-[#F5F5FA] p-4 text-sm leading-6 text-[#777777]">The dense control-room report is intentionally not the default mobile home. Keep this space for future settings and debug links.</p>
+    </section>
+  </div>
+)
+
+const WeekStrip = ({ selectedDate, tasks, weekDays, onSelectDate }: { selectedDate: Date; tasks: MobileTask[]; weekDays: Date[]; onSelectDate: (date: Date) => void }) => (
+  <div className="mobile-week-strip mt-5 flex w-full gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+    {weekDays.map((date) => {
+      const selected = isSameDay(date, selectedDate)
+      const count = tasks.filter((task) => occursOn(task, date)).length
+      return (
+        <button key={date.toISOString()} className={`flex min-h-16 min-w-[54px] flex-col items-center justify-center rounded-[18px] px-3 py-3 transition active:scale-95 ${selected ? 'bg-[#212121] text-white' : 'bg-white text-[#212121]'}`} type="button" onClick={() => onSelectDate(date)}>
+          <span className={`text-[10px] uppercase tracking-tight ${selected ? 'text-white/60' : 'text-[#777777]'}`}>{dayLabels[date.getDay()]}</span>
+          <span className={`${selected ? 'text-xl font-semibold' : 'text-sm font-medium'}`}>{date.getDate()}</span>
+          {count ? <span className={`mt-1 size-1.5 rounded-full ${selected ? 'bg-[#FFF0A3]' : 'bg-[#212121]/65'}`} /> : null}
+        </button>
+      )
+    })}
+  </div>
+)
+
+const RangeCard = ({ projects, selectedDate, task, onOpenProject }: { projects: MobileProject[]; selectedDate: Date; task: MobileTask; onOpenProject?: (projectId: string) => void }) => {
+  const progress = rangeProgress(task, selectedDate)
+  return (
+    <button className="relative w-full overflow-hidden rounded-[22px] border border-black/5 bg-white p-4 text-left shadow-sm transition active:scale-[0.99]" type="button" onClick={() => onOpenProject?.(task.projectId)}>
+      <span className="absolute bottom-4 left-0 top-4 w-1 rounded-r-full bg-[#DBDFE9]" />
+      <span className="flex items-start justify-between gap-3 pl-2">
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-semibold text-[#212121]">{projectName(projects, task.projectId)}</span>
+          <span className="mt-1 block text-xs font-medium text-[#777777]">Phase: {task.phase || 'Design'}</span>
+        </span>
+        <StatusChip label={task.status === 'overdue' ? 'OVERDUE' : 'IN PROGRESS'} />
+      </span>
+      <span className="mt-4 block pl-2">
+        <Progress value={progress.percent} />
+        <span className="mt-2 block text-xs font-medium text-[#777777]">{formatShortDate(parseDate(task.startDate))} - {formatShortDate(parseDate(task.endDate))} / {progress.daysLeft} days left</span>
+      </span>
+    </button>
+  )
+}
+
+const TaskCard = ({ projects, task }: { projects: MobileProject[]; task: MobileTask }) => (
+  <div className="rounded-[22px] border border-black/5 bg-white px-4 py-3 text-left shadow-sm">
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="truncate text-[15px] font-semibold text-[#212121]">{task.title}</p>
+        <p className="mt-1 truncate text-xs font-medium text-[#777777]">{projectName(projects, task.projectId)} / {task.phase}</p>
+      </div>
+      <span className="shrink-0 text-xs font-semibold text-[#777777]">{task.time ?? formatShortDate(parseDate(task.date))}</span>
+    </div>
+    {task.detail ? <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#777777]">{task.detail}</p> : null}
+  </div>
+)
+
+const ProjectRow = ({ project, onOpenProject }: { project: MobileProject; onOpenProject: (projectId: string) => void }) => (
+  <button className="flex min-h-[64px] w-full items-center gap-3 rounded-[22px] border border-[rgba(33,33,33,0.08)] bg-white px-4 py-3 text-left transition active:scale-95" type="button" onClick={() => onOpenProject(project.id)}>
+    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#DBDFE9] text-xs font-bold uppercase text-[#212121]">{initials(project.name)}</span>
+    <span className="min-w-0 flex-1">
+      <span className="block truncate text-sm font-semibold text-[#212121]">{project.name}</span>
+      <span className="mt-1 block text-xs font-medium text-[#777777]">{project.phase}</span>
+    </span>
+    <span className="text-xl leading-none text-[#555555]">{'>'}</span>
+  </button>
+)
+
+const ProjectCard = ({ project, onSelectProject }: { project: MobileProject; onSelectProject: (projectId: string) => void }) => (
+  <button className="w-full rounded-[26px] border border-black/5 bg-white p-4 text-left shadow-sm transition active:scale-[0.99]" type="button" onClick={() => onSelectProject(project.id)}>
+    <span className="flex items-start justify-between gap-3">
+      <span className="min-w-0">
+        <span className="block truncate text-[17px] font-semibold leading-snug text-[#212121]">{project.name}</span>
+        <StatusChip label={project.phase} />
+      </span>
+      <span className="shrink-0 text-lg font-semibold text-[#212121]">{project.progress}%</span>
+    </span>
+    <Progress value={project.progress} />
+    <span className="mt-3 block text-xs font-medium text-[#777777]">{formatShortDate(parseDate(project.startDate))} - {formatShortDate(parseDate(project.endDate))}</span>
+  </button>
+)
+
+const SectionHead = ({ count, title }: { count: number; title: string }) => (
+  <div className="mb-3 flex items-center justify-between px-1">
+    <h2 className="text-[11px] font-semibold uppercase tracking-tight text-[#777777]">{title}</h2>
+    <p className="rounded-full bg-[#DBDFE9] px-2 py-0.5 text-[11px] font-semibold text-[#212121]">{count}</p>
+  </div>
+)
+
+const StatusChip = ({ label }: { label: string }) => <span className="mt-2 inline-flex rounded-full bg-[#DBDFE9] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-tight text-[#212121]">{label}</span>
+const Progress = ({ value }: { value: number }) => <span className="mt-4 block h-2 overflow-hidden rounded-full bg-[#DBDFE9]"><span className="block h-full rounded-full bg-[#212121]" style={{ width: `${Math.max(4, Math.min(100, value))}%` }} /></span>
+const MetricCard = ({ label, value }: { label: string; value: number }) => <div className="rounded-[22px] bg-[#F5F5FA] p-4"><p className="text-[11px] font-semibold uppercase text-[#777777]">{label}</p><strong className="mt-2 block text-2xl text-[#212121]">{value}</strong></div>
+const EmptyCard = ({ compact = false, lines }: { compact?: boolean; lines: string[] }) => <div className={`rounded-[24px] border border-black/5 bg-white text-xs leading-5 text-[#777777] ${compact ? 'px-4 py-3' : 'p-5'}`}>{lines.map((line) => <p key={line}>{line}</p>)}</div>
+const Legend = () => <div className="mt-5 flex flex-wrap gap-2 rounded-[20px] bg-white/70 px-3 py-3 text-[10px] font-medium text-[#777777]"><span>Range</span><span>/</span><span>In Progress</span><span>/</span><span>Planned</span><span>/</span><span>Selected</span></div>
+
+const buildMobileData = (data: OsData): { projects: MobileProject[]; tasks: MobileTask[] } => {
+  const projects = data.studioProjects.length ? data.studioProjects.slice(0, 8).map(toMobileProject) : fallbackProjects
+  const phaseTasks: MobileTask[] = projects.map((project) => ({
+    id: `range-${project.id}`,
+    projectId: project.id,
+    title: project.name,
+    detail: `${project.phase} phase timeline.`,
+    phase: project.phase,
+    date: project.startDate,
+    startDate: project.startDate,
+    endDate: project.endDate,
+    status: project.status === 'DONE' ? 'done' : project.status === 'OVERDUE' ? 'overdue' : 'doing',
+    type: 'phase' as const,
+  }))
+  const taskItems = data.studioTasks.length ? data.studioTasks.slice(0, 16).map(toMobileTask) : fallbackTasks
+  return { projects, tasks: [...phaseTasks, ...taskItems] }
+}
+
+const toMobileProject = (project: StudioProject): MobileProject => ({
+  id: project.id,
+  name: project.name || project.client || 'Karun Phuket',
+  phase: normalizePhase(project.phase),
+  status: project.projectHealth === 'risk' ? 'OVERDUE' : project.status === 'handover' ? 'PLANNED' : 'IN PROGRESS',
+  startDate: project.startDate,
+  endDate: project.endDate,
+  progress: project.progress,
+  note: project.notes ?? project.taskTimeline ?? 'Design direction, client alignment, and approval-ready boards.',
+})
+
+const toMobileTask = (task: StudioTask): MobileTask => ({
+  id: task.id,
+  projectId: task.projectId,
+  title: task.title,
+  detail: task.notes ?? task.trade,
+  phase: normalizePhase(task.processState),
+  date: task.startDate,
+  startDate: task.startDate,
+  endDate: task.endDate,
+  time: inferTime(task.timelineSlot),
+  status: task.status === 'done' ? 'done' : task.status === 'blocked' ? 'overdue' : task.status === 'doing' ? 'doing' : 'todo',
+  type: 'task',
+})
+
+const fallbackProjects: MobileProject[] = [
+  { id: 'demo-karun-phuket', name: 'Karun Phuket', phase: 'Design', status: 'IN PROGRESS', startDate: '2026-05-04', endDate: '2026-05-20', progress: 35, note: 'Design direction, client alignment, and phase approvals.' },
+  { id: 'demo-westville', name: 'Karun Central Westville', phase: 'Construction', status: 'OVERDUE', startDate: '2026-05-04', endDate: '2026-05-07', progress: 50, note: 'Construction coordination and BOQ updates.' },
+  { id: 'demo-ultimate', name: 'Ultimate BKK', phase: 'Handover', status: 'PLANNED', startDate: '2026-05-15', endDate: '2026-05-20', progress: 12, note: 'Handover planning and final documentation.' },
 ]
 
-const priorityOrder = (priority: StudioTask['priority']) => (priority === 'high' ? 3 : priority === 'medium' ? 2 : 1)
+const fallbackTasks: MobileTask[] = [
+  { id: 'task-site', projectId: 'demo-karun-phuket', title: 'Site meeting with client', detail: 'Client walkthrough and design alignment.', phase: 'Design', date: '2026-05-05', startDate: '2026-05-05', endDate: '2026-05-05', time: '09:00', status: 'todo', type: 'task' },
+  { id: 'task-moodboard', projectId: 'demo-karun-phuket', title: 'Moodboard review', detail: 'Review visual direction and references.', phase: 'Design', date: '2026-05-05', startDate: '2026-05-05', endDate: '2026-05-05', time: '14:00', status: 'todo', type: 'task' },
+  { id: 'task-boq', projectId: 'demo-westville', title: 'Update BOQ', detail: 'Revise construction cost items.', phase: 'Construction', date: '2026-05-05', startDate: '2026-05-05', endDate: '2026-05-05', time: '18:00', status: 'todo', type: 'task' },
+  { id: 'task-survey', projectId: 'demo-karun-phuket', title: 'Site survey', detail: 'Completed initial site survey.', phase: 'Design', date: '2026-05-01', startDate: '2026-05-01', endDate: '2026-05-01', status: 'done', type: 'task' },
+]
 
-const byDateAsc = (a: string, b: string) => a.localeCompare(b)
+const getWeekDays = (date: Date) => {
+  const start = new Date(date)
+  start.setDate(date.getDate() - ((date.getDay() + 6) % 7))
+  start.setHours(0, 0, 0, 0)
+  return Array.from({ length: 7 }, (_, index) => {
+    const item = new Date(start)
+    item.setDate(start.getDate() + index)
+    return item
+  })
+}
 
-const gatesByProject = (gates: StudioBillingGate[], projectId: string) => gates.filter((gate) => gate.projectId === projectId)
+const getMonthDays = (date: Date) => {
+  const first = new Date(date.getFullYear(), date.getMonth(), 1)
+  const start = new Date(first)
+  start.setDate(first.getDate() - first.getDay())
+  return Array.from({ length: 42 }, (_, index) => {
+    const item = new Date(start)
+    item.setDate(start.getDate() + index)
+    return item
+  })
+}
 
-const inspectionsByProject = (inspections: StudioInspection[], projectId: string) =>
-  inspections.filter((inspection) => inspection.projectId === projectId)
+const parseDate = (value: string) => {
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number)
+  const date = new Date(year, (month || 1) - 1, day || 1)
+  date.setHours(0, 0, 0, 0)
+  return date
+}
 
-const milestonesByProject = (milestones: StudioMilestone[], projectId: string) =>
-  milestones.filter((milestone) => milestone.projectId === projectId)
+const isSameDay = (left: Date, right: Date) => left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate()
+const occursOn = (task: MobileTask, date: Date) => parseDate(task.startDate) <= date && parseDate(task.endDate) >= date
+const touchesMonth = (task: MobileTask, year: number, month: number) => parseDate(task.startDate) <= new Date(year, month + 1, 0) && parseDate(task.endDate) >= new Date(year, month, 1)
+const formatShortDate = (date: Date) => date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+const rangeProgress = (task: MobileTask, date: Date) => {
+  const start = parseDate(task.startDate)
+  const end = parseDate(task.endDate)
+  const total = Math.max(1, Math.round((end.getTime() - start.getTime()) / dayMs) + 1)
+  const elapsed = Math.min(total, Math.max(1, Math.round((date.getTime() - start.getTime()) / dayMs) + 1))
+  return { daysLeft: Math.max(0, Math.round((end.getTime() - date.getTime()) / dayMs)), percent: (elapsed / total) * 100 }
+}
+const projectName = (projects: MobileProject[], projectId: string) => projects.find((project) => project.id === projectId)?.name ?? 'Karun Phuket'
+const initials = (value: string) => value.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('') || 'P'
+const normalizePhase = (value: string) => {
+  const text = value.toLowerCase()
+  if (text.includes('construction') || text.includes('fit-out')) return 'Construction'
+  if (text.includes('handover') || text.includes('punch')) return 'Handover'
+  if (text.includes('opening')) return 'Opening'
+  return 'Design'
+}
+const inferTime = (slot: string) => {
+  const match = slot.match(/\b\d{1,2}:\d{2}\b/)
+  if (match) return match[0]
+  if (slot.toLowerCase().includes('morning')) return '09:00'
+  if (slot.toLowerCase().includes('afternoon')) return '14:00'
+  if (slot.toLowerCase().includes('evening')) return '18:00'
+  return undefined
+}
+const getTimeGroup = (task: MobileTask): (typeof timeGroups)[number] => {
+  if (!task.time) return 'No time'
+  const hour = Number(task.time.split(':')[0])
+  if (hour < 12) return 'Morning'
+  if (hour < 18) return 'Afternoon'
+  return 'Evening'
+}
 
-const risksByProject = (risks: StudioRisk[], projectId: string) => risks.filter((risk) => risk.projectId === projectId)
 
-const tasksByProject = (tasks: StudioTask[], projectId: string) => tasks.filter((task) => task.projectId === projectId)
-
-const formatMobileInspectionTime = (value: string) =>
-  new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))

@@ -1,0 +1,334 @@
+{
+  "executable": "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+  "screenshots": [
+    {
+      "name": "01-home-desktop.png",
+      "route": "/",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\01-home-desktop.png"
+    },
+    {
+      "name": "02-home-mobile.png",
+      "route": "/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\02-home-mobile.png"
+    },
+    {
+      "name": "03-projects-desktop.png",
+      "route": "/projects",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\03-projects-desktop.png"
+    },
+    {
+      "name": "04-portfolio-karun-central-khon-kaen-desktop.png",
+      "route": "/portfolio/karun-central-khon-kaen",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\04-portfolio-karun-central-khon-kaen-desktop.png"
+    },
+    {
+      "name": "05-mobile-os-unauth-mobile.png",
+      "route": "/m",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\05-mobile-os-unauth-mobile.png"
+    },
+    {
+      "name": "06-mobile-os-auth-mobile.png",
+      "route": "/m",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\06-mobile-os-auth-mobile.png"
+    },
+    {
+      "name": "07-mobile-os-auth-desktop.png",
+      "route": "/m",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\07-mobile-os-auth-desktop.png"
+    },
+    {
+      "name": "08-login-desktop.png",
+      "route": "/login",
+      "viewport": {
+        "width": 1440,
+        "height": 1100
+      },
+      "fullPath": "C:\\Users\\UsEr\\Documents\\Overall\\qa-mobile-web-restore-check\\08-login-desktop.png"
+    }
+  ],
+  "checks": {
+    "01-home-desktop.png": {
+      "url": "http://127.0.0.1:5174/",
+      "text": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\nBE BLANK TO BEHIND STUDIO\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL KHON KAEN\n\nactive / open project\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL LOBBY\n\nactive / open project\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL LANDSCAPE\n\nplanning / open project\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL KHON KAEN\n\nactive / open project\n\nBLANK CANVAS\n\nSTUDIO IDENTITY\n\nOPERATIONAL WORKSPACE\n\nPRIVATE ACCESS\n\nSTUDIO OS STAYS BEHIND THE PORTFOLIO.\n\nPortfolio is public. Editing, project operations, and OS controls require private access.\n\nContinue with Google (mock)\nOS\nedit\nos\nedit",
+      "overflowX": false,
+      "masthead": {
+        "fontFamily": "\"Inter Tight\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontWeight": "800",
+        "letterSpacing": "normal",
+        "lineHeight": "99.1872px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "logo": {
+        "fontFamily": "Baskerville, Georgia, \"Times New Roman\", serif",
+        "fontWeight": "500",
+        "letterSpacing": "normal",
+        "lineHeight": "13.2px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "publicNav": {
+        "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        "fontWeight": "600",
+        "letterSpacing": "0.385px",
+        "lineHeight": "12.65px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "projectTitle": {
+        "fontFamily": "\"Inter Tight\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontWeight": "600",
+        "letterSpacing": "0.13px",
+        "lineHeight": "13.26px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileMain": {
+        "width": 1440,
+        "left": 0,
+        "right": 1440,
+        "centered": true,
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileNav": null,
+      "hasPublicNav": true,
+      "hasMobileNav": false
+    },
+    "02-home-mobile.png": {
+      "url": "http://127.0.0.1:5174/",
+      "text": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\nBE BLANK TO BEHIND STUDIO\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL KHON KAEN\n\nactive / open project\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL LOBBY\n\nactive / open project\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL LANDSCAPE\n\nplanning / open project\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL KHON KAEN\n\nactive / open project\n\nBLANK CANVAS\n\nSTUDIO IDENTITY\n\nOPERATIONAL WORKSPACE\n\nPRIVATE ACCESS\n\nSTUDIO OS STAYS BEHIND THE PORTFOLIO.\n\nPortfolio is public. Editing, project operations, and OS controls require private access.\n\nContinue with Google (mock)\nOS\nedit\nos\nedit",
+      "overflowX": false,
+      "masthead": {
+        "fontFamily": "\"Inter Tight\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontWeight": "800",
+        "letterSpacing": "normal",
+        "lineHeight": "44.616px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "logo": {
+        "fontFamily": "Baskerville, Georgia, \"Times New Roman\", serif",
+        "fontWeight": "500",
+        "letterSpacing": "normal",
+        "lineHeight": "13.2px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "publicNav": {
+        "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        "fontWeight": "600",
+        "letterSpacing": "0.385px",
+        "lineHeight": "12.65px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "projectTitle": {
+        "fontFamily": "\"Inter Tight\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontWeight": "600",
+        "letterSpacing": "0.13px",
+        "lineHeight": "13.26px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileMain": {
+        "width": 390,
+        "left": 0,
+        "right": 390,
+        "centered": true,
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileNav": null,
+      "hasPublicNav": true,
+      "hasMobileNav": false
+    },
+    "03-projects-desktop.png": {
+      "url": "http://127.0.0.1:5174/projects",
+      "text": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\n\nprojects / work index\n\nSTUDIO ARCHIVE IN PROGRESS.\n\n01\n\nKARUN CENTRAL KHON KAEN\n\nactive\nnok\n\n02\n\nKARUN CENTRAL LOBBY\n\nactive\naof\n\n03\n\nKARUN CENTRAL LANDSCAPE\n\nplanning\nmint\n\nos\nedit",
+      "overflowX": false,
+      "masthead": null,
+      "logo": {
+        "fontFamily": "Baskerville, Georgia, \"Times New Roman\", serif",
+        "fontWeight": "500",
+        "letterSpacing": "normal",
+        "lineHeight": "13.2px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "publicNav": {
+        "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        "fontWeight": "600",
+        "letterSpacing": "0.385px",
+        "lineHeight": "12.65px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "projectTitle": {
+        "fontFamily": "\"Inter Tight\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontWeight": "800",
+        "letterSpacing": "normal",
+        "lineHeight": "96px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileMain": {
+        "width": 1440,
+        "left": 0,
+        "right": 1440,
+        "centered": true,
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileNav": null,
+      "hasPublicNav": true,
+      "hasMobileNav": false
+    },
+    "04-portfolio-karun-central-khon-kaen-desktop.png": {
+      "url": "http://127.0.0.1:5174/portfolio/karun-central-khon-kaen",
+      "text": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\n\nactive / nok\n\nKARUN CENTRAL KHON KAEN\nPORTFOLIO IMAGE PENDING\n\nPublic project profile from the shared Studio OS project data. Operational controls remain inside the private Studio OS workspace.\n\nos\nedit",
+      "overflowX": false,
+      "masthead": null,
+      "logo": {
+        "fontFamily": "Baskerville, Georgia, \"Times New Roman\", serif",
+        "fontWeight": "500",
+        "letterSpacing": "normal",
+        "lineHeight": "13.2px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "publicNav": {
+        "fontFamily": "\"JetBrains Mono\", \"Geist Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        "fontWeight": "600",
+        "letterSpacing": "0.385px",
+        "lineHeight": "12.65px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "projectTitle": {
+        "fontFamily": "\"Inter Tight\", \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+        "fontWeight": "800",
+        "letterSpacing": "normal",
+        "lineHeight": "96px",
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileMain": {
+        "width": 1440,
+        "left": 0,
+        "right": 1440,
+        "centered": true,
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileNav": null,
+      "hasPublicNav": true,
+      "hasMobileNav": false
+    },
+    "05-mobile-os-unauth-mobile.png": {
+      "url": "http://127.0.0.1:5174/m",
+      "text": "bb\n\nBe blank to behind studio\n\nStudio OS\n\nMobile companion for today, calendar, projects, notes, and quick field follow-up.\n\nContinue with Google (mock)\n\nPrivate workspace",
+      "overflowX": false,
+      "masthead": null,
+      "logo": null,
+      "publicNav": null,
+      "projectTitle": null,
+      "mobileMain": {
+        "width": 390,
+        "left": 0,
+        "right": 390,
+        "centered": true,
+        "backgroundColor": "rgb(245, 245, 245)"
+      },
+      "mobileNav": null,
+      "hasPublicNav": false,
+      "hasMobileNav": false
+    },
+    "06-mobile-os-auth-mobile.png": {
+      "url": "http://127.0.0.1:5174/m",
+      "text": "Studio OS\nP\ntoday\n0 done\n0 tasks\nMON\n11\nTUE\n12\nWED\n13\nTHU\n14\nFRI\n15\nSAT\n16\nSUN\n17\n\nInsight\n\nDesign work is active. Keep one clean next step.\n\nStay spacious. Move only what matters.\nView active\nIN PROGRESS\n\n1\n\nKarun Central Khon Kaen\nPhase: Handover\nIN PROGRESS\nMay 8 - Jun 30 / 49 days left\nTASKS TODAY\n\n0\n\nNothing scheduled today.\n\nAdd one clear next step when ready.\n\nLATER\n\n3\n\nClose ceiling repairs at north corridor\n\nKarun Central Khon Kaen / Design\n\n14:00\n\nFinish the ceiling patch before the handover board review.\n\nVerify MEP access panels and label set\n\nKarun Central Khon Kaen / Design\n\n11:00\n\nUse this pass to clear the final mechanical punch items before the gate review.\n\nUpdate handover checklist and snag log\n\nKarun Central Khon Kaen / Design\n\n09:00\n\nKeep it aligned with the retention photo log.\n\nPROJECTS\n\n3\n\nKC\nKarun Central Khon Kaen\nHandover\n>\nKC\nKarun Central Lobby\nConstruction\n>",
+      "overflowX": false,
+      "masthead": null,
+      "logo": null,
+      "publicNav": null,
+      "projectTitle": null,
+      "mobileMain": {
+        "width": 390,
+        "left": 0,
+        "right": 390,
+        "centered": true,
+        "backgroundColor": "rgb(245, 245, 250)"
+      },
+      "mobileNav": {
+        "fontFamily": "Inter, Manrope, system-ui, sans-serif",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "backgroundColor": "rgb(33, 33, 33)"
+      },
+      "hasPublicNav": false,
+      "hasMobileNav": true
+    },
+    "07-mobile-os-auth-desktop.png": {
+      "url": "http://127.0.0.1:5174/m",
+      "text": "Studio OS\nP\ntoday\n0 done\n0 tasks\nMON\n11\nTUE\n12\nWED\n13\nTHU\n14\nFRI\n15\nSAT\n16\nSUN\n17\n\nInsight\n\nDesign work is active. Keep one clean next step.\n\nStay spacious. Move only what matters.\nView active\nIN PROGRESS\n\n1\n\nKarun Central Khon Kaen\nPhase: Handover\nIN PROGRESS\nMay 8 - Jun 30 / 49 days left\nTASKS TODAY\n\n0\n\nNothing scheduled today.\n\nAdd one clear next step when ready.\n\nLATER\n\n3\n\nClose ceiling repairs at north corridor\n\nKarun Central Khon Kaen / Design\n\n14:00\n\nFinish the ceiling patch before the handover board review.\n\nVerify MEP access panels and label set\n\nKarun Central Khon Kaen / Design\n\n11:00\n\nUse this pass to clear the final mechanical punch items before the gate review.\n\nUpdate handover checklist and snag log\n\nKarun Central Khon Kaen / Design\n\n09:00\n\nKeep it aligned with the retention photo log.\n\nPROJECTS\n\n3\n\nKC\nKarun Central Khon Kaen\nHandover\n>\nKC\nKarun Central Lobby\nConstruction\n>",
+      "overflowX": false,
+      "masthead": null,
+      "logo": null,
+      "publicNav": null,
+      "projectTitle": null,
+      "mobileMain": {
+        "width": 430,
+        "left": 505,
+        "right": 935,
+        "centered": true,
+        "backgroundColor": "rgb(245, 245, 250)"
+      },
+      "mobileNav": {
+        "fontFamily": "Inter, Manrope, system-ui, sans-serif",
+        "fontWeight": "400",
+        "letterSpacing": "normal",
+        "lineHeight": "24px",
+        "backgroundColor": "rgb(33, 33, 33)"
+      },
+      "hasPublicNav": false,
+      "hasMobileNav": true
+    },
+    "08-login-desktop.png": {
+      "url": "http://127.0.0.1:5174/login",
+      "text": "be blank\npublic site\nLogin\n\nMock protected route for PR #1. Real identity provider will be connected in later milestones.\n\nContinue to Core OS",
+      "overflowX": false,
+      "masthead": null,
+      "logo": null,
+      "publicNav": null,
+      "projectTitle": null,
+      "mobileMain": {
+        "width": 1376,
+        "left": 32,
+        "right": 1408,
+        "centered": true,
+        "backgroundColor": "rgba(0, 0, 0, 0)"
+      },
+      "mobileNav": null,
+      "hasPublicNav": false,
+      "hasMobileNav": false
+    },
+    "mobileCalendar": {
+      "hasTabs": true,
+      "hasTaskGroups": true,
+      "hasRangeBar": true,
+      "hasControlRoom": false,
+      "overflowX": false
+    }
+  }
+}

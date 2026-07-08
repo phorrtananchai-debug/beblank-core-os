@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AuthLayout } from '../layouts/AuthLayout'
 import { OSLayout } from '../layouts/OSLayout'
 import { PublicWebsiteLayout } from '../layouts/PublicWebsiteLayout'
 import { AIWorkflowPage } from '../pages/os/AIWorkflowPage'
@@ -9,6 +10,7 @@ import { DesignSystemPage } from '../pages/os/DesignSystemPage'
 import { DividendHistoryPage } from '../pages/os/DividendHistoryPage'
 import { FamilyOfficePage } from '../pages/os/FamilyOfficePage'
 import { FinancePage } from '../pages/os/FinancePage'
+import { PortfolioManagerPage } from '../pages/os/PortfolioManagerPage'
 import { InvestmentsPage } from '../pages/os/InvestmentsPage'
 import { SettingsPage } from '../pages/os/SettingsPage'
 import { StudioMobilePage } from '../pages/os/StudioMobilePage'
@@ -33,14 +35,20 @@ export const AppRoutes = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:slug" element={<ProjectDetailPage />} />
+        <Route path="/portfolio/:slug" element={<ProjectDetailPage />} />
         <Route path="/work" element={<ProjectsPage />} />
         <Route path="/journal" element={<JournalPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/careers" element={<CareersPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
+      </Route>
+
+      <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
       </Route>
+
+      <Route path="/m" element={<StudioMobilePage />} />
 
       <Route
         path="/os"
@@ -52,6 +60,7 @@ export const AppRoutes = () => {
       >
         <Route index element={<CommandCenterPage />} />
         <Route path="studio" element={<StudioWorkspacePage />} />
+        <Route path="portfolio" element={<PortfolioManagerPage />} />
         <Route path="studio/mobile" element={<StudioMobilePage />} />
         <Route path="studio/projects/:projectId" element={<StudioProjectDetailPage />} />
         <Route path="studio/projects" element={<StudioWorkspacePage />} />
@@ -83,3 +92,4 @@ export const AppRoutes = () => {
     </Routes>
   )
 }
+

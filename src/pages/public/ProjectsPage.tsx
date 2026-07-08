@@ -8,7 +8,7 @@ export const ProjectsPage = () => {
   return (
     <section className="mx-auto min-h-screen max-w-screen-2xl px-5 pb-32 pt-40 md:px-8">
       <p className="public-project-meta text-[#777777]">projects / work index</p>
-      <h1 className="mt-6 max-w-4xl text-6xl font-extrabold uppercase leading-[0.86] md:text-8xl">
+      <h1 className="public-page-heading mt-6 max-w-4xl text-6xl font-extrabold uppercase leading-[0.86] md:text-8xl">
         {hasProjects ? 'Studio archive in progress.' : 'Projects coming soon'}
       </h1>
 
@@ -17,7 +17,7 @@ export const ProjectsPage = () => {
           {data.projects.map((project, index) => (
             <article key={project.id} className="grid gap-4 md:grid-cols-[0.18fr_1fr_0.24fr]">
               <p className="public-project-meta text-[#777777]">{String(index + 1).padStart(2, '0')}</p>
-              <Link to={`/projects/${project.slug}`} className="group">
+              <Link to={`/portfolio/${project.slug}`} className="group">
                 <h2 className="public-project-title text-3xl transition group-hover:opacity-60 md:text-5xl">
                   {project.name}
                 </h2>

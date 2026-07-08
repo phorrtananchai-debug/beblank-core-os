@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,7 +9,7 @@
     @apply m-0;
     background: var(--bb-canvas);
     color: var(--bb-text);
-    font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+    font-family: var(--font-ui);
   }
 
   * {
@@ -30,6 +30,11 @@
 }
 
 :root {
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-brand: "Prompt", "Inter", system-ui, sans-serif;
+  --font-ui: "Inter", "Manrope", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
   --bbh-canvas: #F8F8F6;
   --bbh-shell: #F5F5F2;
   --bbh-surface: #FFFFFF;
@@ -886,7 +891,7 @@
   }
 
   .editorial-thai {
-    font-family: "Prompt", "Inter", system-ui, sans-serif;
+    font-family: var(--font-ui);
     letter-spacing: -0.01em;
   }
 
@@ -900,14 +905,18 @@
   .public-studio-canvas {
     background: #d7d3c8;
     min-height: 100vh;
-    font-family: "Prompt", "Inter", system-ui, sans-serif;
+    overflow-x: hidden;
+    font-family: var(--font-ui);
   }
 
   .public-masthead-nav,
+  .auth-shell-nav,
+  .mobile-private-nav,
+  .mobile-private-meta,
   .public-utility-dock,
   .public-project-meta,
   .public-os-preview {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.6875rem;
     font-weight: 600;
     letter-spacing: 0.035em;
@@ -915,8 +924,16 @@
     text-transform: lowercase;
   }
 
+  .public-brand-logo {
+    font-family: Baskerville, Georgia, 'Times New Roman', serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.1;
+    text-transform: lowercase;
+  }
   .public-masthead-type {
-    font-family: "Prompt", "Inter", system-ui, sans-serif;
+    font-family: 'Inter Tight', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: clamp(3.25rem, 8.4vw, 9.4rem);
     font-weight: 800;
     letter-spacing: 0;
@@ -924,6 +941,17 @@
     text-transform: uppercase;
     transition: transform 120ms linear, opacity 120ms linear;
     will-change: transform, opacity;
+  }
+
+  .public-home-masthead {
+    width: min(92vw, 11.5ch);
+    max-width: 92vw;
+    overflow-wrap: normal;
+  }
+
+  .public-page-heading {
+    font-family: 'Inter Tight', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    letter-spacing: 0;
   }
 
   .public-utility-dock {
@@ -953,9 +981,53 @@
   }
 
   .public-work-image > div {
+    position: relative;
     overflow: hidden;
     border: 1px solid rgba(17, 17, 17, 0.06);
+    background-position: center;
     background-size: cover;
+    transition: filter 220ms ease, transform 220ms ease;
+  }
+
+  .public-work-image {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 180ms ease;
+  }
+
+  .public-work-image:hover > div {
+    filter: saturate(1.08) contrast(1.02);
+    transform: translate3d(0, -3px, 0);
+  }
+
+  .public-work-image:hover .public-project-title {
+    opacity: 0.62;
+  }
+
+  .public-detail-visual {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(135deg, rgba(17, 17, 17, 0.04), transparent 42%),
+      linear-gradient(135deg, #eee9df, #cfc8bb 48%, #f7f4ed);
+    background-position: center;
+    background-size: cover;
+  }
+
+  .public-work-fallback-label {
+    position: absolute;
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: 0.8rem;
+    z-index: 1;
+    color: rgba(17, 17, 17, 0.58);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-transform: uppercase;
   }
 
   .public-work-image-stone > div {
@@ -981,17 +1053,50 @@
   }
 
   .public-project-title {
-    font-family: "Prompt", "Inter", system-ui, sans-serif;
-    font-size: var(--public-project-title-size, 0.82rem);
-    font-weight: 700;
+    font-family: 'Inter Tight', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: var(--public-project-title-size, 0.8125rem);
+    font-weight: 600;
     letter-spacing: 0.01em;
-    line-height: 1.05;
+    line-height: 1.02;
     text-transform: uppercase;
   }
 
   .public-transition-statement {
     @apply mt-32 grid gap-4 border-t border-black/[0.08] pt-8 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777777] md:grid-cols-3;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
+  }
+
+  .public-private-entry {
+    display: grid;
+    gap: 1rem;
+    margin-top: 5rem;
+    max-width: 30rem;
+    border-top: 1px solid rgba(17, 17, 17, 0.08);
+    padding-top: 1.25rem;
+    font-family: var(--font-ui);
+  }
+
+  .public-private-entry-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #777777;
+  }
+
+  .public-private-entry-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 3vw, 2.35rem);
+    font-weight: 750;
+    line-height: 0.98;
+    text-transform: uppercase;
+  }
+
+  .public-private-entry-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
 
   .public-os-preview span,
@@ -1011,13 +1116,18 @@
     background: #111111;
     color: white;
     padding: 0.5rem 0.75rem;
-    font-family: "Prompt", "Inter", system-ui, sans-serif;
+    font-family: var(--font-ui);
     font-size: 0.75rem;
     text-transform: none;
   }
 
   .os-shell {
-    font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+    font-family: var(--font-ui);
+  }
+
+  .mobile-os-page,
+  .mobile-private-entry {
+    font-family: var(--font-ui);
   }
 
   .os-ambient-plane {
@@ -1570,14 +1680,14 @@
 
   .studio-mobile-nav {
     position: sticky;
-    bottom: 0.5rem;
+    bottom: 0.35rem;
     z-index: 3;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.35rem;
     border-radius: 22px;
-    border: 1px solid var(--bb-border);
-    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(17, 17, 17, 0.88);
+    background: #111111;
     padding: 0.45rem;
     box-shadow: var(--bb-shadow-sm);
   }
@@ -1588,22 +1698,22 @@
     align-items: center;
     justify-content: center;
     gap: 0.15rem;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 0.6rem 0.25rem;
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 0.62rem;
     font-weight: 700;
-    color: var(--bb-text-muted);
+    color: rgba(255, 255, 255, 0.66);
     transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
   }
   .studio-mobile-nav-item:hover,
   .studio-mobile-nav-item.is-active {
-    background: var(--bb-accent-soft);
-    color: var(--bb-accent-strong);
+    background: #f4c84f;
+    color: #111111;
   }
   .studio-mobile-nav-item.is-add {
-    background: var(--bb-accent);
-    color: white;
+    background: #f4c84f;
+    color: #111111;
   }
 
   .studio-mobile-nav-icon {
@@ -2040,6 +2150,16 @@
       justify-self: center;
     }
 
+    .public-masthead-type {
+      font-size: clamp(2.45rem, 13vw, 3.45rem);
+      line-height: 0.88;
+    }
+
+    .public-home-masthead {
+      width: min(88vw, 9.8ch);
+      max-width: 88vw;
+    }
+
     .public-work-item {
       position: relative;
       left: auto !important;
@@ -2090,6 +2210,255 @@
     }
   }
 
+
+  .public-portfolio-editor-surface {
+    position: relative;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .public-work-frame {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(17, 17, 17, 0.06);
+    background:
+      linear-gradient(135deg, #d8d1c5, #f4f0e8 44%, #b8b1a6);
+    background-position: center;
+    background-size: cover;
+  }
+
+  .public-work-editable {
+    cursor: grab;
+    outline: 1px dashed rgba(17, 17, 17, 0.32);
+    outline-offset: 5px;
+  }
+
+  .public-work-editable.is-selected {
+    outline: 2px solid #111111;
+  }
+
+  .public-work-editable.is-dragging {
+    cursor: grabbing;
+  }
+
+  .public-editor-toolbar {
+    position: sticky;
+    top: 4.75rem;
+    z-index: 80;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+    display: grid;
+    gap: 0.85rem;
+    overflow: hidden;
+    border: 1px solid rgba(17, 17, 17, 0.1);
+    background: rgba(247, 244, 237, 0.92);
+    padding: 0.85rem;
+    backdrop-filter: blur(16px);
+  }
+
+  .public-editor-toolbar-head,
+  .public-editor-actions,
+  .public-editor-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+  }
+
+  .public-editor-toolbar-head {
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .public-editor-actions {
+    min-width: 0;
+    justify-content: flex-end;
+  }
+
+  .public-editor-toolbar p,
+  .portfolio-manager-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .public-editor-toolbar span,
+  .public-editor-hint,
+  .portfolio-manager-copy,
+  .portfolio-drop-zone span {
+    font-size: 0.75rem;
+    color: #777777;
+  }
+
+  .public-editor-actions button,
+  .public-editor-upload,
+  .portfolio-manager-actions a,
+  .portfolio-manager-actions button {
+    border: 1px solid rgba(17, 17, 17, 0.12);
+    border-radius: 999px;
+    background: white;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .public-editor-upload {
+    cursor: pointer;
+  }
+
+  .public-editor-upload input {
+    display: none;
+  }
+
+  .public-editor-actions button:hover,
+  .portfolio-manager-actions a:hover,
+  .portfolio-manager-actions button:hover {
+    opacity: 0.65;
+  }
+
+  .public-editor-fields {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .public-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .public-editor-fields label,
+  .portfolio-manager-panel label {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .public-editor-fields label span,
+  .portfolio-manager-panel label span {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #777777;
+  }
+
+  .public-editor-fields input,
+  .public-editor-fields select,
+  .portfolio-manager-panel input,
+  .portfolio-manager-panel select {
+    width: 100%;
+    border: 1px solid rgba(17, 17, 17, 0.12);
+    background: white;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.8rem;
+    outline: none;
+  }
+
+  .portfolio-manager {
+    background: #d7d3c8;
+    color: #111111;
+    font-family: var(--font-ui);
+  }
+
+  .portfolio-manager-header,
+  .portfolio-manager-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .portfolio-manager-header h1 {
+    margin-top: 0.5rem;
+    font-family: 'Inter Tight', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: clamp(2.8rem, 7vw, 7rem);
+    font-weight: 800;
+    line-height: 0.86;
+    text-transform: uppercase;
+  }
+
+  .portfolio-manager-grid {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  }
+
+  .portfolio-manager-panel {
+    position: sticky;
+    top: 1rem;
+    display: grid;
+    gap: 1rem;
+    align-self: start;
+    border: 1px solid rgba(17, 17, 17, 0.1);
+    background: rgba(247, 244, 237, 0.9);
+    padding: 1rem;
+  }
+
+  .portfolio-drop-zone {
+    display: grid;
+    gap: 0.35rem;
+    min-height: 8rem;
+    place-items: center;
+    border: 1px dashed rgba(17, 17, 17, 0.28);
+    background: rgba(255, 255, 255, 0.45);
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .mobile-studio-route,
+  .mobile-studio-landing {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  .mobile-studio-app-shell {
+    max-width: min(430px, 100vw);
+    overflow-x: hidden;
+  }
+
+  .mobile-week-strip {
+    max-width: 100%;
+    overflow-y: hidden;
+  }
+
+  .mobile-week-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .public-portfolio-editor-surface .public-archive-canvas {
+      min-height: auto;
+      padding-top: 34vh;
+    }
+
+    .public-portfolio-editor-surface .public-work-item {
+      position: relative;
+      left: auto !important;
+      top: auto !important;
+      width: auto !important;
+      margin-top: 4rem;
+      transform: none !important;
+    }
+
+    .public-editor-grid,
+    .portfolio-manager-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .portfolio-manager-panel {
+      position: relative;
+      top: auto;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -2101,3 +2470,8 @@
     }
   }
 }
+
+
+
+
+
