@@ -1,24 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Project } from '../../types/models'
-import { createBlankHomepageItem, localPortfolioStorageAdapter } from './portfolioStorageAdapter'
+import { createBlankHomepageItem, getPortfolioStorageAdapter } from './portfolioStorageAdapter'
 import { buildSeedPortfolioLayout, type HomepagePortfolioItem, type PortfolioLayoutSnapshot } from './types'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
 export const usePortfolioLayout = (projects: Project[]) => {
   const seed = useMemo(() => buildSeedPortfolioLayout(projects), [projects])
+  const adapter = useMemo(() => getPortfolioStorageAdapter(), [])
   const [snapshot, setSnapshot] = useState<PortfolioLayoutSnapshot>(seed)
   const [saveState, setSaveState] = useState<SaveState>('idle')
 
   useEffect(() => {
     let mounted = true
-    localPortfolioStorageAdapter.load().then((stored) => {
+    adapter.load().then((stored) => {
       if (!mounted) return
       if (stored) {
-        const projectIds = new Set(seed.projects.map((project) => project.id))
+        const nextProjects = stored.projects.length > 0 ? stored.projects : seed.projects
+        const projectIds = new Set(nextProjects.map((project) => project.id))
         setSnapshot({
           ...stored,
-          projects: seed.projects,
+          projects: nextProjects,
           homepageItems: stored.homepageItems.filter((item) => projectIds.has(item.projectId)),
         })
       } else {
@@ -28,7 +30,7 @@ export const usePortfolioLayout = (projects: Project[]) => {
     return () => {
       mounted = false
     }
-  }, [seed])
+  }, [adapter, seed])
 
   const updateItem = useCallback((itemId: string, patch: Partial<HomepagePortfolioItem>) => {
     setSnapshot((current) => ({
@@ -65,27 +67,32 @@ export const usePortfolioLayout = (projects: Project[]) => {
   const save = useCallback(async () => {
     setSaveState('saving')
     try {
-      const saved = await localPortfolioStorageAdapter.save(snapshot)
+      const saved = await adapter.save(snapshot)
       setSnapshot(saved)
       setSaveState('saved')
     } catch {
       setSaveState('error')
     }
-  }, [snapshot])
+  }, [adapter, snapshot])
 
   const reset = useCallback(async () => {
-    await localPortfolioStorageAdapter.reset()
+    await adapter.reset()
     setSnapshot(seed)
     setSaveState('idle')
-  }, [seed])
+  }, [adapter, seed])
 
   const uploadImage = useCallback(async (itemId: string, file: File) => {
-    const upload = await localPortfolioStorageAdapter.uploadImage(file)
-    updateItem(itemId, upload)
-  }, [updateItem])
+    try {
+      const upload = await adapter.uploadImage(file)
+      updateItem(itemId, upload)
+    } catch {
+      setSaveState('error')
+    }
+  }, [adapter, updateItem])
 
   return {
-    adapterMode: 'local/mock' as const,
+    adapterMode: adapter.mode,
+    adapterWarning: adapter.warning,
     addItem,
     deleteItem,
     reset,

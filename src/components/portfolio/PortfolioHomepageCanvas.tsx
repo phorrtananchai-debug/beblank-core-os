@@ -14,6 +14,7 @@ interface PortfolioHomepageCanvasProps {
   onSelectItem: (itemId: string) => void
   onUpdateItem: (itemId: string, patch: Partial<HomepagePortfolioItem>) => void
   onUploadImage: (itemId: string, file: File) => void
+  storageWarning?: string
   saveState: string
 }
 
@@ -32,6 +33,7 @@ export const PortfolioHomepageCanvas = ({
   projects,
   saveState,
   selectedItemId,
+  storageWarning,
 }: PortfolioHomepageCanvasProps) => {
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const [draggingItemId, setDraggingItemId] = useState('')
@@ -108,6 +110,7 @@ export const PortfolioHomepageCanvas = ({
         <PortfolioEditorToolbar
           saveState={saveState}
           selectedItem={selectedItem}
+          storageWarning={storageWarning}
           onAdd={addAndSelect}
           onDelete={() => selectedItem && onDeleteItem(selectedItem.id)}
           onReset={onReset}
@@ -183,6 +186,7 @@ const PortfolioEditorToolbar = ({
   projects,
   saveState,
   selectedItem,
+  storageWarning,
 }: {
   onAdd: () => void
   onDelete: () => void
@@ -193,6 +197,7 @@ const PortfolioEditorToolbar = ({
   projects: PortfolioProject[]
   saveState: string
   selectedItem: HomepagePortfolioItem | null
+  storageWarning?: string
 }) => (
   <aside className="public-editor-toolbar">
     <div className="public-editor-toolbar-head">
@@ -207,6 +212,7 @@ const PortfolioEditorToolbar = ({
         <button type="button" onClick={onReset}>reset</button>
       </div>
     </div>
+    {storageWarning ? <p className="public-editor-storage-warning">{storageWarning}</p> : null}
 
     {selectedItem ? (
       <div className="public-editor-fields">

@@ -2288,10 +2288,18 @@
 
   .public-editor-toolbar span,
   .public-editor-hint,
+  .public-editor-storage-warning,
   .portfolio-manager-copy,
   .portfolio-drop-zone span {
     font-size: 0.75rem;
     color: #777777;
+  }
+
+  .public-editor-storage-warning {
+    border: 1px solid rgba(217, 145, 0, 0.24);
+    background: rgba(255, 244, 216, 0.78);
+    padding: 0.55rem 0.65rem;
+    color: #6f5200;
   }
 
   .public-editor-actions button,

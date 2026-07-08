@@ -14,6 +14,8 @@
     "hermes:validate": "node scripts/hermes-validate-packet.mjs"
   },
   "dependencies": {
+    "@xyflow/react": "^12.11.2",
+    "firebase": "^12.15.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.16.0"

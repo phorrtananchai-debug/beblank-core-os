@@ -6,7 +6,7 @@ interface LocationState {
 }
 
 export const LoginPage = () => {
-  const { login, isAuthenticated } = useAuth()
+  const { authMode, login, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const state = location.state as LocationState | undefined
@@ -21,16 +21,18 @@ export const LoginPage = () => {
     <section className="mx-auto grid max-w-md gap-4 py-16">
       <h1 className="text-4xl font-semibold">Login</h1>
       <p className="text-sm text-[#5a534a]">
-        Mock protected route for PR #1. Real identity provider will be connected in later milestones.
+        {authMode === 'firebase'
+          ? 'Use Google to enter the private BeBlank workspace.'
+          : 'Mock protected route for local development. Configure Firebase env for Google login.'}
       </p>
       <button
         className="btn-primary"
-        onClick={() => {
-          login()
+        onClick={async () => {
+          await login()
           navigate(redirectTarget, { replace: true })
         }}
       >
-        Continue to Core OS
+        {authMode === 'firebase' ? 'Continue with Google' : 'Continue to Core OS'}
       </button>
     </section>
   )

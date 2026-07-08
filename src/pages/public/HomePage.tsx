@@ -84,6 +84,7 @@ export const HomePage = () => {
               onSelectItem={setSelectedItemId}
               onUpdateItem={portfolio.updateItem}
               onUploadImage={portfolio.uploadImage}
+              storageWarning={portfolio.adapterWarning}
             />
           </div>
 

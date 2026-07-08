@@ -53,11 +53,13 @@ export const PortfolioManagerPage = () => {
             onSelectItem={setSelectedItemId}
             onUpdateItem={portfolio.updateItem}
             onUploadImage={portfolio.uploadImage}
+            storageWarning={portfolio.adapterWarning}
           />
         </div>
 
         <aside className="portfolio-manager-panel">
           <p className="portfolio-manager-label">Selected card</p>
+          {portfolio.adapterWarning ? <p className="portfolio-manager-copy">{portfolio.adapterWarning}</p> : null}
           {selectedItem ? (
             <>
               <label>
