@@ -10,6 +10,14 @@ Greenfield rebuild for **Be Blank Core OS** using React + Vite + Tailwind.
 - AI workflow is manual-first in this phase.
 - Hermes / OpenClaw / MCP are future agent layers.
 
+## Agent Quick Start
+
+New to this repo? Read these in order before contributing:
+
+1. **[docs/AGENT_ONBOARDING.md](docs/AGENT_ONBOARDING.md)** — Start here: setup, safety rules, team routing, workflow, closeout checklist.
+2. **[docs/HERMES_HANDOFF_PROTOCOL.md](docs/HERMES_HANDOFF_PROTOCOL.md)** — Agent roles, handoff packets, rules of engagement.
+3. **[docs/CURRENT_AI_WORKFLOW_STATE.md](docs/CURRENT_AI_WORKFLOW_STATE.md)** — Current state snapshot: latest commit, active branches, open questions.
+
 ## Current Scope (No Real Integrations)
 This PR intentionally uses mock-only abstractions:
 - No real Google Sheets connection.
