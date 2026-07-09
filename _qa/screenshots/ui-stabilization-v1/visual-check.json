@@ -1,0 +1,266 @@
+[
+  {
+    "name": "01-home-desktop.png",
+    "route": "/",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/",
+    "bodySample": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\nBE BLANK TO BEHIND STUDIO\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL KHON KAEN\n\nactive / handover prep and snag closure\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL LOBBY\n\na",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": false,
+    "mobileLanding": true,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440
+  },
+  {
+    "name": "02-home-mobile.png",
+    "route": "/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/",
+    "bodySample": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\nBE BLANK TO BEHIND STUDIO\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL KHON KAEN\n\nactive / handover prep and snag closure\n\nPORTFOLIO IMAGE PENDING\n\nKARUN CENTRAL LOBBY\n\na",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": false,
+    "mobileLanding": true,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 390,
+    "innerWidth": 390
+  },
+  {
+    "name": "03-home-edit-desktop.png",
+    "route": "/?edit=1",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/?edit=1",
+    "bodySample": "Authenticated homepage editor: toolbar visible with local/mock Firebase env warning.",
+    "publicNav": false,
+    "editorToolbar": true,
+    "mobileShell": false,
+    "mobileLanding": true,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440
+  },
+  {
+    "name": "04-projects-desktop.png",
+    "route": "/projects",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/projects",
+    "bodySample": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\n\nprojects / work index\n\nSTUDIO ARCHIVE IN PROGRESS.\n\n01\n\nKARUN CENTRAL KHON KAEN\n\nactive\nnok\n\n02\n\nKARUN CENTRAL LOBBY\n\nactive\naof\n\n03\n\nKARUN CENTRAL LANDSCAPE\n\nplan",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": false,
+    "mobileLanding": false,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440
+  },
+  {
+    "name": "05-portfolio-detail-desktop.png",
+    "route": "/portfolio/karun-central-khon-kaen",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/portfolio/karun-central-khon-kaen",
+    "bodySample": "be blank\ncontact\nportfolio\nwork\njournal\nabout\ninstagram\n\nactive / nok\n\nKARUN CENTRAL KHON KAEN\nPORTFOLIO IMAGE PENDING\n\nPublic project profile from the shared Studio OS project data. Operational controls remain inside th",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": false,
+    "mobileLanding": false,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440
+  },
+  {
+    "name": "06-os-portfolio-desktop.png",
+    "route": "/os/portfolio",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/os/portfolio",
+    "bodySample": "Authenticated OS portfolio manager: protected shell visible, editor controls visible, local/mock warning present.",
+    "publicNav": false,
+    "editorToolbar": true,
+    "mobileShell": false,
+    "mobileLanding": false,
+    "controlRoom": false,
+    "portfolioManager": true,
+    "overflow": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440
+  },
+  {
+    "name": "07-mobile-os-unauth.png",
+    "route": "/m",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/m",
+    "bodySample": "bb\n\nBe blank to behind studio\n\nStudio OS\n\nMobile companion for today, calendar, projects, notes, and quick field follow-up.\n\nContinue with Google (mock)\n\nPrivate workspace",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": false,
+    "mobileLanding": true,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 390,
+    "innerWidth": 390
+  },
+  {
+    "name": "08-mobile-os-auth-home.png",
+    "route": "/m",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/m",
+    "bodySample": "Studio OS\nP\ntoday\n0 done\n0 tasks\nMON\n11\nTUE\n12\nWED\n13\nTHU\n14\nFRI\n15\nSAT\n16\nSUN\n17\n\nInsight\n\nDesign work is active. Keep one clean next step.\n\nStay spacious. Move only what matters.\nView active\nIN PROGRESS\n\n1\n\nKarun Centr",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": true,
+    "mobileLanding": false,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 390,
+    "innerWidth": 390
+  },
+  {
+    "name": "09-mobile-os-auth-calendar.png",
+    "route": "/m",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/m",
+    "bodySample": "Studio OS\nP\nWeek\nMonth\nYear\n<\n\nMay 2026\n\n>\nSU\nMO\nTU\nWE\nTH\nFR\nSA\n26\n27\n28\n29\n30\n1\n2\n3\n4\n5\n6\n7\n8\n9\nKarun Central Khon Kaen / Active\n10\n11\n12\n13\n14\n15\n16\nKarun Central Khon Kaen / Active\n17\n18\n19\n20\n21\n22\n23\nKarun Central K",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": true,
+    "mobileLanding": false,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 390,
+    "innerWidth": 390
+  },
+  {
+    "name": "10-mobile-os-desktop.png",
+    "route": "/m",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/m",
+    "bodySample": "Studio OS\nP\ntoday\n0 done\n0 tasks\nMON\n11\nTUE\n12\nWED\n13\nTHU\n14\nFRI\n15\nSAT\n16\nSUN\n17\n\nInsight\n\nDesign work is active. Keep one clean next step.\n\nStay spacious. Move only what matters.\nView active\nIN PROGRESS\n\n1\n\nKarun Centr",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": true,
+    "mobileLanding": false,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440
+  },
+  {
+    "name": "11-login-desktop.png",
+    "route": "/login",
+    "viewport": {
+      "width": 1440,
+      "height": 1100
+    },
+    "errors": [
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED",
+      "Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED"
+    ],
+    "title": "Be Blank OS",
+    "url": "http://127.0.0.1:5174/login",
+    "bodySample": "be blank\npublic site\nLogin\n\nMock protected route for local development. Configure Firebase env for Google login.\n\nContinue to Core OS",
+    "publicNav": false,
+    "editorToolbar": false,
+    "mobileShell": false,
+    "mobileLanding": false,
+    "controlRoom": false,
+    "portfolioManager": false,
+    "overflow": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440
+  }
+]

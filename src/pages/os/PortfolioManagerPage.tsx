@@ -22,7 +22,7 @@ export const PortfolioManagerPage = () => {
   }
 
   return (
-    <section className="portfolio-manager min-h-screen px-5 py-6 md:px-8">
+    <section className="portfolio-manager px-4 py-5 md:px-6">
       <header className="portfolio-manager-header">
         <div>
           <p className="public-project-meta text-[#777777]">Back office / portfolio</p>
