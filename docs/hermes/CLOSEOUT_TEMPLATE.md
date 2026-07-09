@@ -1,126 +1,126 @@
-# Closeout Report Template
+# Closeout Report Template v3
 
-**Purpose:** Structured closeout report produced after every mission. Sent to Por for review before commit/merge approval.
+**Purpose:** Structured closeout report produced after every mission. Follows Closeout Packet v3 schema.
 
 ---
 
 ```yaml
-packet_id: <PKT-YYYY-MM-DD-NNN>
-phase: <Phase identifier>
-mission: <Mission statement>
-agent: <Agent name>
-date: <YYYY-MM-DD>
+closeout_id: CLOSEOUT-YYYYMMDD-NNN
+mission_id: MISSION-YYYYMMDD-NNN
+session_id: SESSION-YYYYMMDD-NNN
+parent_mission: (optional)
+agent: <Hermes Direct / Codex CLI / OpenCode / DeepSeek>
+branch: <branch name>
+date: YYYY-MM-DD
 ```
 
-## Summary
+## Task Summary
 
-<Brief description of what was accomplished>
+<One-line description of what was accomplished>
 
 ## Files Changed
 
-| File | Action | Lines |
-|------|--------|-------|
-| `<path>` | Created / Modified / Deleted | `<N> additions, <N> deletions` |
-| `<path>` | Created / Modified / Deleted | `<N> additions, <N> deletions` |
+| File | Action | Added | Removed |
+|------|--------|-------|---------|
+| `<path>` | Created / Modified / Deleted | N | N |
+
+## Files Inspected
+
+```
+<path 1>
+<path 2>
+```
 
 ## Commands Run
 
-```bash
-<command 1> → <output summary or ✅/❌>
-<command 2> → <output summary or ✅/❌>
-<command 3> → <output summary or ✅/❌>
-```
+| Command | Result |
+|---------|--------|
+| `git status --short` | Clean / (list files) |
+| `git diff --stat` | N files changed |
+| `git log -1 --oneline` | `<hash> <message>` |
+| `npm run lint` | ✅ PASS / ❌ FAIL |
+| `npm run build` | ✅ PASS / ❌ FAIL |
 
-## Build/Test Result
+## Screenshots / QA Artifacts
+
+| Artifact | Path |
+|----------|------|
+| Screenshot | `_qa/screenshots/<phase>/<file>.png` |
+
+## Validation
 
 | Check | Result |
 |-------|--------|
-| `npm run build` | ✅ PASS / ❌ FAIL |
-| `npm run lint` | ✅ PASS / ❌ FAIL (if applicable) |
+| Lint | ✅ / ❌ / N/A |
+| Build | ✅ / ❌ / N/A |
+| Test | ⏳ Not configured |
 
-## Evidence
+## Risk Score
 
-- `<evidence item 1>` — backed by command output
-- `<evidence item 2>` — backed by command output
-- All claims in this report are backed by captured command output.
+🟢 Low / 🟡 Medium / 🟠 High / 🔴 Critical
 
-## Risks
+## Confirmed NOT Modified
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| <Risk description> | 🟢 Low / 🟡 Medium / 🟠 High / 🔴 Critical | <Mitigation or note> |
+- `src/core/auth/` — untouched
+- `src/finance/` — untouched
+- `src/trading/` — untouched
+- `src/creator/` — untouched
+- Firebase config — untouched
+- `.env` files — untouched
 
-## Deviations from Scope
-
-| Deviation | Reason | Approved? |
-|-----------|--------|-----------|
-| <If scope changed, describe> | <Why> | Yes / No / N/A |
-
-## Commit Request Status
-
-- [ ] Commit requested
-- [ ] Commit not requested
-- [ ] Waiting for Por decision
-
-## Agent Budget / Quota Note
+## Cost / Quota
 
 | Field | Value |
 |-------|-------|
-| **Agent used** | `<Hermes Direct / Codex CLI / OpenCode CLI / DS/OpenCode>` |
-| **Why selected** | `<Rationale for route choice>` |
-| **Cheaper path considered** | `<Yes / No — if yes, why not taken>` |
-| **Paid executor used?** | `<Yes / No>` |
-| **Paid executor justification** | `<Required if Yes — why Hermes Direct or Codex read-only was insufficient>` |
-| **Codex quota status** | `<Active / Exhausted / Unknown / Not applicable>` |
-| **Quota evidence source** | `<CLI output / usage counter / screenshot / user statement / unknown>` |
+| Agent used | `<agent>` |
+| Why selected | `<rationale>` |
+| Cheaper path considered | Yes / No |
+| Paid executor used? | Yes / No |
+| Paid executor justification | `<if Yes>` |
+| Codex quota status | Active / Exhausted / Unknown / N/A |
+| Quota evidence source | `<source>` |
 
-## Next Recommended Action
+## Scope Summary
 
-- <Action 1>
-- <Action 2>
-- Awaiting Por instruction
-
----
-
-## Example: Filled Closeout
-
-```yaml
-packet_id: PKT-2026-07-09-001
-phase: Phase 6B.2
-mission: Create Hermes packet schema templates
-agent: Hermes Direct
-date: 2026-07-09
-```
-
-## Summary
-
-Created 4 template files under `docs/hermes/` defining the packet schema, task packet template, closeout template, and review gate template.
-
-## Files Changed
-
-| File | Action | Lines |
-|------|--------|-------|
-| `docs/hermes/PACKET_SCHEMA.md` | Created | 100 lines |
-| `docs/hermes/TASK_PACKET_TEMPLATE.md` | Created | 120 lines |
-| `docs/hermes/CLOSEOUT_TEMPLATE.md` | Created | 95 lines |
-| `docs/hermes/REVIEW_GATE_TEMPLATE.md` | Created | 80 lines |
-
-## Build/Test Result
-
-| Check | Result |
+| Check | Status |
 |-------|--------|
-| `npm run build` | ✅ PASS |
+| Allowed files matched? | ✅ / ❌ |
+| Forbidden files untouched? | ✅ / ❌ |
+| Scope deviations? | None / (list) |
 
-## Risks
+## Evidence Summary
 
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| Templates may diverge from actual workflow as it evolves | 🟢 Low | Update templates when workflow changes |
+All claims backed by captured command output. Key evidence:
 
-## Deviations from Scope
+- `<evidence 1>`
+- `<evidence 2>`
 
-None.
+## Review Recommendation
 
-## Next Recommended Action
+**APPROVE** / **REVISE** / **HOLD FOR EVIDENCE** / **REJECT**
 
-Awaiting Por commit approval.
+## Reopen Criteria
+
+- <condition 1>
+- <condition 2>
+
+## Git Confirmation
+
+| Field | Value |
+|-------|-------|
+| Branch | `<name>` |
+| Working tree | Clean / Dirty |
+| Committed? | Yes / No |
+| Commit hash | `<hash or N/A>` |
+| Pushed? | Yes / No |
+| Merge performed? | Yes / No |
+
+## Risks / Remaining Issues
+
+| Risk | Severity | Status |
+|------|----------|--------|
+| <description> | 🟢 / 🟡 / 🟠 / 🔴 | Open / Mitigated / Closed |
+
+## Suggested Next Mission
+
+<Recommendation based on closeout findings>

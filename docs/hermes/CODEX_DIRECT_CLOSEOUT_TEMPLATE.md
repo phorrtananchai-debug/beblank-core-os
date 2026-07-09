@@ -1,96 +1,139 @@
-# Codex Direct Closeout Template
+# Codex Direct Closeout Template v3
 
-**Purpose:** Template for Codex sessions started directly by Por (not routed through Hermes). When Por runs Codex CLI directly, Codex should produce a closeout using this template so Hermes can sync the work later.
+**Purpose:** Closeout template for Codex sessions started directly by Por. Follows Closeout Packet v3 schema.
 
 ---
 
 ```yaml
-session_date: <YYYY-MM-DD>
-session_time: <HH:MM UTC>
-initiated_by: Por
+closeout_id: CLOSEOUT-YYYYMMDD-NNN
+mission_id: MISSION-YYYYMMDD-NNN
+session_id: SESSION-YYYYMMDD-NNN
+parent_mission: (optional)
 agent: Codex CLI
-reason_hermes_bypassed: <Why Hermes was not used — e.g., "quick inspection", "Hermes not open", "performance">
+branch: <branch name>
+date: YYYY-MM-DD
 ```
 
 ## Session Details
 
 | Field | Value |
 |-------|-------|
-| **Repo path** | `<Full repo path>` |
-| **Branch** | `<branch name>` |
-| **Codex mode** | `<exec / review / interactive>` |
-| **Restricted commands?** | `<Yes / No — if yes, list restricted commands used>` |
-| **Sandbox mode** | `<read-only / workspace-write / none>` |
-| **Reasoning level used** | `<Low / Medium / High>` |
-| **Quota status before** | `<If known — include source>` |
-| **Quota status after** | `<If known — include source>` |
-| **Quota evidence source** | `<CLI output / usage counter / screenshot / user statement / unknown>` |
-
-## Warning
-
-**Codex direct output is not automatically approved.** Codex sessions run directly by Por bypass Hermes routing, review gates, and budget checks. Work produced during a Codex Direct session still requires Hermes/Por review before commit, especially for production-sensitive or HIGH/CRITICAL risk paths.
-
----
+| Initiated by | Por |
+| Reason Hermes bypassed | <why Hermes was not used> |
+| Codex mode | exec / review / interactive |
+| Sandbox mode | read-only / workspace-write / none |
+| Reasoning level | Low / Medium / High |
 
 ## Task Summary
 
-<Brief description of what was done>
+<One-line description of what was accomplished>
+
+## Files Changed
+
+| File | Action | Added | Removed |
+|------|--------|-------|---------|
+| `<path>` | Created / Modified / Deleted | N | N |
 
 ## Files Inspected
 
 ```
-<file path 1>
-<file path 2>
+<path 1>
+<path 2>
 ```
-
-## Files Changed
-
-| File | Action | Lines |
-|------|--------|-------|
-| `<path>` | Created / Modified / Deleted | `<N> additions, <N> deletions` |
 
 ## Commands Run
 
-```bash
-<command 1> → <output or ✅/❌>
-<command 2> → <output or ✅/❌>
-```
+| Command | Result |
+|---------|--------|
+| `git status --short` | Clean / (list files) |
+| `git diff --stat` | N files changed |
+| `git log -1 --oneline` | `<hash> <message>` |
+| `npm run lint` | ✅ PASS / ❌ FAIL |
+| `npm run build` | ✅ PASS / ❌ FAIL |
 
-## Outputs / Evidence
+## Screenshots / QA Artifacts
 
-- `<Evidence item 1>`
-- `<Evidence item 2>`
+| Artifact | Path |
+|----------|------|
+| Screenshot | `_qa/screenshots/<phase>/<file>.png` |
 
-## Risks Found
+## Validation
 
-| Risk | Severity | Notes |
-|------|----------|-------|
-| <Risk description> | 🟢 Low / 🟡 Medium / 🟠 High / 🔴 Critical | <Notes> |
+| Check | Result |
+|-------|--------|
+| Lint | ✅ / ❌ / N/A |
+| Build | ✅ / ❌ / N/A |
+| Test | ⏳ Not configured |
 
-## Recommendations
+## Risk Score
 
-- <Recommendation 1>
-- <Recommendation 2>
+🟢 Low / 🟡 Medium / 🟠 High / 🔴 Critical
 
-## Commit/Push Status
+## Confirmed NOT Modified
 
-| Action | Status |
-|--------|--------|
-| **Commit made?** | `<Yes / No>` |
-| **Commit hash** | `<hash or N/A>` |
-| **Push made?** | `<Yes / No>` |
+- `src/core/auth/` — untouched
+- `src/finance/` — untouched
+- `src/trading/` — untouched
+- `src/creator/` — untouched
+- Firebase config — untouched
+- `.env` files — untouched
 
-## Review Requirements
+## Cost / Quota
 
-| Requirement | Value |
-|-------------|-------|
-| **Hermes review required?** | `<Yes / No — if Yes, Hermes must verify before Por approves>` |
-| **Por approval required?** | `<Yes / No>` |
-| **ChatGPT review required?** | `<Yes / No>` |
-| **Production-sensitive?** | `<Yes / No — if Yes, standard review gates apply>` |
+| Field | Value |
+|-------|-------|
+| Agent used | Codex CLI |
+| Why selected | <rationale> |
+| Cheaper path considered | Yes / No |
+| Paid executor used? | No |
+| Codex quota status before | <if known> |
+| Codex quota status after | <if known> |
+| Quota evidence source | CLI output / usage counter / screenshot / user statement / unknown |
 
-## Next Suggested Action
+## Scope Summary
 
-- <Action 1>
-- <Action 2>
-- Awaiting Por instruction.
+| Check | Status |
+|-------|--------|
+| Allowed files matched? | ✅ / ❌ |
+| Forbidden files untouched? | ✅ / ❌ |
+| Scope deviations? | None / (list) |
+
+## Evidence Summary
+
+All claims backed by captured command output.
+
+## Warning
+
+**Codex direct output is not automatically approved.** Codex sessions run directly by Por bypass Hermes routing, review gates, and budget checks. Standard review gates still apply.
+
+## Review Recommendation
+
+**APPROVE** / **REVISE** / **HOLD FOR EVIDENCE** / **REJECT**
+
+## Reopen Criteria
+
+- <condition 1>
+- <condition 2>
+
+## Git Confirmation
+
+| Field | Value |
+|-------|-------|
+| Branch | `<name>` |
+| Working tree | Clean / Dirty |
+| Committed? | Yes / No |
+| Commit hash | `<hash or N/A>` |
+| Pushed? | Yes / No |
+| Merge performed? | Yes / No |
+| Hermes review required? | Yes / No |
+| Por approval required? | Yes / No |
+
+## Risks / Remaining Issues
+
+| Risk | Severity | Status |
+|------|----------|--------|
+| <description> | 🟢 / 🟡 / 🟠 / 🔴 | Open / Mitigated / Closed |
+
+## Suggested Next Mission
+
+<Recommendation based on closeout findings>
