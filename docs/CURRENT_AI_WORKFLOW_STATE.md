@@ -1,6 +1,6 @@
 # Current AI Workflow State — BeBlank Core OS
 
-**Last updated:** 2026-07-09
+**Last updated:** 2026-07-09 (updated Phase 5.10 — Cycle #3 + CLI delegation)
 **Source:** Git history + Phase 5.6 cycle closeout + Phase 5.5 onboarding pack
 **Note to readers:** This document is a snapshot. Hermes does NOT automatically see ChatGPT, DS, or Codex chats. It only learns about cross-chat work when given a handoff packet, repo diff, report, or state document update.
 
@@ -34,8 +34,8 @@ Por + ChatGPT ──design──→ Por ──assign──→ DS or Codex ──
 |---|---|
 | **Repo** | `github.com/phorrtananchai-debug/beblank-core-os` |
 | **Branch** | `main` |
-| **Latest commit** | `53d995a` — `docs: add Hermes handoff protocol` |
-| **Commits ahead of remote** | 1 (the handoff protocol commit) |
+| **Latest commit** | `999e540` — `docs: archive Hermes smoke-test reports` |
+| **Commits ahead of remote** | 0 (in sync with origin) |
 | **Framework** | React 19 + Vite 8 + TypeScript 6 + TailwindCSS 3 |
 | **Routing** | react-router-dom v7 |
 | **Build** | ✅ PASS (0 errors) |
@@ -46,15 +46,36 @@ Por + ChatGPT ──design──→ Por ──assign──→ DS or Codex ──
 
 ### Merged docs in `docs/`
 - `HERMES_HANDOFF_PROTOCOL.md` — cross-agent handoff rules (Phase 5.6)
-- `HERMES_REAL_REPO_SMOKE_TEST_DEEPSEEK.md` — Phase 5.1 smoke test report (untracked)
-- `HERMES_REAL_REPO_SMOKE_TEST.md` — Phase 5 Lite smoke test report (untracked)
+- `CURRENT_AI_WORKFLOW_STATE.md` — this document
 - `BEBLANK_OS_V2_MASTER_SPEC.md` — master spec document
 - `BEBLANK_OS_DESIGN_SYSTEM.md` — design system documentation
 - Other design, migration, and setup docs
 
+### Hermes reports under `docs/hermes/reports/`
+- `HERMES_CYCLE3_AUDIT.md` — Cycle #3 audit (archived smoke-test reports) — committed `999e540`
+- `HERMES_REAL_REPO_SMOKE_TEST.md` — Phase 5 Lite smoke test report (archived)
+- `HERMES_REAL_REPO_SMOKE_TEST_DEEPSEEK.md` — Phase 5.1 smoke test report (archived)
+
 ---
 
-## 4. Latest Successful Cycle
+## 4. Latest Successful Cycles
+
+### Cycle #3 — Hermes Front Door Low-Risk Test + CLI Delegation Validation
+
+| Field | Value |
+|---|---|
+| **Date** | 2026-07-09 |
+| **Mission** | Archive prior smoke-test reports under `docs/hermes/reports/`; validate Hermes → Codex CLI read-only routing |
+| **Agent** | Hermes (direct) + Codex CLI |
+| **Branch** | `main` (docs-only commit) |
+| **Commit** | `999e540` |
+| **QA by Hermes** | N/A (Hermes was the executing agent) |
+| **Build** | ✅ PASS (1.94s, 174 modules, 0 errors) |
+| **Production files** | ❌ None touched |
+| **Pushed by** | Por (approved via chat) |
+| **Memory** | Recorded by Hermes |
+
+### Phase 5.6 — Hermes Handoff Protocol
 
 | Field | Value |
 |---|---|
@@ -79,8 +100,25 @@ Por + ChatGPT ──design──→ Por ──assign──→ DS or Codex ──
 | **Por** | Product Owner, Design Director, Chief Architect | Full — only human who can approve merges and pushes |
 | **ChatGPT** | Architect, mission designer, safety reviewer | Does NOT access repos or code. Produces plans and risk analyses. |
 | **DeepSeek / OpenCode** | Fast implementer, docs, UI, small changes | Executes in branches. Produces evidence-backed closeouts. |
-| **Codex** | Deep architecture, refactor, code review | Used when DS complexity exceeds safe range. Not yet tested in this workflow. |
-| **Hermes** | Memory, QA, orchestration, closeout reviewer | Read-only for repos. Verifies closeouts, records memory, flags risks. |
+| **Codex** | Deep architecture, refactor, code review, repo inspection | Validated for read-only production repo inspection via Hermes routing. Used for deep review. |
+| **Hermes** | Memory, QA, orchestration, closeout reviewer, CLI delegation router | Read-only for repos. Verifies closeouts, records memory, flags risks. Routes to Codex CLI and OpenCode CLI. |
+
+---
+
+## 5a. CLI Delegation Routing Status
+
+Hermes can now route work to external CLIs as delegated workers. This was validated during Phase 5.9 (Cycle #3).
+
+| Route | Status | Validated Command | Use Case |
+|---|---|---|---|
+| **Hermes → Codex CLI** | ✅ Read-only production repo inspection validated | `codex exec --cd <path> -s read-only --ephemeral --skip-git-repo-check -o <output> "<task>"` | Architecture review, repo inspection, technical debt scan, deep code review |
+| **Hermes → OpenCode CLI** | ✅ Sandbox-only delegation validated | `opencode run --dir <sandbox-path> "<task>"` | Sandboxed fast worker tasks (no production repos) |
+
+### Routing Rules
+- **Codex CLI** may be used for read-only production repo inspection. Default to `-s read-only`, `--ephemeral`, `--skip-git-repo-check`. Use `workspace-write` only after explicit Por approval with a dedicated branch, allowed-file scope, build/test evidence, and Hermes closeout review.
+- **OpenCode CLI** remains sandbox-only until Por explicitly approves production routing with a safety wrapper or branch plan. No explicit read-only/sandbox flag was verified in OpenCode's tooling.
+- **Never use danger bypass modes** on either CLI.
+- **Always use Windows-native paths** (`C:\...`, `D:\...`) — MSYS paths (`/d/...`) are rejected by both CLIs.
 
 ---
 
@@ -176,7 +214,7 @@ A handoff packet is required whenever work moves between agents or chat sessions
 
 | Branch | Purpose | Status |
 |---|---|---|
-| `main` | Production branch | ✅ Active — latest: `53d995a` |
+| `main` | Production branch | ✅ Active — latest: `999e540` |
 | `docs/hermes-handoff-protocol` | Hermes handoff protocol | ✅ Merged |
 | `docs/current-ai-workflow-state` | Current state snapshot (this document) | 🔄 In progress |
 | `chore/hermes-smoke-test` | Phase 5.1 smoke test | 🗑️ Stale |
@@ -187,6 +225,8 @@ A handoff packet is required whenever work moves between agents or chat sessions
 - `HERMES_HANDOFF_PROTOCOL.md` — cross-agent handoff rules
 - `CURRENT_AI_WORKFLOW_STATE.md` — this document
 - `BEBLANK_OS_V2_MASTER_SPEC.md` — master specification
+- `docs/hermes/reports/HERMES_CYCLE3_AUDIT.md` — Cycle #3 audit summary
+- `docs/hermes/reports/HERMES_REAL_REPO_SMOKE_TEST*.md` — prior smoke test reports (archived)
 - Other design, migration, and setup documentation
 
 ---
@@ -197,9 +237,9 @@ A handoff packet is required whenever work moves between agents or chat sessions
 |---|---|---|---|
 | **1** | Review this snapshot and confirm accuracy | LOW | Por + ChatGPT |
 | **2** | Plan the next MEDIUM-risk mission (e.g., inspect a specific non-production directory and report) | MEDIUM | ChatGPT → Por |
-| **3** | Execute approved MEDIUM-risk mission | MEDIUM | DS or Codex |
+| **3** | Execute approved MEDIUM-risk mission | MEDIUM | DS, Codex, or Hermes |
 | **4** | QA review and memory update | LOW | Hermes |
-| **5** | After 3+ full cycles, evaluate adding Codex to the workflow | MEDIUM | Por |
+| **5** | Evaluate whether OpenCode CLI should be approved for production routing (sandbox-only today) | MEDIUM | Por |
 
 ---
 
@@ -210,9 +250,8 @@ A handoff packet is required whenever work moves between agents or chat sessions
 | What exactly is in `src/trading/`? | Needs verification |
 | What exactly is in `src/creator/`? | Needs verification |
 | Should old smoke-test branches be deleted? | Needs Por decision |
-| Should `docs/HERMES_REAL_REPO_SMOKE_TEST*.md` be cleaned up or committed? | Needs Por decision |
 | Should `backup/pre-hermes-smoke-jarvis-scaffold` be pushed to remote? | Needs Por decision |
-| When should Codex enter the workflow? | Next planning session |
+| Should OpenCode CLI be approved for production repo routing? | Needs Por decision — currently sandbox-only |
 | Should this state document be updated after every cycle? | Suggested — needs Por approval |
 
 ---
@@ -230,6 +269,10 @@ Memory entries should be:
 - **Risk-aware:** What went wrong or could go wrong
 
 Current Hermes memory (as of 2026-07-09):
+- Cycle #3: Hermes Front Door + CLI delegation validated
+- Codex CLI read-only real repo inspection confirmed working
+- OpenCode CLI sandbox delegation confirmed working
+- Smoke-test reports archived under `docs/hermes/reports/`
 - Phase 5.6: First successful DS → Hermes QA → Por push cycle completed
 - Docs-only handoff protocol created, reviewed, merged, pushed
 - Cherry-pick strategy works for diverged remotes
