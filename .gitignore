@@ -33,3 +33,6 @@ skills-lock.json
 
 # Jarvis runtime logs and task artifacts
 .jarvis/
+
+# Hermes local runtime packets and sync state
+.hermes/
