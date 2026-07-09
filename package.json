@@ -12,7 +12,10 @@
     "design:screenshots": "node scripts/generate-design-system-screenshots.mjs",
     "design:export": "node scripts/export-design-system-json.mjs",
     "hermes:validate": "node scripts/hermes-validate-packet.mjs",
-    "hermes:sync": "node scripts/hermes-sync.mjs"
+    "hermes:sync": "node scripts/hermes-sync.mjs",
+    "hermes:agents": "node scripts/hermes-agent-registry.mjs",
+    "hermes:route": "node scripts/hermes-route-task.mjs",
+    "hermes:lock": "node scripts/hermes-lock-check.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.2",

@@ -1,0 +1,89 @@
+{
+  "version": "1.0",
+  "agents": [
+    {
+      "id": "hermes-direct",
+      "name": "Hermes Direct",
+      "capabilities": ["documentation", "read-only-inspection", "build-verification", "lint-verification", "qa-review", "checklist-validation", "closeout-review", "memory-update"],
+      "allowed_scope": ["docs/**", "*.md", ".hermes.example/**", ".gitkeep"],
+      "forbidden_scope": ["src/**", "package.json", "scripts/**", "routes/**", "auth/**", "finance/**", "trading/**", "creator/**"],
+      "cost_class": "free",
+      "quota_policy": "none",
+      "can_write_repo": false,
+      "can_commit": false,
+      "can_push": false,
+      "preferred_tasks": ["docs", "summaries", "review-gates", "closeouts", "checklist", "low-risk-governance"],
+      "risk_limit": "LOW"
+    },
+    {
+      "id": "codex-cli",
+      "name": "Codex CLI",
+      "capabilities": ["architecture-review", "deep-reasoning", "repo-inspection", "code-review", "technical-debt-scan"],
+      "allowed_scope": ["src/**", "docs/**", "scripts/**", "*.md"],
+      "forbidden_scope": ["auth/**", "finance/**", "trading/**", "creator/**", ".env", "firebase-config"],
+      "cost_class": "free-quota",
+      "quota_policy": "quota-limited; evidence-based tracking; never guess remaining limit",
+      "can_write_repo": false,
+      "can_commit": false,
+      "can_push": false,
+      "preferred_tasks": ["deep-inspection", "architecture", "refactor-planning", "risk-review", "production-read-only"],
+      "risk_limit": "MEDIUM"
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "capabilities": ["ui-implementation", "fast-draft", "mock-ui-work", "sandbox-execution"],
+      "allowed_scope": ["src/**", "docs/**", "_qa/**"],
+      "forbidden_scope": ["auth/**", "finance/**", "trading/**", "creator/**", ".env", "firebase-config", "package.json"],
+      "cost_class": "paid",
+      "quota_policy": "per-call charges; usage must be justified in closeout",
+      "can_write_repo": false,
+      "can_commit": false,
+      "can_push": false,
+      "preferred_tasks": ["ui-components", "fast-drafts", "sandbox-tests", "mock-data"],
+      "risk_limit": "MEDIUM"
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "capabilities": ["ui-implementation", "fast-draft", "mock-ui-work", "sandbox-execution"],
+      "allowed_scope": ["src/**", "docs/**"],
+      "forbidden_scope": ["auth/**", "finance/**", "trading/**", "creator/**", ".env", "package.json"],
+      "cost_class": "paid",
+      "quota_policy": "per-call charges; usage must be justified in closeout",
+      "can_write_repo": false,
+      "can_commit": false,
+      "can_push": false,
+      "preferred_tasks": ["ui-components", "fast-drafts", "repetitive-edits"],
+      "risk_limit": "MEDIUM"
+    },
+    {
+      "id": "chatgpt",
+      "name": "ChatGPT (Mission Architect)",
+      "capabilities": ["mission-design", "safety-planning", "risk-analysis", "strategy"],
+      "allowed_scope": [],
+      "forbidden_scope": ["src/**", "docs/**", "scripts/**", "*.md", "repo-access"],
+      "cost_class": "paid",
+      "quota_policy": "advisory only; no code execution or repo access",
+      "can_write_repo": false,
+      "can_commit": false,
+      "can_push": false,
+      "preferred_tasks": ["planning", "risk-assessment", "option-framing"],
+      "risk_limit": "CRITICAL"
+    },
+    {
+      "id": "por",
+      "name": "Por (Human)",
+      "capabilities": ["decision-approval", "emergency-bypass", "final-approval"],
+      "allowed_scope": ["**"],
+      "forbidden_scope": [],
+      "cost_class": "human",
+      "quota_policy": "final decision authority",
+      "can_write_repo": true,
+      "can_commit": true,
+      "can_push": true,
+      "preferred_tasks": ["approval", "commit", "push", "merge", "bypass"],
+      "risk_limit": "CRITICAL"
+    }
+  ]
+}
