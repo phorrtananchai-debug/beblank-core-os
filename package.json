@@ -11,7 +11,8 @@
     "design:review": "node scripts/generate-design-system-review.mjs && node scripts/generate-design-system-review-extras.mjs",
     "design:screenshots": "node scripts/generate-design-system-screenshots.mjs",
     "design:export": "node scripts/export-design-system-json.mjs",
-    "hermes:validate": "node scripts/hermes-validate-packet.mjs"
+    "hermes:validate": "node scripts/hermes-validate-packet.mjs",
+    "hermes:sync": "node scripts/hermes-sync.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.2",
