@@ -30,3 +30,6 @@ dist-ssr
 # Impeccable skill files
 .agents/
 skills-lock.json
+
+# Jarvis runtime logs and task artifacts
+.jarvis/
