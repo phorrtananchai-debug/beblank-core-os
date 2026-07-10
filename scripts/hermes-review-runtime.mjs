@@ -6,6 +6,8 @@ import { spawnSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import {
   changedSinceBaseline,
+  captureOutputFingerprints,
+  detectMissionChanges,
   getMission,
   initializeRuntime,
   inspectMissionObjective,
@@ -91,7 +93,7 @@ export function determineReviewVerdict(facts) {
   if (facts.outside_scope || facts.forbidden_touched) return 'REJECT'
   if (facts.protected_scope || facts.conflicts || facts.head_changed || facts.checks_failed) return 'HUMAN_REQUIRED'
   if (facts.execution_missing) return 'HOLD_FOR_EVIDENCE'
-  if (facts.execution_failed || facts.objective_failed || facts.worker_blocking || facts.closeout_missing || facts.blocking_evidence) return 'NEEDS_REWORK'
+  if (facts.execution_failed || facts.objective_failed || facts.worker_blocking || facts.closeout_missing || facts.blocking_evidence || facts.fingerprint_failed) return 'NEEDS_REWORK'
   if (facts.warnings) return 'ACCEPT_WITH_WARNINGS'
   return 'AUTO_ACCEPT'
 }
@@ -108,8 +110,9 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
   const assignment = runtime.active_assignments[missionId] || null
   const statusResult = git(packet.repo, ['status', '--short'])
   const currentStatus = parseGitStatus(statusResult.stdout)
-  const changed = changedSinceBaseline(currentStatus, mission.baseline_status || [])
-  const changedFiles = changed.map(item => item.path)
+  const outputFingerprints = captureOutputFingerprints(packet.repo, packet.allowed_files)
+  const changeDetection = detectMissionChanges(currentStatus, mission.baseline_status || [], mission.output_baseline, outputFingerprints)
+  const changedFiles = changeDetection.changed_files
   const outsideScope = changedFiles.filter(file => !packet.allowed_files.some(pattern => pathMatchesScope(file, pattern)))
   const forbiddenTouched = changedFiles.filter(file => packet.forbidden_files.some(pattern => pathMatchesScope(file, pattern)))
   const conflicts = currentStatus.filter(item => /U|AA|DD/.test(item.code)).map(item => item.path)
@@ -129,6 +132,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
   if (forbiddenTouched.length) issues.push(`Forbidden files changed: ${forbiddenTouched.join(', ')}`)
   if (conflicts.length) issues.push(`Unresolved conflicts: ${conflicts.join(', ')}`)
   if (headChanged) issues.push(`Worker changed HEAD before review: ${mission.baseline_head} -> ${head}`)
+  if (!changeDetection.ok) issues.push(`Output fingerprint capture failed: ${changeDetection.fingerprint.errors.map(item => `${item.scope}: ${item.error}`).join('; ')}`)
   if (!closeout.complete) issues.push(`Closeout Packet v3 incomplete: ${closeout.missing.join(', ')}`)
   if (!execution) issues.push('Execution evidence is missing')
   else if (execution.status !== 'COMPLETED') issues.push(`Execution status is ${execution.status}`)
@@ -156,6 +160,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
     worker_blocking: !workerCloseout.passing,
     closeout_missing: !closeout.complete,
     blocking_evidence: Boolean(execution?.quota_block),
+    fingerprint_failed: !changeDetection.ok,
     warnings: warnings.length > 0,
   })
   const completionReady = ['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(verdict)
@@ -164,6 +169,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
     && workerCloseout.passing
     && closeout.complete
     && !execution.quota_block
+    && changeDetection.ok
     && !outsideScope.length
     && !forbiddenTouched.length
     && !conflicts.length
@@ -172,7 +178,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
     && !analysis.protected_paths.length
   const result = {
     mission_id: missionId, verdict, risk: analysis.risk, packet_valid: validation.valid,
-    changed_files: changedFiles, allowed_files: packet.allowed_files, outside_scope: outsideScope,
+    changed_files: changedFiles, change_reasons: changeDetection.change_reasons, output_baseline: mission.output_baseline, output_fingerprints: outputFingerprints, output_changes: changeDetection.fingerprint.changes, allowed_files: packet.allowed_files, outside_scope: outsideScope,
     forbidden_touched: forbiddenTouched, protected_paths: analysis.protected_paths, conflicts,
     checks, qa_required: qaRequired, qa_artifacts: qaArtifacts,
     closeout, worker_closeout: workerCloseout, objective, completion_ready: completionReady, execution_status: execution?.status || 'MISSING', lock_active: Boolean(lock),

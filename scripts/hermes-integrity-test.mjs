@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -16,6 +16,15 @@ const { determineReviewVerdict, normalizeRequiredChecks } = await import('./herm
 const { adapterExecute, buildCodexArgs, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
 const { commitEligibility, finalizeAcceptedMission, parseCommitControls, resolveCommitMessage, validateStagedScope } = await import('./hermes-run.mjs')
 const { resolveSyncedState, syncCloseout } = await import('./hermes-sync.mjs')
+
+function fingerprintWorkspace(name) {
+  const workspace = join(fixtureRoot, `fingerprint-${name}`)
+  mkdirSync(workspace, { recursive: true })
+  git(workspace, ['init'])
+  git(workspace, ['config', 'user.email', 'fingerprint@local.invalid'])
+  git(workspace, ['config', 'user.name', 'Fingerprint Fixture'])
+  return workspace
+}
 
 function git(repo, args) {
   const result = spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8', windowsHide: true })
@@ -73,6 +82,7 @@ End with: ## Review Recommendation followed by **APPROVE**.
     const mission = store.normalizeMission(packet)
     mission.baseline_status = store.parseGitStatus(git(workspace, ['status', '--short']))
     mission.baseline_head = git(workspace, ['rev-parse', 'HEAD'])
+    mission.output_baseline = store.captureOutputFingerprints(workspace, packet.allowed_files)
     store.saveMission(mission, { create: true })
     const runtime = store.readState('runtime.json')
     runtime.active_assignments[missionId] = {
@@ -137,6 +147,85 @@ try {
     mission: 'Create docs guide',
     text: '## Evidence\nYes\n## Approval\nYes\n## Closeout\nYes',
   }
+  test('pre-existing untracked file edited is detected as modified', () => {
+    const workspace = fingerprintWorkspace('untracked-modified')
+    writeFileSync(join(workspace, 'output.md'), 'before\n')
+    const before = store.captureOutputFingerprints(workspace, ['output.md'])
+    writeFileSync(join(workspace, 'output.md'), 'after\n')
+    const comparison = store.compareOutputFingerprints(before, store.captureOutputFingerprints(workspace, ['output.md']))
+    assert.deepEqual(comparison.changes.map(change => [change.path, change.reason]), [['output.md', 'modified']])
+  })
+  test('pre-existing untracked file unchanged is not detected', () => {
+    const workspace = fingerprintWorkspace('untracked-unchanged')
+    writeFileSync(join(workspace, 'output.md'), 'same\n')
+    const before = store.captureOutputFingerprints(workspace, ['output.md'])
+    const comparison = store.compareOutputFingerprints(before, store.captureOutputFingerprints(workspace, ['output.md']))
+    assert.equal(comparison.changed, false)
+  })
+  test('pre-existing untracked file deletion is detected', () => {
+    const workspace = fingerprintWorkspace('untracked-deleted')
+    writeFileSync(join(workspace, 'output.md'), 'delete\n')
+    const before = store.captureOutputFingerprints(workspace, ['output.md'])
+    rmSync(join(workspace, 'output.md'))
+    const comparison = store.compareOutputFingerprints(before, store.captureOutputFingerprints(workspace, ['output.md']))
+    assert.deepEqual(comparison.changes.map(change => change.reason), ['deleted'])
+  })
+  test('new untracked file creation is detected', () => {
+    const workspace = fingerprintWorkspace('untracked-created')
+    const before = store.captureOutputFingerprints(workspace, ['output.md'])
+    writeFileSync(join(workspace, 'output.md'), 'created\n')
+    const comparison = store.compareOutputFingerprints(before, store.captureOutputFingerprints(workspace, ['output.md']))
+    assert.deepEqual(comparison.changes.map(change => change.reason), ['created'])
+  })
+  test('tracked file modification is detected by fingerprint and git delta', () => {
+    const workspace = fingerprintWorkspace('tracked-modified')
+    writeFileSync(join(workspace, 'output.md'), 'before\n')
+    git(workspace, ['add', 'output.md']); git(workspace, ['commit', '-m', 'baseline'])
+    const before = store.captureOutputFingerprints(workspace, ['output.md'])
+    writeFileSync(join(workspace, 'output.md'), 'after\n')
+    const after = store.captureOutputFingerprints(workspace, ['output.md'])
+    const detection = store.detectMissionChanges(store.parseGitStatus(git(workspace, ['status', '--short'])), [], before, after)
+    assert.ok(detection.changed_files.includes('output.md'))
+    assert.ok(detection.change_reasons.find(change => change.path === 'output.md').reasons.includes('modified'))
+  })
+  test('mtime-only changes are not detected', () => {
+    const workspace = fingerprintWorkspace('mtime')
+    const file = join(workspace, 'output.md')
+    writeFileSync(file, 'same\n')
+    const before = store.captureOutputFingerprints(workspace, ['output.md'])
+    utimesSync(file, new Date(), new Date(Date.now() + 60_000))
+    assert.equal(store.compareOutputFingerprints(before, store.captureOutputFingerprints(workspace, ['output.md'])).changed, false)
+  })
+  test('file type changes are detected', () => {
+    const workspace = fingerprintWorkspace('type')
+    const output = join(workspace, 'output')
+    writeFileSync(output, 'file\n')
+    const before = store.captureOutputFingerprints(workspace, ['output'])
+    rmSync(output); mkdirSync(output)
+    const comparison = store.compareOutputFingerprints(before, store.captureOutputFingerprints(workspace, ['output']))
+    assert.ok(comparison.changes.some(change => change.reason === 'type_changed'))
+  })
+  test('approved directory additions and modifications are detected', () => {
+    const workspace = fingerprintWorkspace('directory')
+    const directory = join(workspace, 'docs')
+    mkdirSync(directory)
+    writeFileSync(join(directory, 'existing.md'), 'before\n')
+    const before = store.captureOutputFingerprints(workspace, ['docs/'])
+    writeFileSync(join(directory, 'added.md'), 'added\n')
+    writeFileSync(join(directory, 'existing.md'), 'after\n')
+    const changes = store.compareOutputFingerprints(before, store.captureOutputFingerprints(workspace, ['docs/'])).changes
+    assert.deepEqual(changes.map(change => [change.path, change.reason]), [['docs/added.md', 'created'], ['docs/existing.md', 'modified']])
+  })
+  test('approved directory unchanged and unrelated UI changes remain excluded', () => {
+    const workspace = fingerprintWorkspace('directory-unchanged')
+    mkdirSync(join(workspace, 'docs'))
+    writeFileSync(join(workspace, 'docs', 'guide.md'), 'same\n')
+    const before = store.captureOutputFingerprints(workspace, ['docs/'])
+    writeFileSync(join(workspace, 'ui.css'), 'unrelated\n')
+    const after = store.captureOutputFingerprints(workspace, ['docs/'])
+    const detection = store.detectMissionChanges([], [], before, after)
+    assert.equal(detection.changed_files.length, 0)
+  })
   const acceptedReview = {
     completion_ready: true,
     verdict: 'AUTO_ACCEPT',

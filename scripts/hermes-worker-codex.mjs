@@ -7,8 +7,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import {
   appendHistory,
   atomicWrite,
+  captureOutputFingerprints,
+  detectMissionChanges,
   getMission,
-  changedSinceBaseline,
   initializeRuntime,
   inspectMissionObjective,
   parseTaskPacket,
@@ -235,7 +236,9 @@ export function adapterExecute(packetPath, { authorizedByDispatch = false } = {}
   writeFileSync(stderrPath, redact(result.stderr || result.error?.message || ''), 'utf8')
   const statusResult = run('git', ['-C', dryRun.repo.repo, 'status', '--short'])
   const currentStatus = statusResult.status === 0 ? parseGitStatus(statusResult.stdout || '') : []
-  const changedFiles = changedSinceBaseline(currentStatus, mission.baseline_status || []).map(item => item.path)
+  const outputFingerprints = captureOutputFingerprints(dryRun.repo.repo, packet.allowed_files)
+  const changeDetection = detectMissionChanges(currentStatus, mission.baseline_status || [], mission.output_baseline, outputFingerprints)
+  const changedFiles = changeDetection.changed_files
   const outsideScope = changedFiles.filter(file => !packet.allowed_files.some(pattern => pathMatchesScope(file, pattern)))
   const objective = inspectMissionObjective(packet, changedFiles)
   const workerCloseout = inspectWorkerCloseout(closeoutPath)
@@ -246,13 +249,14 @@ export function adapterExecute(packetPath, { authorizedByDispatch = false } = {}
   if (!workerCloseout.detected) executionIssues.push('Worker closeout is missing')
   else if (!workerCloseout.passing) executionIssues.push(`Worker closeout verdict is ${workerCloseout.verdict}`)
   if (outsideScope.length) executionIssues.push(`Worker changed files outside scope: ${outsideScope.join(', ')}`)
+  if (!changeDetection.ok) executionIssues.push(`Output fingerprint capture failed: ${changeDetection.fingerprint.errors.map(item => `${item.scope}: ${item.error}`).join('; ')}`)
   if (packet.output_required && sandbox.downgraded) executionIssues.push(`Effective sandbox is ${sandbox.effective}; workspace-write is required for this writing mission`)
   executionIssues.push(...objective.issues)
   if (quotaBlock) executionIssues.push('Codex quota/cost evidence block is active')
   let status = 'COMPLETED'
   if ((result.status ?? 1) !== 0 || outsideScope.length) status = 'FAILED'
-  else if (!workerCloseout.passing || !objective.objective_verified || quotaBlock || (packet.output_required && sandbox.downgraded)) status = 'BLOCKED'
-  record = { ...record, status, exit_code: result.status ?? 1, completed_at: new Date().toISOString(), effective_sandbox_mode: sandbox.effective, sandbox_downgraded: sandbox.downgraded, closeout_detected: workerCloseout.detected, worker_verdict: workerCloseout.verdict, worker_closeout_passing: workerCloseout.passing, changed_files: changedFiles, outside_scope: outsideScope, objective_verified: objective.objective_verified, objective, quota_block: quotaBlock, execution_issues: executionIssues }
+  else if (!workerCloseout.passing || !objective.objective_verified || quotaBlock || !changeDetection.ok || (packet.output_required && sandbox.downgraded)) status = 'BLOCKED'
+  record = { ...record, status, exit_code: result.status ?? 1, completed_at: new Date().toISOString(), effective_sandbox_mode: sandbox.effective, sandbox_downgraded: sandbox.downgraded, closeout_detected: workerCloseout.detected, worker_verdict: workerCloseout.verdict, worker_closeout_passing: workerCloseout.passing, changed_files: changedFiles, change_reasons: changeDetection.change_reasons, output_baseline: mission.output_baseline, output_fingerprints: outputFingerprints, output_changes: changeDetection.fingerprint.changes, outside_scope: outsideScope, objective_verified: objective.objective_verified, objective, quota_block: quotaBlock, execution_issues: executionIssues }
   saveExecution(record)
   appendHistory('CODEX_EXECUTION_FINISHED', dryRun.mission_id, { status: record.status, exit_code: record.exit_code, closeout_detected: record.closeout_detected })
   return record

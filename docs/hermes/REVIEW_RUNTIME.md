@@ -12,5 +12,7 @@ Review applies deterministic vetoes before acceptance. A missing required output
 
 Required checks are parsed as explicit normalized commands. `npm test` runs only the configured `test` script; `npm run <script>` runs only that exact configured script (including arguments such as `npm run hermes:runtime -- doctor`). Exact duplicates are deduplicated. Unknown or malformed checks are reported as failed checks and never inferred from substrings.
 
+Review combines Git status deltas with content-aware fingerprints for approved output scopes. A pre-existing untracked regular file is recognized as modified only when its SHA-256 changes; directory scopes use sorted manifests of relative paths, file types, sizes, and regular-file hashes. Fingerprint capture errors fail closed.
+
 Local auto-commit is eligible only for LOW/MEDIUM risk, complete evidence, passing required checks, no protected paths, no conflicts, and an exact match between reviewed and staged files. Push and merge are never performed.
 

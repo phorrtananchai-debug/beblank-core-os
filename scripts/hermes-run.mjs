@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url'
 import {
   appendHistory,
   atomicWrite,
+  captureOutputFingerprints,
   getMission,
   initializeRuntime,
   normalizeMission,
@@ -36,6 +37,8 @@ function enqueue(packetPath) {
   if (baseline.status !== 0) throw new Error(`Git status failed: ${(baseline.stderr || baseline.stdout).trim()}`)
   mission.baseline_status = parseStatus(baseline.stdout || '')
   mission.baseline_head = git(packet.repo, ['rev-parse', 'HEAD'])
+  mission.output_baseline = captureOutputFingerprints(packet.repo, packet.allowed_files)
+  if (!mission.output_baseline.ok) throw new Error(`Output baseline capture failed: ${mission.output_baseline.errors.map(item => `${item.scope}: ${item.error}`).join('; ')}`)
   saveMission(mission, { create: true })
   const queue = readState('queue.json')
   queue.items.push({ mission_id: mission.mission_id, enqueued_at: mission.created_at, priority: 0 })
@@ -127,6 +130,7 @@ ${assignment?.risk || 'unknown'}
 - Closeout detected: ${execution?.closeout_detected ? 'Yes' : 'No'}
 - Worker verdict: ${execution?.worker_verdict || 'unknown'}
 - Objective verified: ${review?.objective?.objective_verified ? 'Yes' : 'No'}
+- Output fingerprint changes: ${execution?.output_changes?.length ? execution.output_changes.map(change => `${change.path} (${change.reason})`).join(', ') : 'None detected'}
 
 ## Review Recommendation
 

@@ -3,13 +3,18 @@
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
+  readlinkSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
@@ -232,6 +237,83 @@ export function parseGitStatus(text) {
 export function changedSinceBaseline(current, baseline = []) {
   const previous = new Map(baseline.map(item => [item.path, item.code]))
   return current.filter(item => previous.get(item.path) !== item.code)
+}
+
+function normalizedRelative(repo, absolute) {
+  return relative(repo, absolute).replaceAll('\\', '/').replace(/^\.\//, '')
+}
+
+function trackedPath(repo, path) {
+  const result = spawnSync('git', ['-C', repo, 'ls-files', '--error-unmatch', '--', path], { encoding: 'utf8', windowsHide: true })
+  return result.status === 0
+}
+
+function outputRoot(repo, scope) {
+  const normalized = scope.replaceAll('\\', '/').replace(/^\.\//, '')
+  if (normalized.includes('*') && !normalized.endsWith('/**')) throw new Error(`Unsupported output fingerprint scope: ${scope}`)
+  const stable = normalized.endsWith('/**') ? normalized.slice(0, -3) : normalized.endsWith('/') ? normalized.slice(0, -1) : normalized
+  const absolute = resolve(repo, stable)
+  if (absolute !== repo && !absolute.startsWith(`${repo}${sep}`)) throw new Error(`Output fingerprint scope escapes repository: ${scope}`)
+  return { scope: normalized, absolute, path: normalizedRelative(repo, absolute) }
+}
+
+function entryFingerprint(repo, absolute) {
+  const path = normalizedRelative(repo, absolute)
+  if (!existsSync(absolute)) return [{ path, exists: false, type: 'missing', size: null, sha256: null, tracked: false }]
+  const stat = lstatSync(absolute)
+  if (stat.isSymbolicLink()) return [{ path, exists: true, type: 'symlink', size: null, sha256: createHash('sha256').update(readlinkSync(absolute)).digest('hex'), tracked: trackedPath(repo, path) }]
+  if (stat.isFile()) return [{ path, exists: true, type: 'file', size: stat.size, sha256: createHash('sha256').update(readFileSync(absolute)).digest('hex'), tracked: trackedPath(repo, path) }]
+  if (!stat.isDirectory()) throw new Error(`Unsupported output file type at ${path}`)
+  const entries = [{ path, exists: true, type: 'directory', size: null, sha256: null, tracked: trackedPath(repo, path) }]
+  for (const child of readdirSync(absolute).sort((a, b) => a.localeCompare(b))) entries.push(...entryFingerprint(repo, join(absolute, child)))
+  return entries
+}
+
+export function captureOutputFingerprints(repoPath, scopes = []) {
+  const repo = resolve(repoPath)
+  const fingerprints = []
+  const errors = []
+  for (const scope of scopes) {
+    try {
+      const root = outputRoot(repo, scope)
+      fingerprints.push({ scope: root.scope, entries: entryFingerprint(repo, root.absolute) })
+    } catch (error) {
+      errors.push({ scope, error: error.message })
+    }
+  }
+  return { captured_at: new Date().toISOString(), scopes: fingerprints, errors, ok: errors.length === 0 }
+}
+
+export function compareOutputFingerprints(before, after) {
+  const changes = []
+  const errors = [...(before?.errors || []), ...(after?.errors || [])]
+  const beforeEntries = new Map((before?.scopes || []).flatMap(scope => scope.entries || []).map(entry => [entry.path, entry]))
+  const afterEntries = new Map((after?.scopes || []).flatMap(scope => scope.entries || []).map(entry => [entry.path, entry]))
+  const paths = [...new Set([...beforeEntries.keys(), ...afterEntries.keys()])].sort((a, b) => a.localeCompare(b))
+  for (const path of paths) {
+    const initial = beforeEntries.get(path) || { path, exists: false, type: 'missing' }
+    const final = afterEntries.get(path) || { path, exists: false, type: 'missing' }
+    let reason = null
+    if (!initial.exists && final.exists) reason = 'created'
+    else if (initial.exists && !final.exists) reason = 'deleted'
+    else if (initial.type !== final.type) reason = 'type_changed'
+    else if (initial.type === 'file' && initial.sha256 !== final.sha256) reason = 'modified'
+    else if (initial.type === 'symlink' && initial.sha256 !== final.sha256) reason = 'modified'
+    if (reason) changes.push({ path, reason, initial, final })
+  }
+  return { changed: changes.length > 0, changes, errors, ok: errors.length === 0 }
+}
+
+export function detectMissionChanges(currentStatus, baselineStatus = [], outputBaseline = null, outputFinal = null) {
+  const gitChanges = changedSinceBaseline(currentStatus, baselineStatus).map(item => ({ path: item.path, reason: 'git_status_changed' }))
+  const fingerprint = outputBaseline && outputFinal ? compareOutputFingerprints(outputBaseline, outputFinal) : { changes: [], errors: [], ok: true }
+  const reasons = new Map()
+  for (const change of [...gitChanges, ...fingerprint.changes]) {
+    const list = reasons.get(change.path) || []
+    list.push(change.reason)
+    reasons.set(change.path, list)
+  }
+  return { changed_files: [...reasons.keys()].sort((a, b) => a.localeCompare(b)), change_reasons: [...reasons.entries()].map(([path, reasons]) => ({ path, reasons })), fingerprint, ok: fingerprint.ok }
 }
 
 export function inspectMissionObjective(packet, changedFiles) {
