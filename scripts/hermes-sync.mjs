@@ -16,6 +16,7 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { appendHistory, initializeRuntime, saveMission } from './hermes-runtime-store.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const STATE_DIR = join(__dirname, '..', '.hermes', 'state')
@@ -149,6 +150,32 @@ function sync(filePath) {
   else state.push(mission)
 
   writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n')
+
+  // Phase 7.7 centralized runtime state. Keep the legacy snapshot above for
+  // compatibility while making the runtime store authoritative for orchestration.
+  initializeRuntime()
+  const existingState = {
+    approval: 'WAITING_APPROVAL',
+    revision: 'WAITING_REVIEW',
+    hold: 'BLOCKED',
+    rejected: 'FAILED',
+    review: 'WAITING_REVIEW',
+  }[mission.status] || 'WAITING_REVIEW'
+  saveMission({
+    mission_id: mission.mission_id,
+    mission: `Synced closeout ${mission.closeout_id}`,
+    state: existingState,
+    closeout_id: mission.closeout_id,
+    session_id: mission.session_id,
+    agent_role: mission.agent,
+    branch: mission.branch,
+    risk: mission.risk,
+    build: mission.build,
+    lint: mission.lint,
+    review_recommendation: mission.review_recommendation,
+    updated_at: mission.updated_at,
+  })
+  appendHistory('CLOSEOUT_SYNCED', mission.mission_id, { closeout_id: mission.closeout_id, state: existingState })
 
   console.log(`Synced mission ${mission.mission_id} → ${STATE_FILE}`)
   console.log(`Status: ${mission.status} | Risk: ${mission.risk} | Build: ${mission.build}`)

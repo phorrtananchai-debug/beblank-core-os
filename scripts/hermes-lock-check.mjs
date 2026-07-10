@@ -18,6 +18,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const LOCKS_DIR = join(ROOT, '.hermes', 'locks')
 const LOCKS_EXAMPLE_DIR = join(ROOT, '.hermes.example', 'locks')
+const CENTRAL_LOCKS = join(ROOT, '.hermes', 'runtime', 'locks.json')
 
 const EXIT_SAFE = 0
 const EXIT_WARN = 1
@@ -71,6 +72,12 @@ function getFilePaths(text) {
 
 function loadLocks() {
   const locks = []
+  if (existsSync(CENTRAL_LOCKS)) {
+    try {
+      const state = JSON.parse(readFileSync(CENTRAL_LOCKS, 'utf-8'))
+      if (Array.isArray(state.locks)) locks.push(...state.locks.filter(lock => lock.status !== 'released'))
+    } catch {}
+  }
   const dirs = [LOCKS_DIR, LOCKS_EXAMPLE_DIR]
   for (const d of dirs) {
     if (!existsSync(d)) continue

@@ -18,11 +18,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const REGISTRY_PATH = join(ROOT, '.hermes', 'state', 'agent-registry.json')
 const EXAMPLE_PATH = join(ROOT, '.hermes.example', 'state', 'agent-registry.example.json')
+const RUNTIME_PATH = join(ROOT, '.hermes', 'runtime', 'agents.json')
 
 // --- Load registry ---
 
 function loadRegistry() {
-  let p = REGISTRY_PATH
+  let p = RUNTIME_PATH
+  if (!existsSync(p)) p = REGISTRY_PATH
   if (!existsSync(p)) p = EXAMPLE_PATH
   if (!existsSync(p)) {
     console.error('No agent registry found')
