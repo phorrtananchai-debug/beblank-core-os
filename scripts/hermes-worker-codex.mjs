@@ -22,6 +22,12 @@ import {
 // Codex CLI 0.133.0 ships gpt-5.5 in its bundled catalog. Pin the worker to
 // that locally supported model instead of inheriting a newer desktop config.
 export const CODEX_MODEL = 'gpt-5.5'
+export const CLOSEOUT_V3_HEADINGS = Object.freeze([
+  'Mission Metadata', 'Task Summary', 'Files Changed', 'Files Inspected', 'Commands Run',
+  'Screenshots / QA Artifacts', 'Validation', 'Risk Score', 'Confirmed NOT Modified',
+  'Cost / Quota', 'Scope Summary', 'Evidence Summary', 'Review Recommendation',
+  'Reopen Criteria', 'Git Confirmation', 'Risks / Remaining Issues', 'Suggested Next Mission',
+])
 
 export function resolveCodexSandbox(packet) {
   const repoRoot = resolve(packet.repo)
@@ -144,11 +150,17 @@ NON-NEGOTIABLE SAFETY RULES:
 
 EVIDENCE AND CLOSEOUT:
 - Run only the packet's required checks and safe read-only diagnostics.
-- Record actual changed files, git status, checks, risks, and limitations.
-- End with a complete Closeout Packet v3 following docs/hermes/CLOSEOUT_PACKET_V3.md.
-- Explicitly state commit, push, and merge status. Never push or merge.
+- Record actual changed files, git status, checks, risks, limitations, and blockers truthfully.
 - A writing mission is successful only when every required output exists and was created or modified.
 - If a required output cannot be produced, return HOLD FOR EVIDENCE or NEEDS REWORK; do not claim success.
+
+FINAL RESPONSE CONTRACT (REQUIRED):
+- Your final response, captured as the worker closeout, MUST be one valid Closeout Packet v3. Do not return free-form success prose instead.
+- Include every heading below, exactly named (heading levels may vary):
+${CLOSEOUT_V3_HEADINGS.map((heading, index) => `  ${index + 1}. ${heading}`).join('\n')}
+- Under Files Changed, list the actual changed file paths and actions. Do not list files that were not changed.
+- Under Review Recommendation, use one supported verdict: APPROVE, REVISE, HOLD FOR EVIDENCE, or REJECT. Do not claim APPROVE if outputs, scope, checks, or evidence are missing.
+- Explicitly state commit, push, and merge status. Never push or merge.
 
 FULL VALIDATED TASK PACKET:
 --- BEGIN PACKET ---
@@ -157,18 +169,41 @@ ${packet.text}
 `
 }
 
-export function inspectWorkerCloseout(path) {
-  if (!path || !existsSync(path)) return { detected: false, verdict: 'MISSING', passing: false, blocking: true }
+function closeoutSection(text, heading) {
+  const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = new RegExp(`^#{1,6}\\s+(?:\\d+\\.\\s*)?${escaped}\\s*\\r?\\n([\\s\\S]*?)(?=^#{1,6}\\s+|(?![\\s\\S]))`, 'im').exec(text)
+  return match?.[1]?.trim() || ''
+}
+
+function closeoutFilePaths(section) {
+  return section.split(/\r?\n/)
+    .map(line => line.trim().startsWith('|') ? line.split('|')[1]?.trim() || '' : line.replace(/^\s*[-*]\s+/, '').trim())
+    .map(line => line.replace(/^`|`$/g, ''))
+    .filter(line => !/^[-: ]+$/.test(line) && !/^file$/i.test(line))
+    .filter(line => (/[\\/]/.test(line) || /^[^\s]+\.[A-Za-z0-9]+$/.test(line)) && !/^none\b/i.test(line))
+    .map(line => line.split(/\s+[|—-]\s+/)[0].trim())
+}
+
+export function inspectWorkerCloseout(path, { changedFiles = [] } = {}) {
+  if (!path || !existsSync(path)) return { detected: false, verdict: 'MISSING', passing: false, blocking: true, complete: false, missing: ['closeout file'], errors: ['Worker closeout is missing'] }
   const text = readFileSync(path, 'utf8')
-  const match = /^##\s+(?:\d+\.\s*)?Review Recommendation\s*\r?\n([\s\S]*?)(?=^##\s+|(?![\s\S]))/im.exec(text)
-  const section = (match?.[1] || '').toUpperCase().replaceAll('_', ' ')
-  if (/\b(HOLD|BLOCKED|FAILED|FAIL|NEEDS REWORK|REJECT)\b/.test(section)) {
-    return { detected: true, verdict: section.includes('REJECT') ? 'REJECT' : section.includes('NEEDS REWORK') ? 'NEEDS_REWORK' : 'HOLD', passing: false, blocking: true }
-  }
-  if (/\b(AUTO ACCEPT|ACCEPT WITH WARNINGS|ACCEPT|APPROVE)\b/.test(section)) {
-    return { detected: true, verdict: section.match(/AUTO ACCEPT|ACCEPT WITH WARNINGS|APPROVE|ACCEPT/)?.[0].replaceAll(' ', '_') || 'APPROVE', passing: true, blocking: false }
-  }
-  return { detected: true, verdict: 'UNKNOWN', passing: false, blocking: true }
+  const missing = CLOSEOUT_V3_HEADINGS.filter(heading => !closeoutSection(text, heading))
+  const section = closeoutSection(text, 'Review Recommendation').toUpperCase().replaceAll('_', ' ')
+  const verdictMatch = /\b(APPROVE|REVISE|HOLD FOR EVIDENCE|BLOCKED|FAILED|NEEDS REWORK|REJECT)\b/.exec(section)
+  const verdict = verdictMatch?.[1]?.replaceAll(' ', '_') || 'UNKNOWN'
+  const listedFiles = closeoutFilePaths(closeoutSection(text, 'Files Changed'))
+  const expected = [...changedFiles].sort((a, b) => a.localeCompare(b))
+  const actual = [...new Set(listedFiles)].sort((a, b) => a.localeCompare(b))
+  const filesMatch = expected.length === actual.length && expected.every((file, index) => file === actual[index])
+  const contradictory = verdict === 'APPROVE' && /\b(HOLD FOR EVIDENCE|BLOCKED|FAILED|NEEDS REWORK|REJECT)\b/.test(text.toUpperCase())
+  const errors = []
+  if (missing.length) errors.push(`Closeout Packet v3 missing headings: ${missing.join(', ')}`)
+  if (verdict === 'UNKNOWN') errors.push('Closeout review recommendation is missing or unsupported')
+  if (!filesMatch) errors.push(`Closeout Files Changed does not match verified changes: expected ${expected.join(', ') || 'none'}; found ${actual.join(', ') || 'none'}`)
+  if (contradictory) errors.push('Closeout contradicts APPROVE with a blocking verdict')
+  const complete = missing.length === 0 && filesMatch
+  const passing = complete && verdict === 'APPROVE' && !contradictory
+  return { detected: true, verdict, passing, blocking: !passing, complete, missing, listed_files: actual, files_match: filesMatch, contradictory, errors }
 }
 
 function redact(text = '') {
@@ -241,7 +276,7 @@ export function adapterExecute(packetPath, { authorizedByDispatch = false } = {}
   const changedFiles = changeDetection.changed_files
   const outsideScope = changedFiles.filter(file => !packet.allowed_files.some(pattern => pathMatchesScope(file, pattern)))
   const objective = inspectMissionObjective(packet, changedFiles)
-  const workerCloseout = inspectWorkerCloseout(closeoutPath)
+  const workerCloseout = inspectWorkerCloseout(closeoutPath, { changedFiles })
   const sandbox = detectEffectiveSandbox(result.stderr || '', dryRun.sandbox_mode)
   const quotaBlock = /(?:^|\n)ERROR:.*(?:quota (?:exceeded|exhausted)|rate limit|usage limit)/im.test(result.stderr || '')
   const executionIssues = []

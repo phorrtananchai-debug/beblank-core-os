@@ -13,7 +13,7 @@ process.env.HERMES_RUNTIME_DIR = join(fixtureRoot, 'runtime')
 const store = await import('./hermes-runtime-store.mjs')
 const { classifyMission, validateDispatchPacket } = await import('./hermes-dispatch.mjs')
 const { determineReviewVerdict, normalizeRequiredChecks } = await import('./hermes-review-runtime.mjs')
-const { adapterExecute, buildCodexArgs, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
+const { adapterExecute, buildCodexArgs, buildCodexPrompt, CLOSEOUT_V3_HEADINGS, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
 const { commitEligibility, finalizeAcceptedMission, parseCommitControls, resolveCommitMessage, validateStagedScope } = await import('./hermes-run.mjs')
 const { resolveSyncedState, syncCloseout } = await import('./hermes-sync.mjs')
 
@@ -24,6 +24,14 @@ function fingerprintWorkspace(name) {
   git(workspace, ['config', 'user.email', 'fingerprint@local.invalid'])
   git(workspace, ['config', 'user.name', 'Fingerprint Fixture'])
   return workspace
+}
+
+function closeoutV3({ files = [], verdict = 'APPROVE', omit = [], extra = '' } = {}) {
+  return CLOSEOUT_V3_HEADINGS.filter(heading => !omit.includes(heading)).map((heading, index) => {
+    if (heading === 'Files Changed') return `## ${index + 1}. ${heading}\n\n${files.length ? files.map(file => `- ${file}`).join('\n') : '- None.'}`
+    if (heading === 'Review Recommendation') return `## ${index + 1}. ${heading}\n\n**${verdict}**${extra}`
+    return `## ${index + 1}. ${heading}\n\nDocumented evidence.`
+  }).join('\n\n')
 }
 
 function git(repo, args) {
@@ -394,16 +402,44 @@ try {
   })
 
   const holdCloseout = join(fixtureRoot, 'hold.md')
-  writeFileSync(holdCloseout, '## 13. Review Recommendation\n\n**HOLD FOR EVIDENCE**\n', 'utf8')
+  writeFileSync(holdCloseout, closeoutV3({ verdict: 'HOLD FOR EVIDENCE' }), 'utf8')
   test('worker closeout HOLD parser is blocking', () => {
     const result = inspectWorkerCloseout(holdCloseout)
     assert.equal(result.passing, false)
-    assert.equal(result.verdict, 'HOLD')
+    assert.equal(result.verdict, 'HOLD_FOR_EVIDENCE')
   })
   const passCloseout = join(fixtureRoot, 'pass.md')
-  writeFileSync(passCloseout, '## Review Recommendation\n\n**APPROVE**\n', 'utf8')
+  writeFileSync(passCloseout, closeoutV3({ files: ['guide.md'] }), 'utf8')
   test('worker closeout APPROVE parser passes', () => {
-    assert.equal(inspectWorkerCloseout(passCloseout).passing, true)
+    assert.equal(inspectWorkerCloseout(passCloseout, { changedFiles: ['guide.md'] }).passing, true)
+  })
+  test('closeout missing a required heading fails', () => {
+    const path = join(fixtureRoot, 'missing-heading.md')
+    writeFileSync(path, closeoutV3({ omit: ['Validation'] }), 'utf8')
+    assert.equal(inspectWorkerCloseout(path).passing, false)
+  })
+  test('free-form success prose and UNKNOWN verdict fail', () => {
+    const path = join(fixtureRoot, 'free-form.md')
+    writeFileSync(path, 'Success: all work is complete and approved.', 'utf8')
+    const result = inspectWorkerCloseout(path)
+    assert.equal(result.verdict, 'UNKNOWN')
+    assert.equal(result.passing, false)
+  })
+  test('BLOCKED verdict and contradictory APPROVE closeouts fail', () => {
+    const blocked = join(fixtureRoot, 'blocked.md')
+    const contradictory = join(fixtureRoot, 'contradictory.md')
+    writeFileSync(blocked, closeoutV3({ verdict: 'BLOCKED' }), 'utf8')
+    writeFileSync(contradictory, closeoutV3({ extra: '\n\nHOLD FOR EVIDENCE' }), 'utf8')
+    assert.equal(inspectWorkerCloseout(blocked).passing, false)
+    assert.equal(inspectWorkerCloseout(contradictory).contradictory, true)
+  })
+  test('closeout Files Changed must match verified mission changes', () => {
+    assert.equal(inspectWorkerCloseout(passCloseout, { changedFiles: ['different.md'] }).files_match, false)
+  })
+  test('worker prompt ends with explicit complete closeout response contract', () => {
+    const prompt = buildCodexPrompt(writePacket, 'medium')
+    assert.ok(prompt.includes('FINAL RESPONSE CONTRACT (REQUIRED)'))
+    assert.ok(CLOSEOUT_V3_HEADINGS.every(heading => prompt.includes(heading)))
   })
 
   store.initializeRuntime({ force: true })

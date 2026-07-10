@@ -28,6 +28,8 @@ This is platform-specific, fail-closed compatibility handling, not a claim that 
 
 A process exit code of zero is only transport success. The adapter also requires a passing worker closeout, every declared output to exist and be changed, no out-of-scope writes, no blocking quota evidence, and an effective write-capable sandbox for writing missions. A non-passing closeout, failed objective, or sandbox downgrade records the execution as `BLOCKED`; a process or scope failure records it as `FAILED`.
 
+For every writing mission, the final Codex response is a required Closeout Packet v3 contract, not optional prose. The prompt enumerates every schema heading, requires an explicit supported review verdict, requires Files Changed to match the actual verified changes, and requires truthful validation/blocker evidence. The parser tolerates safe heading-level and whitespace differences but rejects missing headings, unsupported or contradictory verdicts, free-form success claims, and file-list mismatches. Runtime v1 does not perform a second closeout-only worker pass; malformed closeouts fail closed.
+
 Logs and the last Codex response are stored under `.hermes/executions/<mission-id>/`. Runtime metadata is stored in `.hermes/runtime/runtime.json`. Known secret-like values are redacted before logs are written.
 
 `cancel` reports `NOT_SUPPORTED` because this initial adapter uses a synchronous CLI process and cannot prove that cross-process cancellation is safe. Quota is never inferred; without evidence the adapter reports: **Codex quota status: unknown — evidence required.**

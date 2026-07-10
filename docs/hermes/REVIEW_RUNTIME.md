@@ -14,5 +14,7 @@ Required checks are parsed as explicit normalized commands. `npm test` runs only
 
 Review combines Git status deltas with content-aware fingerprints for approved output scopes. A pre-existing untracked regular file is recognized as modified only when its SHA-256 changes; directory scopes use sorted manifests of relative paths, file types, sizes, and regular-file hashes. Fingerprint capture errors fail closed.
 
+Worker closeouts are validated against every Closeout Packet v3 heading before review can accept them. The review uses the actual verified changed-file set to reject a closeout whose Files Changed list disagrees with execution evidence. Missing, free-form, unknown, contradictory, HOLD, or BLOCKED closeouts remain non-passing.
+
 Local auto-commit is eligible only for LOW/MEDIUM risk, complete evidence, passing required checks, no protected paths, no conflicts, and an exact match between reviewed and staged files. Push and merge are never performed.
 

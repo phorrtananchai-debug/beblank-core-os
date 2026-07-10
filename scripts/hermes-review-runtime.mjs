@@ -18,7 +18,7 @@ import {
   REPO_ROOT,
 } from './hermes-runtime-store.mjs'
 import { classifyMission, validateDispatchPacket } from './hermes-dispatch.mjs'
-import { inspectWorkerCloseout } from './hermes-worker-codex.mjs'
+import { CLOSEOUT_V3_HEADINGS, inspectWorkerCloseout } from './hermes-worker-codex.mjs'
 
 function run(command, args, options = {}) {
   return spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options })
@@ -75,17 +75,12 @@ export function requiredChecks(repo, packet) {
     : runCheck(repo, npm, plan.args))
 }
 
-const REQUIRED_CLOSEOUT_HEADINGS = [
-  'Mission Metadata', 'Task Summary', 'Files Changed', 'Files Inspected', 'Commands Run',
-  'Screenshots / QA Artifacts', 'Validation', 'Risk Score', 'Confirmed NOT Modified',
-  'Cost / Quota', 'Scope Summary', 'Evidence Summary', 'Review Recommendation',
-  'Reopen Criteria', 'Git Confirmation', 'Risks / Remaining Issues', 'Suggested Next Mission',
-]
+const REQUIRED_CLOSEOUT_HEADINGS = CLOSEOUT_V3_HEADINGS
 
 function closeoutCompleteness(path) {
   if (!path || !existsSync(path)) return { complete: false, missing: ['closeout file'] }
   const text = readFileSync(path, 'utf8')
-  const missing = REQUIRED_CLOSEOUT_HEADINGS.filter(heading => !new RegExp(`^##\\s+(?:\\d+\\.\\s*)?${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'mi').test(text))
+  const missing = REQUIRED_CLOSEOUT_HEADINGS.filter(heading => !new RegExp(`^#{1,6}\\s+(?:\\d+\\.\\s*)?${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'mi').test(text))
   return { complete: missing.length === 0, missing }
 }
 
@@ -123,7 +118,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
   const checks = execution?.status === 'COMPLETED' ? requiredChecks(packet.repo, packet) : []
   const workerCloseoutPath = closeoutPath || execution?.closeout_path
   const closeout = closeoutCompleteness(workerCloseoutPath)
-  const workerCloseout = inspectWorkerCloseout(workerCloseoutPath)
+  const workerCloseout = inspectWorkerCloseout(workerCloseoutPath, { changedFiles })
   const objective = inspectMissionObjective(packet, changedFiles)
   const issues = []
   const warnings = []
