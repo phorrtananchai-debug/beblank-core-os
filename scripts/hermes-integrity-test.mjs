@@ -12,7 +12,7 @@ process.env.HERMES_RUNTIME_DIR = join(fixtureRoot, 'runtime')
 
 const store = await import('./hermes-runtime-store.mjs')
 const { classifyMission, validateDispatchPacket } = await import('./hermes-dispatch.mjs')
-const { determineReviewVerdict } = await import('./hermes-review-runtime.mjs')
+const { determineReviewVerdict, normalizeRequiredChecks } = await import('./hermes-review-runtime.mjs')
 const { adapterExecute, buildCodexArgs, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
 const { commitEligibility, finalizeAcceptedMission, parseCommitControls, resolveCommitMessage, validateStagedScope } = await import('./hermes-run.mjs')
 const { resolveSyncedState, syncCloseout } = await import('./hermes-sync.mjs')
@@ -152,6 +152,35 @@ try {
     worker_closeout: { passing: true },
     objective: { objective_verified: true },
   }
+  const reviewScripts = {
+    test: 'node test.mjs', lint: 'eslint .', build: 'tsc -b',
+    'hermes:test-integrity': 'node scripts/hermes-integrity-test.mjs',
+    'hermes:runtime': 'node scripts/hermes-runtime.mjs',
+    'custom-test-lint-build': 'node custom.mjs',
+  }
+  test('required check npm run hermes:test-integrity stays exact', () => {
+    assert.deepEqual(normalizeRequiredChecks(['npm run hermes:test-integrity'], reviewScripts), [{ command: 'npm run hermes:test-integrity', args: ['run', 'hermes:test-integrity'] }])
+  })
+  test('integrity script does not trigger npm test', () => {
+    assert.ok(!normalizeRequiredChecks(['npm run hermes:test-integrity'], reviewScripts).some(check => check.command === 'npm test'))
+  })
+  test('exact npm test remains an explicit test-script request', () => {
+    assert.deepEqual(normalizeRequiredChecks(['npm test'], reviewScripts), [{ command: 'npm test', args: ['test'] }])
+  })
+  test('lint and build commands run only their exact scripts', () => {
+    assert.deepEqual(normalizeRequiredChecks(['npm run lint', 'npm run build'], reviewScripts).map(check => check.args), [['run', 'lint'], ['run', 'build']])
+  })
+  test('script names containing test lint or build do not infer other checks', () => {
+    assert.deepEqual(normalizeRequiredChecks(['npm run custom-test-lint-build'], reviewScripts), [{ command: 'npm run custom-test-lint-build', args: ['run', 'custom-test-lint-build'] }])
+  })
+  test('multiple explicit checks remain independent and exact duplicates deduplicate', () => {
+    assert.deepEqual(normalizeRequiredChecks(['npm run lint', 'npm run hermes:runtime -- doctor', 'npm run lint'], reviewScripts).map(check => check.args), [['run', 'lint'], ['run', 'hermes:runtime', '--', 'doctor']])
+  })
+  test('unknown and malformed required checks fail closed', () => {
+    const checks = normalizeRequiredChecks(['npm run absent-script', 'pnpm test', ''], reviewScripts)
+    assert.equal(checks.length, 3)
+    assert.ok(checks.every(check => check.error))
+  })
   const finalCloseout = join(fixtureRoot, 'final-closeout.md')
   writeFileSync(finalCloseout, '# fixture closeout\n', 'utf8')
 

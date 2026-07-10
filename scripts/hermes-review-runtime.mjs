@@ -37,17 +37,40 @@ function runCheck(repo, name, args) {
   return { command: [name, ...args].join(' '), exit_code: result.status ?? 1, status: result.status === 0 ? 'PASS' : 'FAIL', output: `${result.stdout || ''}${result.stderr || ''}${result.error?.message || ''}`.slice(-4000) }
 }
 
-function requiredChecks(repo, packet, changedFiles) {
-  const checks = []
-  const requested = packet.required_checks.join(' ').toLowerCase()
-  checks.push(runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'lint']))
-  checks.push(runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build']))
-  checks.push(runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'hermes:runtime', '--', 'doctor']))
-  if (/\btest/.test(requested)) {
-    const script = JSON.parse(readFileSync(join(repo, 'package.json'), 'utf8')).scripts?.test
-    checks.push(script ? runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['test']) : { command: 'npm test', exit_code: 1, status: 'FAIL', output: 'Test requested but no test script is configured.' })
+export function normalizeRequiredChecks(requiredChecks, scripts = {}) {
+  const plans = []
+  const seen = new Set()
+  for (const raw of requiredChecks || []) {
+    const text = String(raw || '').trim().replace(/\s+/g, ' ')
+    let plan
+    if (text === 'npm test') {
+      plan = scripts.test
+        ? { command: 'npm test', args: ['test'] }
+        : { command: 'npm test', error: 'Required check "npm test" was declared, but package.json has no test script.' }
+    } else {
+      const match = /^npm run ([A-Za-z0-9:_-]+)(?: (.*))?$/.exec(text)
+      if (!match) {
+        plan = { command: text || '<empty>', error: `Unknown or malformed required check: ${text || '<empty>'}` }
+      } else {
+        const [, script, trailing = ''] = match
+        if (!scripts[script]) plan = { command: text, error: `Required npm script "${script}" is not configured.` }
+        else {
+          const extra = trailing ? trailing.split(' ') : []
+          plan = { command: text, args: ['run', script, ...extra] }
+        }
+      }
+    }
+    if (!seen.has(plan.command)) { seen.add(plan.command); plans.push(plan) }
   }
-  return checks
+  return plans
+}
+
+export function requiredChecks(repo, packet) {
+  const scripts = JSON.parse(readFileSync(join(repo, 'package.json'), 'utf8')).scripts || {}
+  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+  return normalizeRequiredChecks(packet.required_checks, scripts).map(plan => plan.error
+    ? { command: plan.command, exit_code: 1, status: 'FAIL', output: plan.error }
+    : runCheck(repo, npm, plan.args))
 }
 
 const REQUIRED_CLOSEOUT_HEADINGS = [
@@ -94,7 +117,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
   const head = headResult.stdout.trim()
   const headChanged = Boolean(mission.baseline_head && head && head !== mission.baseline_head)
   const lock = readState('locks.json').locks.find(item => item.mission_id === missionId && item.status !== 'released') || null
-  const checks = execution?.status === 'COMPLETED' ? requiredChecks(packet.repo, packet, changedFiles) : []
+  const checks = execution?.status === 'COMPLETED' ? requiredChecks(packet.repo, packet) : []
   const workerCloseoutPath = closeoutPath || execution?.closeout_path
   const closeout = closeoutCompleteness(workerCloseoutPath)
   const workerCloseout = inspectWorkerCloseout(workerCloseoutPath)

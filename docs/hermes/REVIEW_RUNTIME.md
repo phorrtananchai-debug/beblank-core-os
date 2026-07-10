@@ -10,5 +10,7 @@ Verdicts are `AUTO_ACCEPT`, `ACCEPT_WITH_WARNINGS`, `HOLD_FOR_EVIDENCE`, `NEEDS_
 
 Review applies deterministic vetoes before acceptance. A missing required output, zero changes for a writing mission, non-passing worker closeout, incomplete closeout, failed objective, non-successful execution, or blocking quota/evidence record produces `NEEDS_REWORK` (or the stricter existing scope/risk verdict). `AUTO_ACCEPT` is possible only when `completion_ready` is true. Read-only packets must explicitly declare `output_required: false`; any file change then fails their objective.
 
+Required checks are parsed as explicit normalized commands. `npm test` runs only the configured `test` script; `npm run <script>` runs only that exact configured script (including arguments such as `npm run hermes:runtime -- doctor`). Exact duplicates are deduplicated. Unknown or malformed checks are reported as failed checks and never inferred from substrings.
+
 Local auto-commit is eligible only for LOW/MEDIUM risk, complete evidence, passing required checks, no protected paths, no conflicts, and an exact match between reviewed and staged files. Push and merge are never performed.
 
