@@ -9,7 +9,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
@@ -204,6 +204,68 @@ function unquote(value) {
   return value.replace(/^(['"])(.*)\1$/, '$2')
 }
 
+function booleanValue(value, fallback) {
+  if (value === undefined || value === null || value === '') return fallback
+  if (typeof value === 'boolean') return value
+  if (/^(true|yes|1)$/i.test(String(value))) return true
+  if (/^(false|no|0)$/i.test(String(value))) return false
+  throw new Error(`Invalid boolean value: ${value}`)
+}
+
+export function pathMatchesScope(file, pattern) {
+  const target = file.replaceAll('\\', '/').replace(/^\.\//, '').toLowerCase()
+  const scope = pattern.replaceAll('\\', '/').replace(/^\.\//, '').toLowerCase()
+  if (scope.endsWith('/**')) return target === scope.slice(0, -3) || target.startsWith(scope.slice(0, -2))
+  if (scope.endsWith('/')) return target.startsWith(scope)
+  if (scope.startsWith('*.')) return target.endsWith(scope.slice(1))
+  if (scope.includes('*')) {
+    const escaped = scope.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replaceAll('**', '\u0000').replaceAll('*', '[^/]*').replaceAll('\u0000', '.*')
+    return new RegExp(`^${escaped}$`).test(target)
+  }
+  return target === scope
+}
+
+export function parseGitStatus(text) {
+  return text.split(/\r?\n/).filter(Boolean).map(line => ({ code: line.slice(0, 2), path: line.slice(3).replace(/^"|"$/g, '') }))
+}
+
+export function changedSinceBaseline(current, baseline = []) {
+  const previous = new Map(baseline.map(item => [item.path, item.code]))
+  return current.filter(item => previous.get(item.path) !== item.code)
+}
+
+export function inspectMissionObjective(packet, changedFiles) {
+  const issues = []
+  const requiredOutputs = packet.required_outputs || []
+  const missingOutputs = []
+  const unchangedOutputs = []
+  const repoRoot = resolve(packet.repo)
+  if (!packet.output_required) {
+    if (changedFiles.length) issues.push(`Read-only mission changed files: ${changedFiles.join(', ')}`)
+  } else {
+    if (!changedFiles.length) issues.push('Writing mission produced zero changed files')
+    for (const output of requiredOutputs) {
+      const matchedChange = changedFiles.some(file => pathMatchesScope(file, output))
+      if (!matchedChange) unchangedOutputs.push(output)
+      if (!output.includes('*')) {
+        const absolute = resolve(repoRoot, output)
+        const insideRepo = absolute === repoRoot || absolute.startsWith(`${repoRoot}${sep}`)
+        if (!insideRepo || !existsSync(absolute)) missingOutputs.push(output)
+      } else if (!matchedChange) missingOutputs.push(output)
+    }
+    if (missingOutputs.length) issues.push(`Required outputs missing: ${missingOutputs.join(', ')}`)
+    if (unchangedOutputs.length) issues.push(`Required outputs not created or modified: ${unchangedOutputs.join(', ')}`)
+  }
+  return {
+    output_required: packet.output_required,
+    required_outputs: requiredOutputs,
+    missing_outputs: [...new Set(missingOutputs)],
+    unchanged_outputs: [...new Set(unchangedOutputs)],
+    objective_verified: issues.length === 0,
+    issues,
+  }
+}
+
 export function markdownSection(text, title) {
   const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const match = new RegExp(`^#{1,3}\\s+${escaped}\\s*\\r?\\n([\\s\\S]*?)(?=^#{1,3}\\s+|(?![\\s\\S]))`, 'im').exec(text)
@@ -225,6 +287,10 @@ export function parseTaskPacket(packetPath) {
   const meta = parseFrontmatter(text)
   const allowed = Array.isArray(meta.allowed_files) && meta.allowed_files.length ? meta.allowed_files : sectionList(text, 'Allowed Files')
   const forbidden = Array.isArray(meta.forbidden_files) && meta.forbidden_files.length ? meta.forbidden_files : sectionList(text, 'Forbidden Files')
+  const outputRequired = booleanValue(meta.output_required, true)
+  const requiredOutputs = Array.isArray(meta.required_outputs) && meta.required_outputs.length
+    ? meta.required_outputs
+    : outputRequired ? allowed : []
   return {
     path,
     text,
@@ -237,6 +303,8 @@ export function parseTaskPacket(packetPath) {
     allowed_files: allowed,
     forbidden_files: forbidden,
     required_checks: Array.isArray(meta.required_checks) ? meta.required_checks : sectionList(text, 'Required Commands'),
+    output_required: outputRequired,
+    required_outputs: requiredOutputs,
     approval_gate: meta.approval_gate || markdownSection(text, 'Approval'),
   }
 }
@@ -254,6 +322,8 @@ export function normalizeMission(packet) {
     allowed_files: packet.allowed_files,
     forbidden_files: packet.forbidden_files,
     required_checks: packet.required_checks,
+    output_required: packet.output_required,
+    required_outputs: packet.required_outputs,
     approval_gate: packet.approval_gate,
     state: 'PENDING',
     created_at: now,
@@ -267,6 +337,10 @@ export function updateMissionState(missionId, state, details = {}) {
   const store = readState('mission-store.json')
   const mission = store.missions.find(item => item.mission_id === missionId)
   if (!mission) throw new Error(`Mission not found: ${missionId}`)
+  if (state === 'COMPLETED') {
+    if (['FAILED', 'BLOCKED'].includes(mission.state)) throw new Error(`Completion invariant rejected: ${mission.state} mission cannot become COMPLETED`)
+    if (details.completion_evidence?.ready !== true) throw new Error('Completion invariant rejected: verified completion evidence is required')
+  }
   mission.state = state
   mission.updated_at = new Date().toISOString()
   Object.assign(mission, details)

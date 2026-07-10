@@ -124,6 +124,8 @@ ${assignment?.risk || 'unknown'}
 
 - Execution record: ${execution?.status || 'missing'}
 - Closeout detected: ${execution?.closeout_detected ? 'Yes' : 'No'}
+- Worker verdict: ${execution?.worker_verdict || 'unknown'}
+- Objective verified: ${review?.objective?.objective_verified ? 'Yes' : 'No'}
 
 ## Review Recommendation
 
@@ -158,7 +160,7 @@ function writeCloseout(mission, assignment, execution, review = null) {
 }
 
 function commitIfAllowed(mission, review) {
-  if (!['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(review.verdict) || !review.changed_files.length) return null
+  if (!review.completion_ready || !['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(review.verdict) || !review.changed_files.length) return null
   if (!['LOW', 'MEDIUM'].includes(review.risk) || review.protected_paths.length || review.outside_scope.length || review.forbidden_touched.length || review.conflicts.length || review.checks.some(check => check.status !== 'PASS') || !review.closeout.complete) return null
   for (const file of review.changed_files) {
     const add = run('git', ['-C', mission.repo, 'add', '--', file])
@@ -195,18 +197,31 @@ function executeMission(mission, { resume = false } = {}) {
     if (assignment.worker_id !== 'codex-cli') throw new Error(`Worker execution not implemented for ${assignment.selected_worker}`)
   }
   const execution = existingExecution?.status === 'COMPLETED' ? existingExecution : adapterExecute(mission.packet_path, { authorizedByDispatch: true })
-  const provisionalCloseout = writeCloseout(mission, assignment, execution)
-  let review = reviewMission(mission.mission_id, { closeoutPath: provisionalCloseout })
+  if (execution.status === 'COMPLETED') updateMissionState(mission.mission_id, 'WAITING_REVIEW', { execution_status: execution.status })
+  let review = reviewMission(mission.mission_id, { closeoutPath: execution.closeout_path })
   let commit = null
-  if (['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(review.verdict)) {
+  if (review.completion_ready && ['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(review.verdict)) {
     commit = commitIfAllowed(mission, review)
     review = { ...review, commit_created: Boolean(commit), commit }
-    updateMissionState(mission.mission_id, 'COMPLETED', { review_verdict: review.verdict, commit: commit || null, completed_at: new Date().toISOString() })
+    updateMissionState(mission.mission_id, 'COMPLETED', {
+      review_verdict: review.verdict,
+      commit: commit || null,
+      completed_at: new Date().toISOString(),
+      completion_evidence: {
+        ready: true,
+        execution_status: execution.status,
+        objective_verified: review.objective.objective_verified,
+        worker_closeout_passing: review.worker_closeout.passing,
+        review_verdict: review.verdict,
+        blocking_evidence: false,
+      },
+    })
     releaseLocks(mission.mission_id, 'mission completed')
     removeFromQueue(mission.mission_id)
   } else {
-    const state = review.verdict === 'HOLD_FOR_EVIDENCE' ? 'BLOCKED' : 'FAILED'
+    const state = ['HOLD_FOR_EVIDENCE', 'NEEDS_REWORK'].includes(review.verdict) || execution.status === 'BLOCKED' ? 'BLOCKED' : 'FAILED'
     updateMissionState(mission.mission_id, state, { review_verdict: review.verdict, block_reason: review.issues.join('; ') })
+    appendHistory('MISSION_COMPLETION_REJECTED', mission.mission_id, { state, verdict: review.verdict, issues: review.issues })
     releaseLocks(mission.mission_id, `mission ${state.toLowerCase()}`)
     if (state === 'FAILED') removeFromQueue(mission.mission_id)
   }

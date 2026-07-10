@@ -21,7 +21,8 @@
     "hermes:dispatch": "node scripts/hermes-dispatch.mjs",
     "hermes:codex": "node scripts/hermes-worker-codex.mjs",
     "hermes:run": "node scripts/hermes-run.mjs",
-    "hermes:review": "node scripts/hermes-review-runtime.mjs"
+    "hermes:review": "node scripts/hermes-review-runtime.mjs",
+    "hermes:test-integrity": "node scripts/hermes-integrity-test.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.2",

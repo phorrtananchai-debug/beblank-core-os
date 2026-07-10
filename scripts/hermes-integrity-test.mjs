@@ -1,0 +1,226 @@
+#!/usr/bin/env node
+
+import assert from 'node:assert/strict'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
+
+const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
+const fixtureRoot = join(ROOT, '.hermes', `integrity-fixture-${process.pid}-${Date.now()}`)
+process.env.HERMES_RUNTIME_DIR = join(fixtureRoot, 'runtime')
+
+const store = await import('./hermes-runtime-store.mjs')
+const { classifyMission, validateDispatchPacket } = await import('./hermes-dispatch.mjs')
+const { determineReviewVerdict } = await import('./hermes-review-runtime.mjs')
+const { adapterExecute, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
+
+function git(repo, args) {
+  const result = spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8', windowsHide: true })
+  if (result.status !== 0) throw new Error(`Fixture git failed: ${(result.stderr || result.stdout).trim()}`)
+  return result.stdout.trim()
+}
+
+async function runCodexWriteSmoke() {
+  const missionId = `HERMES-INTEGRITY-WRITE-SMOKE-${process.pid}`
+  const workspace = join(fixtureRoot, 'codex-workspace')
+  const executionDir = join(ROOT, '.hermes', 'executions', missionId)
+  mkdirSync(workspace, { recursive: true })
+  git(workspace, ['init'])
+  git(workspace, ['config', 'user.email', 'hermes-smoke@local.invalid'])
+  git(workspace, ['config', 'user.name', 'Hermes Smoke'])
+  writeFileSync(join(workspace, 'README.md'), '# Hermes disposable smoke\n', 'utf8')
+  git(workspace, ['add', 'README.md'])
+  git(workspace, ['commit', '-m', 'fixture baseline'])
+  const branch = git(workspace, ['branch', '--show-current'])
+  const packetPath = join(fixtureRoot, 'codex-write-smoke.md')
+  writeFileSync(packetPath, `---
+mission_id: ${missionId}
+mission: Create the approved disposable output file
+agent_role: Codex CLI
+repo: ${workspace}
+branch: ${branch}
+approval_gate: Por
+output_required: true
+allowed_files:
+  - output.md
+forbidden_files:
+  - .git/
+---
+# Disposable Codex Write Smoke
+## Mission
+Create output.md containing exactly HERMES_WORKSPACE_WRITE_OK. Do not modify any other file.
+## Allowed Files
+\`\`\`
+output.md
+\`\`\`
+## Forbidden Files
+\`\`\`
+.git/
+\`\`\`
+## Evidence
+Verify output.md exists and return a closeout whose Review Recommendation is APPROVE.
+## Approval
+Authorized disposable Hermes integrity smoke.
+## Closeout
+End with: ## Review Recommendation followed by **APPROVE**.
+`, 'utf8')
+  try {
+    store.initializeRuntime({ force: true })
+    const packet = store.parseTaskPacket(packetPath)
+    const mission = store.normalizeMission(packet)
+    mission.baseline_status = store.parseGitStatus(git(workspace, ['status', '--short']))
+    mission.baseline_head = git(workspace, ['rev-parse', 'HEAD'])
+    store.saveMission(mission, { create: true })
+    const runtime = store.readState('runtime.json')
+    runtime.active_assignments[missionId] = {
+      mission_id: missionId,
+      worker_id: 'codex-cli',
+      approval_state: 'AUTHORIZED',
+      safe_to_run: true,
+    }
+    store.atomicWrite('runtime.json', runtime)
+    store.updateMissionState(missionId, 'RUNNING', { started_at: new Date().toISOString() })
+    const execution = adapterExecute(packetPath, { authorizedByDispatch: true })
+    const stderr = readFileSync(execution.stderr_log, 'utf8')
+    assert.equal(execution.status, 'COMPLETED', JSON.stringify({
+      status: execution.status,
+      worker_verdict: execution.worker_verdict,
+      objective_verified: execution.objective_verified,
+      changed_files: execution.changed_files,
+      outside_scope: execution.outside_scope,
+      quota_block: execution.quota_block,
+      sandbox_header: /sandbox:\s*([^\r\n]+)/i.exec(stderr)?.[1] || 'missing',
+      issues: execution.execution_issues,
+    }))
+    assert.equal(execution.objective_verified, true)
+    assert.equal(execution.worker_closeout_passing, true)
+    assert.equal(execution.requested_sandbox_mode, 'workspace-write')
+    assert.equal(execution.effective_sandbox_mode, 'workspace-write')
+    assert.equal(readFileSync(join(workspace, 'output.md'), 'utf8').trim(), 'HERMES_WORKSPACE_WRITE_OK')
+    assert.deepEqual(store.parseGitStatus(git(workspace, ['status', '--short'])).map(item => item.path), ['output.md'])
+    assert.match(stderr, /sandbox:\s+workspace-write/i)
+    return {
+      status: 'PASS',
+      requested_sandbox_mode: execution.requested_sandbox_mode,
+      effective_sandbox_mode: execution.effective_sandbox_mode,
+      sandbox_root: execution.sandbox_root,
+      output_created: true,
+      changed_files: execution.changed_files,
+      worker_verdict: execution.worker_verdict,
+    }
+  } finally {
+    if (existsSync(executionDir)) rmSync(executionDir, { recursive: true, force: true })
+  }
+}
+
+const results = []
+function test(name, fn) {
+  try { fn(); results.push({ name, status: 'PASS' }) }
+  catch (error) { results.push({ name, status: 'FAIL', error: error.message }); throw error }
+}
+
+try {
+  mkdirSync(fixtureRoot, { recursive: true })
+  const output = join(fixtureRoot, 'guide.md')
+  writeFileSync(output, '# fixture\n', 'utf8')
+  const writePacket = {
+    repo: fixtureRoot,
+    output_required: true,
+    required_outputs: ['guide.md'],
+    allowed_files: ['guide.md'],
+    forbidden_files: ['src/'],
+    mission_id: 'TEST-WRITE',
+    mission: 'Create docs guide',
+    text: '## Evidence\nYes\n## Approval\nYes\n## Closeout\nYes',
+  }
+
+  test('write mission required output passes when created', () => {
+    const objective = store.inspectMissionObjective(writePacket, ['guide.md'])
+    assert.equal(objective.objective_verified, true)
+  })
+  test('write sandbox narrows to the approved output directory', () => {
+    const sandbox = resolveCodexSandbox(writePacket)
+    assert.equal(sandbox.mode, 'workspace-write')
+    assert.equal(sandbox.root, fixtureRoot)
+  })
+  test('effective read-only sandbox is detected as a write downgrade', () => {
+    const sandbox = detectEffectiveSandbox('sandbox: read-only\n', 'workspace-write')
+    assert.equal(sandbox.effective, 'read-only')
+    assert.equal(sandbox.downgraded, true)
+  })
+  test('missing required file plus process exit zero cannot pass', () => {
+    const objective = store.inspectMissionObjective({ ...writePacket, required_outputs: ['missing.md'] }, [])
+    assert.equal(objective.objective_verified, false)
+    assert.ok(objective.missing_outputs.includes('missing.md'))
+  })
+  test('zero changed files for writing mission cannot pass', () => {
+    const objective = store.inspectMissionObjective(writePacket, [])
+    assert.equal(objective.objective_verified, false)
+    assert.ok(objective.issues.some(issue => issue.includes('zero changed files')))
+  })
+  test('worker HOLD vetoes AUTO_ACCEPT', () => {
+    assert.equal(determineReviewVerdict({ worker_blocking: true }), 'NEEDS_REWORK')
+  })
+  test('missing closeout vetoes AUTO_ACCEPT', () => {
+    assert.equal(determineReviewVerdict({ closeout_missing: true }), 'NEEDS_REWORK')
+  })
+  test('blocking quota or evidence vetoes AUTO_ACCEPT', () => {
+    assert.equal(determineReviewVerdict({ blocking_evidence: true }), 'NEEDS_REWORK')
+  })
+  test('read-only mission explicitly requiring no output may pass with zero changes', () => {
+    const objective = store.inspectMissionObjective({ ...writePacket, output_required: false, required_outputs: [] }, [])
+    assert.equal(objective.objective_verified, true)
+    assert.equal(determineReviewVerdict({}), 'AUTO_ACCEPT')
+    assert.equal(resolveCodexSandbox({ ...writePacket, output_required: false }).mode, 'read-only')
+  })
+  test('protected paths remain blocked', () => {
+    const analysis = classifyMission({ ...writePacket, allowed_files: ['src/core/auth/AuthContext.tsx'] })
+    assert.ok(analysis.protected_paths.includes('auth'))
+    assert.equal(determineReviewVerdict({ protected_scope: true }), 'HUMAN_REQUIRED')
+  })
+  test('writes outside approved scope remain rejected', () => {
+    assert.equal(determineReviewVerdict({ outside_scope: true }), 'REJECT')
+  })
+  test('writing packet must declare output scope', () => {
+    const validation = validateDispatchPacket({ ...writePacket, allowed_files: [], required_outputs: [] })
+    assert.equal(validation.valid, false)
+  })
+
+  const holdCloseout = join(fixtureRoot, 'hold.md')
+  writeFileSync(holdCloseout, '## 13. Review Recommendation\n\n**HOLD FOR EVIDENCE**\n', 'utf8')
+  test('worker closeout HOLD parser is blocking', () => {
+    const result = inspectWorkerCloseout(holdCloseout)
+    assert.equal(result.passing, false)
+    assert.equal(result.verdict, 'HOLD')
+  })
+  const passCloseout = join(fixtureRoot, 'pass.md')
+  writeFileSync(passCloseout, '## Review Recommendation\n\n**APPROVE**\n', 'utf8')
+  test('worker closeout APPROVE parser passes', () => {
+    assert.equal(inspectWorkerCloseout(passCloseout).passing, true)
+  })
+
+  store.initializeRuntime({ force: true })
+  store.saveMission({ mission_id: 'FAILED-TEST', state: 'FAILED' }, { create: true })
+  test('failed mission cannot transition to COMPLETED', () => {
+    assert.throws(() => store.updateMissionState('FAILED-TEST', 'COMPLETED', { completion_evidence: { ready: true } }), /cannot become COMPLETED/)
+  })
+  store.saveMission({ mission_id: 'BLOCKED-TEST', state: 'BLOCKED' }, { create: true })
+  test('blocked mission cannot transition to COMPLETED', () => {
+    assert.throws(() => store.updateMissionState('BLOCKED-TEST', 'COMPLETED', { completion_evidence: { ready: true } }), /cannot become COMPLETED/)
+  })
+  store.saveMission({ mission_id: 'NO-EVIDENCE-TEST', state: 'WAITING_REVIEW' }, { create: true })
+  test('completion requires verified evidence', () => {
+    assert.throws(() => store.updateMissionState('NO-EVIDENCE-TEST', 'COMPLETED'), /verified completion evidence/)
+  })
+  store.saveMission({ mission_id: 'READY-TEST', state: 'WAITING_REVIEW' }, { create: true })
+  test('verified accepted mission may transition to COMPLETED', () => {
+    const mission = store.updateMissionState('READY-TEST', 'COMPLETED', { completion_evidence: { ready: true } })
+    assert.equal(mission.state, 'COMPLETED')
+  })
+
+  const codex_write_smoke = process.argv.includes('--codex-write-smoke') ? await runCodexWriteSmoke() : 'NOT_REQUESTED'
+  console.log(JSON.stringify({ verdict: 'PASS', tests: results, codex_write_smoke }, null, 2))
+} finally {
+  if (existsSync(fixtureRoot)) rmSync(fixtureRoot, { recursive: true, force: true })
+}

@@ -32,7 +32,8 @@ export function validateDispatchPacket(packet) {
   const issues = []
   if (!packet.mission_id) issues.push('mission_id or packet_id is required')
   if (!packet.mission) issues.push('Mission content is required')
-  if (!packet.allowed_files.length) issues.push('Allowed Files must contain at least one path')
+  if (packet.output_required && !packet.allowed_files.length) issues.push('Allowed Files must contain at least one path for a writing mission')
+  if (packet.output_required && !packet.required_outputs.length) issues.push('Writing mission must declare at least one required output')
   if (!packet.forbidden_files.length) issues.push('Forbidden Files must contain at least one path')
   for (const heading of ['Evidence', 'Approval', 'Closeout']) {
     if (!markdownSection(packet.text, heading)) issues.push(`${heading} section is required`)
