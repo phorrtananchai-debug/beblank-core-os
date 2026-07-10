@@ -14,6 +14,10 @@ import {
   REPO_ROOT,
 } from './hermes-runtime-store.mjs'
 
+// Codex CLI 0.133.0 ships gpt-5.5 in its bundled catalog. Pin the worker to
+// that locally supported model instead of inheriting a newer desktop config.
+export const CODEX_MODEL = 'gpt-5.5'
+
 function run(command, args, options = {}) {
   return spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options })
 }
@@ -128,9 +132,10 @@ export function adapterDryRun(packetPath) {
   const prompt = buildCodexPrompt(packet, effort)
   return {
     mode: 'dry-run', mission_id: packet.mission_id, availability, repo,
+    selected_model: CODEX_MODEL,
     reasoning_effort: effort,
     quota_note: 'Codex quota status: unknown — evidence required.',
-    command_preview: `codex exec --sandbox workspace-write --cd ${JSON.stringify(repo.repo)} --ephemeral --config model_reasoning_effort=${JSON.stringify(effort)} <prompt>`,
+    command_preview: `codex exec --ignore-user-config --model ${CODEX_MODEL} --sandbox workspace-write --cd ${JSON.stringify(repo.repo)} --ephemeral --config model_reasoning_effort=${JSON.stringify(effort)} <prompt>`,
     prompt,
   }
 }
@@ -155,7 +160,8 @@ export function adapterExecute(packetPath, { authorizedByDispatch = false } = {}
   saveExecution(record)
   appendHistory('CODEX_EXECUTION_STARTED', dryRun.mission_id, { started_at: started })
   const args = [
-    ...dryRun.availability.prefix, 'exec', '--sandbox', 'workspace-write', '--cd', dryRun.repo.repo,
+    ...dryRun.availability.prefix, 'exec', '--ignore-user-config', '--model', dryRun.selected_model,
+    '--sandbox', 'workspace-write', '--cd', dryRun.repo.repo,
     '--ephemeral', '--color', 'never', '--config', `model_reasoning_effort=${JSON.stringify(dryRun.reasoning_effort)}`,
     '--output-last-message', closeoutPath, '-',
   ]
