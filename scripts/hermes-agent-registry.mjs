@@ -78,7 +78,7 @@ function cmdRoute(registry, cap) {
     a.capabilities.some(c => c.toLowerCase().includes(cap.toLowerCase()))
   ).sort((a, b) => {
     const order = { free: 0, 'free-quota': 1, paid: 2, human: 3 }
-    return (order[a.cost_class] || 99) - (order[b.cost_class] || 99)
+    return (order[a.cost_class] ?? 99) - (order[b.cost_class] ?? 99)
   })
   if (!found.length) {
     console.error(`No agent found for capability: ${cap}`)

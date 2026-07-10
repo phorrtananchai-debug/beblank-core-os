@@ -206,7 +206,7 @@ function unquote(value) {
 
 export function markdownSection(text, title) {
   const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const match = new RegExp(`^#{1,3}\\s+${escaped}\\s*$([\\s\\S]*?)(?=^#{1,3}\\s+|\\s*$)`, 'im').exec(text)
+  const match = new RegExp(`^#{1,3}\\s+${escaped}\\s*\\r?\\n([\\s\\S]*?)(?=^#{1,3}\\s+|(?![\\s\\S]))`, 'im').exec(text)
   return match ? match[1].trim() : ''
 }
 
@@ -274,4 +274,3 @@ export function updateMissionState(missionId, state, details = {}) {
   appendHistory('MISSION_STATE_CHANGED', missionId, { state, ...details })
   return mission
 }
-

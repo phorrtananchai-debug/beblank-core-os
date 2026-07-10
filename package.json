@@ -17,7 +17,8 @@
     "hermes:route": "node scripts/hermes-route-task.mjs",
     "hermes:lock": "node scripts/hermes-lock-check.mjs",
     "hermes:queue": "node scripts/hermes-queue.mjs",
-    "hermes:runtime": "node scripts/hermes-runtime.mjs"
+    "hermes:runtime": "node scripts/hermes-runtime.mjs",
+    "hermes:dispatch": "node scripts/hermes-dispatch.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.2",

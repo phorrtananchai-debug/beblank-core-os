@@ -135,7 +135,7 @@ function analyze(text, registry) {
     })
     .sort((a, b) => {
       const order = { free: 0, 'free-quota': 1, paid: 2, human: 3 }
-      return (order[a.cost_class] || 99) - (order[b.cost_class] || 99)
+      return (order[a.cost_class] ?? 99) - (order[b.cost_class] ?? 99)
     })
 
   const recommended = candidates[0] || null
