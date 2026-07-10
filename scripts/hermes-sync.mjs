@@ -14,9 +14,9 @@
  */
 
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { appendHistory, initializeRuntime, saveMission } from './hermes-runtime-store.mjs'
+import { join, dirname, resolve } from 'path'
+import { fileURLToPath, pathToFileURL } from 'url'
+import { appendHistory, getMission, initializeRuntime, saveMission, updateMissionState } from './hermes-runtime-store.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const STATE_DIR = join(__dirname, '..', '.hermes', 'state')
@@ -94,7 +94,7 @@ function extractGitCommit(text) {
 function extractReview(text) {
   const sec = getSection(text, 'Review Recommendation')
   if (!sec) return 'unknown'
-  const m = sec.match(/\*\*(APPROVE|REVISE|HOLD FOR EVIDENCE|REJECT)\*\*/)
+  const m = sec.match(/\*\*(AUTO ACCEPT|ACCEPT WITH WARNINGS|APPROVE|REVISE|NEEDS REWORK|HOLD FOR EVIDENCE|BLOCKED|FAILED|REJECT)\*\*/)
   return m ? m[1] : 'unknown'
 }
 
@@ -106,10 +106,19 @@ function extractNext(text) {
 
 // --- main ---
 
-function sync(filePath) {
+export function resolveSyncedState(existingState, review, { completionReady = false } = {}) {
+  if (['FAILED', 'BLOCKED', 'NEEDS_REWORK'].includes(existingState)) return existingState
+  if (['FAILED', 'REJECT'].includes(review)) return 'FAILED'
+  if (['BLOCKED', 'HOLD FOR EVIDENCE'].includes(review)) return 'BLOCKED'
+  if (['NEEDS REWORK', 'REVISE'].includes(review)) return 'NEEDS_REWORK'
+  if (existingState === 'COMPLETED') return 'COMPLETED'
+  if (['AUTO ACCEPT', 'ACCEPT WITH WARNINGS', 'APPROVE'].includes(review)) return completionReady ? 'COMPLETED' : 'WAITING_APPROVAL'
+  return 'WAITING_REVIEW'
+}
+
+export function syncCloseout(filePath, { completionEvidence = null, legacyStateFile = STATE_FILE } = {}) {
   if (!existsSync(filePath)) {
-    console.error(`File not found: ${filePath}`)
-    process.exit(EXIT_ERR)
+    throw new Error(`File not found: ${filePath}`)
   }
 
   const text = readFileSync(filePath, 'utf-8')
@@ -135,12 +144,12 @@ function sync(filePath) {
   }
 
   // write state
-  mkdirSync(STATE_DIR, { recursive: true })
+  mkdirSync(dirname(legacyStateFile), { recursive: true })
 
   let state = []
-  if (existsSync(STATE_FILE)) {
+  if (existsSync(legacyStateFile)) {
     try {
-      state = JSON.parse(readFileSync(STATE_FILE, 'utf-8'))
+      state = JSON.parse(readFileSync(legacyStateFile, 'utf-8'))
     } catch { state = [] }
   }
 
@@ -149,22 +158,18 @@ function sync(filePath) {
   if (idx >= 0) state[idx] = mission
   else state.push(mission)
 
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n')
+  writeFileSync(legacyStateFile, JSON.stringify(state, null, 2) + '\n')
 
   // Phase 7.7 centralized runtime state. Keep the legacy snapshot above for
   // compatibility while making the runtime store authoritative for orchestration.
   initializeRuntime()
-  const existingState = {
-    approval: 'WAITING_APPROVAL',
-    revision: 'WAITING_REVIEW',
-    hold: 'BLOCKED',
-    rejected: 'FAILED',
-    review: 'WAITING_REVIEW',
-  }[mission.status] || 'WAITING_REVIEW'
+  const existing = getMission(mission.mission_id)
+  const syncedState = resolveSyncedState(existing?.state, mission.review_recommendation, { completionReady: completionEvidence?.ready === true })
   saveMission({
+    ...(existing || {}),
     mission_id: mission.mission_id,
-    mission: `Synced closeout ${mission.closeout_id}`,
-    state: existingState,
+    mission: existing?.mission || `Synced closeout ${mission.closeout_id}`,
+    state: syncedState === 'COMPLETED' && existing?.state !== 'COMPLETED' ? (existing?.state || 'WAITING_REVIEW') : syncedState,
     closeout_id: mission.closeout_id,
     session_id: mission.session_id,
     agent_role: mission.agent,
@@ -175,11 +180,14 @@ function sync(filePath) {
     review_recommendation: mission.review_recommendation,
     updated_at: mission.updated_at,
   })
-  appendHistory('CLOSEOUT_SYNCED', mission.mission_id, { closeout_id: mission.closeout_id, state: existingState })
+  if (syncedState === 'COMPLETED' && existing?.state !== 'COMPLETED') {
+    updateMissionState(mission.mission_id, 'COMPLETED', { completed_at: mission.updated_at, completion_evidence: completionEvidence })
+  }
+  appendHistory('CLOSEOUT_SYNCED', mission.mission_id, { closeout_id: mission.closeout_id, state: syncedState })
 
-  console.log(`Synced mission ${mission.mission_id} → ${STATE_FILE}`)
+  console.log(`Synced mission ${mission.mission_id} → ${legacyStateFile}`)
   console.log(`Status: ${mission.status} | Risk: ${mission.risk} | Build: ${mission.build}`)
-  return mission
+  return { ...mission, runtime_state: syncedState, synced: true }
 }
 
 function classifyStatus(review) {
@@ -202,10 +210,12 @@ function classifyRisk(text) {
 }
 
 // --- CLI ---
-const file = process.argv[2]
-if (!file) {
-  console.error('Usage: node scripts/hermes-sync.mjs <closeout.md>')
-  process.exit(EXIT_ERR)
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  const file = process.argv[2]
+  if (!file) {
+    console.error('Usage: node scripts/hermes-sync.mjs <closeout.md>')
+    process.exit(EXIT_ERR)
+  }
+  try { syncCloseout(file) }
+  catch (error) { console.error(`Hermes sync error: ${error.message}`); process.exit(EXIT_ERR) }
 }
-
-sync(file)

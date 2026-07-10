@@ -14,6 +14,8 @@ const store = await import('./hermes-runtime-store.mjs')
 const { classifyMission, validateDispatchPacket } = await import('./hermes-dispatch.mjs')
 const { determineReviewVerdict } = await import('./hermes-review-runtime.mjs')
 const { adapterExecute, buildCodexArgs, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
+const { commitEligibility, finalizeAcceptedMission, parseCommitControls, resolveCommitMessage, validateStagedScope } = await import('./hermes-run.mjs')
+const { resolveSyncedState, syncCloseout } = await import('./hermes-sync.mjs')
 
 function git(repo, args) {
   const result = spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8', windowsHide: true })
@@ -135,6 +137,74 @@ try {
     mission: 'Create docs guide',
     text: '## Evidence\nYes\n## Approval\nYes\n## Closeout\nYes',
   }
+  const acceptedReview = {
+    completion_ready: true,
+    verdict: 'AUTO_ACCEPT',
+    changed_files: ['guide.md'],
+    risk: 'LOW',
+    protected_paths: [], outside_scope: [], forbidden_touched: [], conflicts: [],
+    checks: [
+      { command: 'npm run lint', status: 'PASS' },
+      { command: 'npm run build', status: 'PASS' },
+      { command: 'npm run hermes:runtime -- doctor', status: 'PASS' },
+    ],
+    closeout: { complete: true },
+    worker_closeout: { passing: true },
+    objective: { objective_verified: true },
+  }
+  const finalCloseout = join(fixtureRoot, 'final-closeout.md')
+  writeFileSync(finalCloseout, '# fixture closeout\n', 'utf8')
+
+  test('commit occurs only after final closeout and sync', () => {
+    const events = []
+    finalizeAcceptedMission({
+      mission: { mission_id: 'ORDER-TEST', repo: fixtureRoot }, assignment: {}, execution: { status: 'COMPLETED' }, review: acceptedReview,
+      operations: {
+        writeCloseout: () => { events.push('closeout'); return finalCloseout },
+        syncCloseout: () => { events.push('sync'); return { synced: true, runtime_state: 'COMPLETED' } },
+        getMission: () => { events.push('verify'); return { state: 'COMPLETED' } },
+        commit: () => { events.push('commit'); return 'abc123' },
+      },
+    })
+    assert.deepEqual(events, ['closeout', 'sync', 'verify', 'commit'])
+  })
+  test('--no-commit prevents commit after successful completion', () => {
+    let committed = false
+    const controls = parseCommitControls(['--no-commit'])
+    const result = finalizeAcceptedMission({
+      mission: { mission_id: 'NO-COMMIT-TEST', repo: fixtureRoot }, assignment: {}, execution: { status: 'COMPLETED' }, review: acceptedReview, ...controls,
+      operations: {
+        writeCloseout: () => finalCloseout,
+        syncCloseout: () => ({ synced: true, runtime_state: 'COMPLETED' }),
+        getMission: () => ({ state: 'COMPLETED' }),
+        commit: () => { committed = true },
+      },
+    })
+    assert.equal(committed, false)
+    assert.equal(result.commit, null)
+  })
+  test('custom and default commit messages resolve deterministically', () => {
+    assert.equal(parseCommitControls(['--commit-message', 'docs: custom']).commitMessage, 'docs: custom')
+    assert.equal(resolveCommitMessage('DEFAULT-TEST'), 'chore(hermes): complete DEFAULT-TEST')
+    assert.equal(resolveCommitMessage('CUSTOM-TEST', 'docs: custom'), 'docs: custom')
+  })
+  test('failed, blocked, and missing-closeout missions cannot commit', () => {
+    const base = { review: acceptedReview, syncResult: { synced: true, runtime_state: 'COMPLETED' }, closeoutPath: finalCloseout }
+    assert.equal(commitEligibility({ ...base, finalState: 'FAILED' }).eligible, false)
+    assert.equal(commitEligibility({ ...base, finalState: 'BLOCKED' }).eligible, false)
+    assert.equal(commitEligibility({ ...base, finalState: 'COMPLETED', closeoutPath: join(fixtureRoot, 'missing-closeout.md') }).eligible, false)
+  })
+  test('sync terminal-state precedence preserves completion and veto states', () => {
+    assert.equal(resolveSyncedState('COMPLETED', 'APPROVE', { completionReady: true }), 'COMPLETED')
+    assert.equal(resolveSyncedState('FAILED', 'APPROVE', { completionReady: true }), 'FAILED')
+    assert.equal(resolveSyncedState('BLOCKED', 'APPROVE', { completionReady: true }), 'BLOCKED')
+    assert.equal(resolveSyncedState('NEEDS_REWORK', 'APPROVE', { completionReady: true }), 'NEEDS_REWORK')
+    assert.equal(resolveSyncedState('COMPLETED', 'FAILED', { completionReady: true }), 'FAILED')
+  })
+  test('scope validation rejects unrelated staged files and accepts mission files only', () => {
+    assert.equal(validateStagedScope(['guide.md'], ['guide.md', 'src/index.css']).valid, false)
+    assert.equal(validateStagedScope(['guide.md'], ['guide.md']).valid, true)
+  })
 
   test('write mission required output passes when created', () => {
     const objective = store.inspectMissionObjective(writePacket, ['guide.md'])
@@ -219,6 +289,37 @@ try {
   })
 
   store.initializeRuntime({ force: true })
+  store.saveMission({ mission_id: 'SYNC-DOCS-TEST', mission: 'Disposable docs fixture', state: 'WAITING_REVIEW' }, { create: true })
+  const syncCloseoutPath = join(fixtureRoot, 'sync-docs-closeout.md')
+  writeFileSync(syncCloseoutPath, `---
+closeout_id: CLOSEOUT-SYNC-DOCS-TEST
+mission_id: SYNC-DOCS-TEST
+session_id: SESSION-TEST
+agent: Codex CLI
+branch: fixture
+risk: LOW
+---
+# Fixture Closeout
+## Review Recommendation
+**AUTO ACCEPT**
+`, 'utf8')
+  test('successful docs fixture syncs and remains COMPLETED with no commit', () => {
+    let committed = false
+    const result = finalizeAcceptedMission({
+      mission: { mission_id: 'SYNC-DOCS-TEST', repo: fixtureRoot },
+      assignment: {}, execution: { status: 'COMPLETED' }, review: acceptedReview, commitEnabled: false,
+      operations: {
+        writeCloseout: () => syncCloseoutPath,
+        syncCloseout: (path, options) => syncCloseout(path, { ...options, legacyStateFile: join(fixtureRoot, 'legacy-state.json') }),
+        getMission: () => store.getMission('SYNC-DOCS-TEST'),
+        commit: () => { committed = true },
+      },
+    })
+    assert.equal(result.syncResult.runtime_state, 'COMPLETED')
+    assert.equal(store.getMission('SYNC-DOCS-TEST').state, 'COMPLETED')
+    assert.equal(result.commit, null)
+    assert.equal(committed, false)
+  })
   store.saveMission({ mission_id: 'FAILED-TEST', state: 'FAILED' }, { create: true })
   test('failed mission cannot transition to COMPLETED', () => {
     assert.throws(() => store.updateMissionState('FAILED-TEST', 'COMPLETED', { completion_evidence: { ready: true } }), /cannot become COMPLETED/)
@@ -226,6 +327,10 @@ try {
   store.saveMission({ mission_id: 'BLOCKED-TEST', state: 'BLOCKED' }, { create: true })
   test('blocked mission cannot transition to COMPLETED', () => {
     assert.throws(() => store.updateMissionState('BLOCKED-TEST', 'COMPLETED', { completion_evidence: { ready: true } }), /cannot become COMPLETED/)
+  })
+  store.saveMission({ mission_id: 'NEEDS-REWORK-TEST', state: 'NEEDS_REWORK' }, { create: true })
+  test('needs-rework mission cannot transition to COMPLETED', () => {
+    assert.throws(() => store.updateMissionState('NEEDS-REWORK-TEST', 'COMPLETED', { completion_evidence: { ready: true } }), /cannot become COMPLETED/)
   })
   store.saveMission({ mission_id: 'NO-EVIDENCE-TEST', state: 'WAITING_REVIEW' }, { create: true })
   test('completion requires verified evidence', () => {

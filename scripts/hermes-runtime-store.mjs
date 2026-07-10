@@ -18,7 +18,7 @@ export const RUNTIME_DIR = resolve(process.env.HERMES_RUNTIME_DIR || join(REPO_R
 export const RUNTIME_VERSION = 1
 export const MISSION_STATES = Object.freeze([
   'PENDING', 'RUNNING', 'WAITING_REVIEW', 'WAITING_APPROVAL', 'BLOCKED',
-  'COMPLETED', 'FAILED', 'PAUSED', 'ARCHIVED',
+  'NEEDS_REWORK', 'COMPLETED', 'FAILED', 'PAUSED', 'ARCHIVED',
 ])
 
 const STATE_FACTORIES = Object.freeze({
@@ -338,7 +338,7 @@ export function updateMissionState(missionId, state, details = {}) {
   const mission = store.missions.find(item => item.mission_id === missionId)
   if (!mission) throw new Error(`Mission not found: ${missionId}`)
   if (state === 'COMPLETED') {
-    if (['FAILED', 'BLOCKED'].includes(mission.state)) throw new Error(`Completion invariant rejected: ${mission.state} mission cannot become COMPLETED`)
+    if (['FAILED', 'BLOCKED', 'NEEDS_REWORK'].includes(mission.state)) throw new Error(`Completion invariant rejected: ${mission.state} mission cannot become COMPLETED`)
     if (details.completion_evidence?.ready !== true) throw new Error('Completion invariant rejected: verified completion evidence is required')
   }
   mission.state = state

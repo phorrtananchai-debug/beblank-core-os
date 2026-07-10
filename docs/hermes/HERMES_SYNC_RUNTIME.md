@@ -21,7 +21,7 @@ Parsed fields:
 - Mission Metadata (frontmatter): `mission_id`, `closeout_id`, `session_id`, `agent`, `branch`, `risk`
 - Validation section: build and lint results
 - Git Confirmation section: commit hash
-- Review Recommendation: APPROVE / REVISE / HOLD FOR EVIDENCE / REJECT
+- Review Recommendation: AUTO ACCEPT / ACCEPT WITH WARNINGS / APPROVE / REVISE / NEEDS REWORK / HOLD FOR EVIDENCE / BLOCKED / FAILED / REJECT
 - Suggested Next Mission
 
 ## Output
@@ -52,6 +52,8 @@ Parsed fields:
 - If no existing mission matches, it is **appended**.
 - The state file is a flat JSON array — no indexes, no database.
 - The runtime does not modify git or repository files.
+- Centralized state uses deterministic precedence: `FAILED`, `BLOCKED`, or `NEEDS_REWORK` vetoes outrank `COMPLETED`; an accepted review preserves an existing `COMPLETED`; accepted non-terminal work can become `COMPLETED` only when verified completion evidence is supplied by the runner; otherwise it remains `WAITING_APPROVAL`.
+- Sync merges closeout metadata into an existing mission instead of replacing its history-bearing runtime fields. An accepted closeout never downgrades an existing terminal state.
 
 ## Limitations
 

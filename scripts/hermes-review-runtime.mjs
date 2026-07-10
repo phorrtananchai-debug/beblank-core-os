@@ -42,6 +42,7 @@ function requiredChecks(repo, packet, changedFiles) {
   const requested = packet.required_checks.join(' ').toLowerCase()
   checks.push(runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'lint']))
   checks.push(runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build']))
+  checks.push(runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'hermes:runtime', '--', 'doctor']))
   if (/\btest/.test(requested)) {
     const script = JSON.parse(readFileSync(join(repo, 'package.json'), 'utf8')).scripts?.test
     checks.push(script ? runCheck(repo, process.platform === 'win32' ? 'npm.cmd' : 'npm', ['test']) : { command: 'npm test', exit_code: 1, status: 'FAIL', output: 'Test requested but no test script is configured.' })

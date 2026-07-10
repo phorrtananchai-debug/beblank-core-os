@@ -19,6 +19,7 @@ import {
 import { dispatchMission } from './hermes-dispatch.mjs'
 import { adapterDryRun, adapterExecute, adapterStatus } from './hermes-worker-codex.mjs'
 import { parseStatus, reviewMission } from './hermes-review-runtime.mjs'
+import { syncCloseout } from './hermes-sync.mjs'
 
 function run(command, args, options = {}) { return spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options }) }
 function git(repo, args) {
@@ -159,18 +160,69 @@ function writeCloseout(mission, assignment, execution, review = null) {
   return path
 }
 
-function commitIfAllowed(mission, review) {
-  if (!review.completion_ready || !['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(review.verdict) || !review.changed_files.length) return null
-  if (!['LOW', 'MEDIUM'].includes(review.risk) || review.protected_paths.length || review.outside_scope.length || review.forbidden_touched.length || review.conflicts.length || review.checks.some(check => check.status !== 'PASS') || !review.closeout.complete) return null
+export function commitEligibility({ review, finalState, syncResult, closeoutPath }) {
+  const reasons = []
+  if (finalState !== 'COMPLETED') reasons.push(`Final mission state is ${finalState || 'missing'}`)
+  if (!syncResult?.synced || syncResult.runtime_state !== 'COMPLETED') reasons.push('Mission sync did not preserve COMPLETED')
+  if (!closeoutPath || !existsSync(closeoutPath)) reasons.push('Final closeout is missing')
+  if (!review?.completion_ready || !['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(review?.verdict)) reasons.push('Review did not accept verified completion')
+  if (!review?.changed_files?.length) reasons.push('Mission has no approved changed files')
+  if (!['LOW', 'MEDIUM'].includes(review?.risk)) reasons.push(`Risk is ${review?.risk || 'unknown'}`)
+  if (review?.protected_paths?.length || review?.outside_scope?.length || review?.forbidden_touched?.length || review?.conflicts?.length) reasons.push('Scope, protection, or conflict gate failed')
+  if (review?.checks?.some(check => check.status !== 'PASS')) reasons.push('A required validation check failed')
+  if (!review?.closeout?.complete || !review?.worker_closeout?.passing || !review?.objective?.objective_verified) reasons.push('Completion evidence is incomplete')
+  return { eligible: reasons.length === 0, reasons }
+}
+
+export function validateStagedScope(approvedFiles, stagedFiles) {
+  const outside = stagedFiles.filter(file => !approvedFiles.includes(file))
+  return { valid: outside.length === 0, outside }
+}
+
+export function resolveCommitMessage(missionId, explicitMessage = null) {
+  return explicitMessage || `chore(hermes): complete ${missionId}`
+}
+
+function commitIfAllowed(mission, review, { message, finalState, syncResult, closeoutPath }) {
+  const eligibility = commitEligibility({ review, finalState, syncResult, closeoutPath })
+  if (!eligibility.eligible) throw new Error(`Commit prohibited: ${eligibility.reasons.join('; ')}`)
   for (const file of review.changed_files) {
     const add = run('git', ['-C', mission.repo, 'add', '--', file])
     if (add.status !== 0) throw new Error(`Auto-commit staging failed for ${file}: ${add.stderr}`)
   }
   const staged = git(mission.repo, ['diff', '--cached', '--name-only']).split(/\r?\n/).filter(Boolean)
-  if (staged.some(file => !review.changed_files.includes(file))) throw new Error('Auto-commit refused: staged scope differs from reviewed scope')
-  const commit = run('git', ['-C', mission.repo, 'commit', '-m', `chore(hermes): complete ${mission.mission_id}`])
+  const stagedScope = validateStagedScope(review.changed_files, staged)
+  if (!stagedScope.valid) throw new Error(`Auto-commit refused: staged scope includes ${stagedScope.outside.join(', ')}`)
+  const commit = run('git', ['-C', mission.repo, 'commit', '-m', resolveCommitMessage(mission.mission_id, message)])
   if (commit.status !== 0) throw new Error(`Auto-commit failed: ${(commit.stderr || commit.stdout).trim()}`)
   return git(mission.repo, ['rev-parse', 'HEAD'])
+}
+
+export function finalizeAcceptedMission({ mission, assignment, execution, review, commitEnabled = true, commitMessage = null, operations = {} }) {
+  const write = operations.writeCloseout || writeCloseout
+  const sync = operations.syncCloseout || syncCloseout
+  const lookup = operations.getMission || getMission
+  const commitOperation = operations.commit || commitIfAllowed
+  const closeoutPath = write(mission, assignment, execution, review)
+  if (!closeoutPath || !(operations.closeoutExists ? operations.closeoutExists(closeoutPath) : existsSync(closeoutPath))) throw new Error('Final closeout verification failed')
+  const completionEvidence = {
+    ready: true,
+    execution_status: execution.status,
+    objective_verified: review.objective.objective_verified,
+    worker_closeout_passing: review.worker_closeout.passing,
+    review_verdict: review.verdict,
+    blocking_evidence: false,
+    closeout_path: closeoutPath,
+    sync_required: true,
+  }
+  const syncResult = sync(closeoutPath, { completionEvidence })
+  if (!syncResult?.synced) throw new Error('Mission sync did not complete')
+  const finalMission = lookup(mission.mission_id)
+  if (finalMission?.state !== 'COMPLETED') throw new Error(`Final mission state verification failed: ${finalMission?.state || 'missing'}`)
+  const eligibility = commitEligibility({ review, finalState: finalMission.state, syncResult, closeoutPath })
+  if (!eligibility.eligible) throw new Error(`Completion gates failed: ${eligibility.reasons.join('; ')}`)
+  const commit = commitEnabled ? commitOperation(mission, review, { message: commitMessage, finalState: finalMission.state, syncResult, closeoutPath }) : null
+  return { closeoutPath, syncResult, finalMission, commit, commitEnabled, commitMessage }
 }
 
 function dryRun(packetPath) {
@@ -183,7 +235,7 @@ function dryRun(packetPath) {
   return { mode: 'dry-run', mission_id: mission.mission_id, assignment, adapter, review_verdict: 'HOLD_FOR_EVIDENCE', closeout_path: closeoutPath, resumable: true }
 }
 
-function executeMission(mission, { resume = false } = {}) {
+function executeMission(mission, { resume = false, commitEnabled = true, commitMessage = null } = {}) {
   if (['COMPLETED', 'ARCHIVED'].includes(mission.state)) throw new Error(`Mission ${mission.mission_id} is terminal (${mission.state}); resume refused`)
   const existingExecution = adapterStatus(mission.mission_id)
   let assignment = readState('runtime.json').active_assignments[mission.mission_id]
@@ -200,53 +252,57 @@ function executeMission(mission, { resume = false } = {}) {
   if (execution.status === 'COMPLETED') updateMissionState(mission.mission_id, 'WAITING_REVIEW', { execution_status: execution.status })
   let review = reviewMission(mission.mission_id, { closeoutPath: execution.closeout_path })
   let commit = null
+  let closeoutPath = null
+  let syncResult = null
   if (review.completion_ready && ['AUTO_ACCEPT', 'ACCEPT_WITH_WARNINGS'].includes(review.verdict)) {
-    commit = commitIfAllowed(mission, review)
+    const finalized = finalizeAcceptedMission({ mission, assignment, execution, review, commitEnabled, commitMessage })
+    commit = finalized.commit
+    closeoutPath = finalized.closeoutPath
+    syncResult = finalized.syncResult
     review = { ...review, commit_created: Boolean(commit), commit }
-    updateMissionState(mission.mission_id, 'COMPLETED', {
-      review_verdict: review.verdict,
-      commit: commit || null,
-      completed_at: new Date().toISOString(),
-      completion_evidence: {
-        ready: true,
-        execution_status: execution.status,
-        objective_verified: review.objective.objective_verified,
-        worker_closeout_passing: review.worker_closeout.passing,
-        review_verdict: review.verdict,
-        blocking_evidence: false,
-      },
-    })
     releaseLocks(mission.mission_id, 'mission completed')
     removeFromQueue(mission.mission_id)
   } else {
-    const state = ['HOLD_FOR_EVIDENCE', 'NEEDS_REWORK'].includes(review.verdict) || execution.status === 'BLOCKED' ? 'BLOCKED' : 'FAILED'
+    const state = review.verdict === 'NEEDS_REWORK' ? 'NEEDS_REWORK' : review.verdict === 'HOLD_FOR_EVIDENCE' || execution.status === 'BLOCKED' ? 'BLOCKED' : 'FAILED'
     updateMissionState(mission.mission_id, state, { review_verdict: review.verdict, block_reason: review.issues.join('; ') })
     appendHistory('MISSION_COMPLETION_REJECTED', mission.mission_id, { state, verdict: review.verdict, issues: review.issues })
     releaseLocks(mission.mission_id, `mission ${state.toLowerCase()}`)
     if (state === 'FAILED') removeFromQueue(mission.mission_id)
+    closeoutPath = writeCloseout(mission, assignment, execution, review)
+    syncResult = syncCloseout(closeoutPath)
   }
-  const closeoutPath = writeCloseout(mission, assignment, execution, review)
-  appendHistory('RUNNER_COMPLETED', mission.mission_id, { verdict: review.verdict, commit, pushed: false })
-  return { mode: resume ? 'resume' : 'execute', mission_id: mission.mission_id, assignment, execution, review, commit, closeout_path: closeoutPath, pushed: false, merged: false }
+  appendHistory('RUNNER_COMPLETED', mission.mission_id, { verdict: review.verdict, commit, sync_state: syncResult?.runtime_state, pushed: false })
+  return { mode: resume ? 'resume' : 'execute', mission_id: mission.mission_id, assignment, execution, review, sync: syncResult, commit, closeout_path: closeoutPath, pushed: false, merged: false }
+}
+
+export function parseCommitControls(args) {
+  const noCommit = args.includes('--no-commit')
+  const messageIndex = args.indexOf('--commit-message')
+  const commitMessage = messageIndex >= 0 ? args[messageIndex + 1] : null
+  if (messageIndex >= 0 && (!commitMessage || commitMessage.startsWith('--'))) throw new Error('--commit-message requires a non-empty value')
+  return { commitEnabled: !noCommit, commitMessage }
 }
 
 function main() {
   initializeRuntime()
   const args = process.argv.slice(2)
+  const commitControls = parseCommitControls(args)
   if (args[0] === '--status') {
     const mission = getMission(args[1]); if (!mission) throw new Error(`Mission not found: ${args[1]}`)
     return { mission, assignment: readState('runtime.json').active_assignments[args[1]] || null, execution: adapterStatus(args[1]), history: readState('history.json').events.filter(event => event.mission_id === args[1]) }
   }
   if (args[0] === '--resume') {
     const mission = getMission(args[1]); if (!mission) throw new Error(`Mission not found: ${args[1]}`)
-    return executeMission(mission, { resume: true })
+    return executeMission(mission, { resume: true, ...commitControls })
   }
   const execute = args.includes('--execute')
-  const packetPath = args.find(arg => !arg.startsWith('--'))
-  if (!packetPath) throw new Error('Usage: hermes:run [--dry-run|--execute] <mission-packet> | --resume <id> | --status <id>')
+  const messageIndex = args.indexOf('--commit-message')
+  const values = new Set(messageIndex >= 0 ? [args[messageIndex + 1]] : [])
+  const packetPath = args.find(arg => !arg.startsWith('--') && !values.has(arg))
+  if (!packetPath) throw new Error('Usage: hermes:run [--dry-run|--execute] [--no-commit] [--commit-message <message>] <mission-packet> | --resume <id> [commit controls] | --status <id>')
   if (!execute) return dryRun(packetPath)
   const mission = enqueue(packetPath)
-  return executeMission(mission)
+  return executeMission(mission, commitControls)
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
