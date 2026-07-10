@@ -56,6 +56,16 @@ export function detectEffectiveSandbox(stderr = '', requested = 'unknown') {
   }
 }
 
+export function buildCodexArgs(dryRun, closeoutPath, platform = process.platform) {
+  const platformConfig = platform === 'win32' ? ['-c', 'windows.sandbox="elevated"'] : []
+  return [
+    ...dryRun.availability.prefix, 'exec', '--ignore-user-config', ...platformConfig,
+    '--model', dryRun.selected_model, '--sandbox', dryRun.sandbox_mode, '--cd', dryRun.sandbox_root,
+    '--ephemeral', '--color', 'never', '--config', `model_reasoning_effort=${JSON.stringify(dryRun.reasoning_effort)}`,
+    '--output-last-message', closeoutPath, '-',
+  ]
+}
+
 function run(command, args, options = {}) {
   return spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options })
 }
@@ -185,6 +195,7 @@ export function adapterDryRun(packetPath) {
   const effort = effortFor(packet, mission)
   const sandbox = resolveCodexSandbox(packet)
   const prompt = buildCodexPrompt(packet, effort)
+  const previewArgs = buildCodexArgs({ availability, selected_model: CODEX_MODEL, sandbox_mode: sandbox.mode, sandbox_root: sandbox.root, reasoning_effort: effort }, '<closeout-path>')
   return {
     mode: 'dry-run', mission_id: packet.mission_id, availability, repo,
     selected_model: CODEX_MODEL,
@@ -192,7 +203,8 @@ export function adapterDryRun(packetPath) {
     quota_note: 'Codex quota status: unknown — evidence required.',
     sandbox_mode: sandbox.mode,
     sandbox_root: sandbox.root,
-    command_preview: `codex exec --ignore-user-config --model ${CODEX_MODEL} --sandbox ${sandbox.mode} --cd ${JSON.stringify(sandbox.root)} --ephemeral --config model_reasoning_effort=${JSON.stringify(effort)} <prompt>`,
+    command_args: previewArgs,
+    command_preview: `codex ${previewArgs.map(value => JSON.stringify(value)).join(' ')} <prompt>`,
     prompt,
   }
 }
@@ -217,12 +229,7 @@ export function adapterExecute(packetPath, { authorizedByDispatch = false } = {}
   let record = { mission_id: dryRun.mission_id, status: 'RUNNING', worker: 'codex-cli', started_at: started, repo: dryRun.repo.repo, branch: dryRun.repo.branch, reasoning_effort: dryRun.reasoning_effort, selected_model: dryRun.selected_model, sandbox_mode: dryRun.sandbox_mode, requested_sandbox_mode: dryRun.sandbox_mode, effective_sandbox_mode: 'unknown', sandbox_downgraded: false, sandbox_root: dryRun.sandbox_root, stdout_log: stdoutPath, stderr_log: stderrPath, closeout_path: closeoutPath, pid: null }
   saveExecution(record)
   appendHistory('CODEX_EXECUTION_STARTED', dryRun.mission_id, { started_at: started })
-  const args = [
-    ...dryRun.availability.prefix, 'exec', '--ignore-user-config', '--model', dryRun.selected_model,
-    '--sandbox', dryRun.sandbox_mode, '--cd', dryRun.sandbox_root,
-    '--ephemeral', '--color', 'never', '--config', `model_reasoning_effort=${JSON.stringify(dryRun.reasoning_effort)}`,
-    '--output-last-message', closeoutPath, '-',
-  ]
+  const args = buildCodexArgs(dryRun, closeoutPath)
   const result = run(dryRun.availability.command, args, { cwd: dryRun.repo.repo, input: dryRun.prompt, maxBuffer: 20 * 1024 * 1024 })
   writeFileSync(stdoutPath, redact(result.stdout || ''), 'utf8')
   writeFileSync(stderrPath, redact(result.stderr || result.error?.message || ''), 'utf8')

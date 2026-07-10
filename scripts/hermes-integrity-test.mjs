@@ -13,7 +13,7 @@ process.env.HERMES_RUNTIME_DIR = join(fixtureRoot, 'runtime')
 const store = await import('./hermes-runtime-store.mjs')
 const { classifyMission, validateDispatchPacket } = await import('./hermes-dispatch.mjs')
 const { determineReviewVerdict } = await import('./hermes-review-runtime.mjs')
-const { adapterExecute, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
+const { adapterExecute, buildCodexArgs, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
 
 function git(repo, args) {
   const result = spawnSync('git', ['-C', repo, ...args], { encoding: 'utf8', windowsHide: true })
@@ -23,7 +23,7 @@ function git(repo, args) {
 
 async function runCodexWriteSmoke() {
   const missionId = `HERMES-INTEGRITY-WRITE-SMOKE-${process.pid}`
-  const workspace = join(fixtureRoot, 'codex-workspace')
+  const workspace = join(ROOT, '.hermes', 'windows-write-smoke')
   const executionDir = join(ROOT, '.hermes', 'executions', missionId)
   mkdirSync(workspace, { recursive: true })
   git(workspace, ['init'])
@@ -49,7 +49,7 @@ forbidden_files:
 ---
 # Disposable Codex Write Smoke
 ## Mission
-Create output.md containing exactly HERMES_WORKSPACE_WRITE_OK. Do not modify any other file.
+Create output.md containing exactly HERMES_WINDOWS_WORKSPACE_WRITE_OK. Do not modify any other file.
 ## Allowed Files
 \`\`\`
 output.md
@@ -97,7 +97,7 @@ End with: ## Review Recommendation followed by **APPROVE**.
     assert.equal(execution.worker_closeout_passing, true)
     assert.equal(execution.requested_sandbox_mode, 'workspace-write')
     assert.equal(execution.effective_sandbox_mode, 'workspace-write')
-    assert.equal(readFileSync(join(workspace, 'output.md'), 'utf8').trim(), 'HERMES_WORKSPACE_WRITE_OK')
+    assert.equal(readFileSync(join(workspace, 'output.md'), 'utf8').trim(), 'HERMES_WINDOWS_WORKSPACE_WRITE_OK')
     assert.deepEqual(store.parseGitStatus(git(workspace, ['status', '--short'])).map(item => item.path), ['output.md'])
     assert.match(stderr, /sandbox:\s+workspace-write/i)
     return {
@@ -111,6 +111,7 @@ End with: ## Review Recommendation followed by **APPROVE**.
     }
   } finally {
     if (existsSync(executionDir)) rmSync(executionDir, { recursive: true, force: true })
+    if (existsSync(workspace)) rmSync(workspace, { recursive: true, force: true })
   }
 }
 
@@ -143,6 +144,23 @@ try {
     const sandbox = resolveCodexSandbox(writePacket)
     assert.equal(sandbox.mode, 'workspace-write')
     assert.equal(sandbox.root, fixtureRoot)
+  })
+  test('Windows writing command pins model, supported reasoning, and elevated sandbox backend', () => {
+    const args = buildCodexArgs({ availability: { prefix: [] }, selected_model: CODEX_MODEL, sandbox_mode: 'workspace-write', sandbox_root: fixtureRoot, reasoning_effort: 'medium' }, 'closeout.md', 'win32')
+    assert.ok(args.includes('--ignore-user-config'))
+    assert.deepEqual(args.slice(args.indexOf('-c'), args.indexOf('-c') + 2), ['-c', 'windows.sandbox="elevated"'])
+    assert.deepEqual(args.slice(args.indexOf('--model'), args.indexOf('--model') + 2), ['--model', 'gpt-5.5'])
+    assert.deepEqual(args.slice(args.indexOf('--sandbox'), args.indexOf('--sandbox') + 2), ['--sandbox', 'workspace-write'])
+    assert.ok(args.includes('model_reasoning_effort="medium"'))
+  })
+  test('Windows read-only command preserves read-only sandbox with safe backend override', () => {
+    const args = buildCodexArgs({ availability: { prefix: [] }, selected_model: CODEX_MODEL, sandbox_mode: 'read-only', sandbox_root: fixtureRoot, reasoning_effort: 'low' }, 'closeout.md', 'win32')
+    assert.deepEqual(args.slice(args.indexOf('--sandbox'), args.indexOf('--sandbox') + 2), ['--sandbox', 'read-only'])
+    assert.ok(args.includes('windows.sandbox="elevated"'))
+  })
+  test('non-Windows command omits Windows sandbox backend override', () => {
+    const args = buildCodexArgs({ availability: { prefix: [] }, selected_model: CODEX_MODEL, sandbox_mode: 'workspace-write', sandbox_root: fixtureRoot, reasoning_effort: 'medium' }, 'closeout.md', 'linux')
+    assert.ok(!args.some(value => value.includes('windows.sandbox')))
   })
   test('effective read-only sandbox is detected as a write downgrade', () => {
     const sandbox = detectEffectiveSandbox('sandbox: read-only\n', 'workspace-write')

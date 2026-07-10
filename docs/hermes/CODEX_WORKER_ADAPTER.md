@@ -16,13 +16,15 @@ Execution requires a `RUNNING` mission and a safe, authorized `codex-cli` assign
 
 ## CLI compatibility and precedence
 
-The worker pins `gpt-5.5`, which is present in the bundled model catalog shipped with the locally supported Codex CLI `0.133.0`. It invokes `codex exec` with `--ignore-user-config --model gpt-5.5`, so the worker model does not inherit a newer or incompatible model from `~/.codex/config.toml`. Authentication still comes from the normal Codex home.
+The worker pins `gpt-5.5` and invokes `codex exec` with `--ignore-user-config --model gpt-5.5`, so the worker model does not inherit a newer or incompatible model from `~/.codex/config.toml`. Authentication still comes from the normal Codex home.
 
-Model precedence for Hermes execution is therefore: adapter `--model gpt-5.5` → Codex bundled metadata. User config and profiles are ignored for the worker invocation. Reasoning precedence is: a valid mission value (`low`, `medium`, or `high`) → Hermes task heuristic → the adapter's `--config model_reasoning_effort=...` CLI override. Codex CLI `0.133.0` also lists `xhigh`, but Hermes intentionally recommends only low/medium/high.
+Model precedence for Hermes execution is therefore: adapter `--model gpt-5.5` → Codex bundled metadata. User config and profiles are ignored for the worker invocation. Reasoning precedence is: a valid mission value (`low`, `medium`, or `high`) → Hermes task heuristic → the adapter's `--config model_reasoning_effort=...` CLI override. Hermes intentionally permits only low/medium/high.
 
-For a writing mission, the adapter requests the CLI-supported `--sandbox workspace-write --cd <approved-root>` combination. A host can still impose a stricter effective sandbox. In particular, the current Codex Desktop host has been observed to report `sandbox: read-only` even when Hermes correctly requests `workspace-write`. The adapter records both requested and effective modes and blocks a writing mission when the effective mode is not `workspace-write`. It never escalates to `danger-full-access`.
+For a writing mission, the adapter requests the CLI-supported `--sandbox workspace-write --cd <approved-root>` combination. Because `--ignore-user-config` also ignores the user-level Windows sandbox backend, native Windows invocations additionally pass `-c windows.sandbox="elevated"`. Explicitly read-only missions retain `--sandbox read-only`; the backend selection does not broaden that mission policy. Non-Windows invocations do not receive the Windows override.
 
-This is fail-closed compatibility handling, not a claim that Codex Desktop workspace writing is fixed. Write-capable execution still requires standalone terminal validation in a host that actually grants `workspace-write`. Network remains governed by the existing environment and sandbox policy. The prompt and post-execution checks continue to enforce the packet allowlist, protected-path checks, and centralized locks.
+A host can still impose a stricter effective sandbox. The adapter records both requested and effective modes and blocks a writing mission when the effective mode is not `workspace-write`. It never escalates to `danger-full-access`.
+
+This is platform-specific, fail-closed compatibility handling, not a claim that every host grants workspace writes. Network remains governed by the existing environment and sandbox policy. The prompt and post-execution checks continue to enforce the packet allowlist, protected-path checks, and centralized locks.
 
 A process exit code of zero is only transport success. The adapter also requires a passing worker closeout, every declared output to exist and be changed, no out-of-scope writes, no blocking quota evidence, and an effective write-capable sandbox for writing missions. A non-passing closeout, failed objective, or sandbox downgrade records the execution as `BLOCKED`; a process or scope failure records it as `FAILED`.
 
