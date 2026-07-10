@@ -149,6 +149,7 @@ export function dispatchMission({ missionId, authorize = false } = {}) {
     approval_state,
     execution_command_preview: command,
     packet_validation: validation,
+    safe_to_run: safe,
     created_at: new Date().toISOString(),
   }
   const runtime = readState('runtime.json')
@@ -163,7 +164,7 @@ export function dispatchMission({ missionId, authorize = false } = {}) {
     updateMissionState(mission.mission_id, 'BLOCKED', { block_reason: validation.issues.join('; ') || analysis.protected_paths.join(', ') || 'lock conflict' })
   }
   appendHistory('MISSION_DISPATCHED', mission.mission_id, { assignment_id: assignment.assignment_id, worker: worker.id, safe, approval_state })
-  return { ...assignment, safe_to_run: safe, human_summary: safe ? `${mission.mission_id} assigned to ${worker.name}.` : `${mission.mission_id} not started: ${approval_state}.` }
+  return { ...assignment, human_summary: safe ? `${mission.mission_id} assigned to ${worker.name}.` : `${mission.mission_id} not started: ${approval_state}.` }
 }
 
 function print(result) {
@@ -184,4 +185,3 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(new URL(import.meta.
     process.exit(2)
   }
 }
-
