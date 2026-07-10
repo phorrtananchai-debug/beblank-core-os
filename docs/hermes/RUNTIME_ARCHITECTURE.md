@@ -6,6 +6,8 @@
 
 ## Runtime Component Map
 
+> **Phase 8.0 update:** The original component map below documents the pre-7.7 layout. The working local-first orchestration path now uses `.hermes/runtime/` as its authoritative six-file state store and the one-shot runner described later in this document.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    .hermes/ (local, gitignored)              │
@@ -26,6 +28,14 @@
 ---
 
 ## Component Breakdown
+
+### 0. Kernel, Queue, Dispatcher, Worker, and Runner (Phases 7.7–8.0)
+
+**Locations:** `scripts/hermes-runtime-store.mjs`, `hermes-queue.mjs`, `hermes-runtime.mjs`, `hermes-dispatch.mjs`, `hermes-worker-codex.mjs`, `hermes-run.mjs`, and `hermes-review-runtime.mjs`.
+
+The kernel owns `mission-store.json`, `queue.json`, `runtime.json`, `agents.json`, `locks.json`, and `history.json` under `.hermes/runtime/`. Writes are atomic, previous valid versions are backed up, and malformed primary state can be restored from backup. The dispatcher creates evidence-bearing assignments without executing paid/advisory workers. The Codex adapter is dry-run by default. The runner handles one explicitly invoked mission and never runs as a watcher, daemon, or service.
+
+Execution remains policy-gated: protected/high-risk scope stops for Por, Codex quota is never guessed, and push/merge are not implemented. Real Codex execution still depends on local CLI authentication, quota, and network availability.
 
 ### 1. Packet Validator (Phase 7.2)
 

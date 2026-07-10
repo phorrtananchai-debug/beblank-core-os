@@ -32,6 +32,10 @@ function doctor() {
   const runtime = states['runtime.json'] || { active_assignments: {} }
   const ids = new Set(missions.map(mission => mission.mission_id))
   for (const item of queue) if (!ids.has(item.mission_id)) issues.push(`Orphan queue entry: ${item.mission_id}`)
+  for (const item of queue) {
+    const mission = missions.find(candidate => candidate.mission_id === item.mission_id)
+    if (mission && ['COMPLETED', 'FAILED', 'ARCHIVED'].includes(mission.state)) issues.push(`Terminal mission still queued: ${item.mission_id} (${mission.state})`)
+  }
   for (const mission of missions) {
     const queued = queue.some(item => item.mission_id === mission.mission_id)
     if (mission.state === 'PENDING' && !queued) warnings.push(`Pending mission missing from queue: ${mission.mission_id}`)
@@ -71,4 +75,3 @@ try {
   console.error(`Hermes runtime error: ${error.message}`)
   process.exit(2)
 }
-

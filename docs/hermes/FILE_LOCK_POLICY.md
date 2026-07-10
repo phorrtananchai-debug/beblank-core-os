@@ -38,7 +38,7 @@ Lock files live in `.hermes/locks/` and are named after the mission:
 | **Read-only is exempt** | Read-only inspection does not require a lock. |
 | **Locks are scoped to files** | A lock lists specific file paths, not directories. |
 | **Lock by glob** | Use `**` patterns for broad scope: `docs/**` locks all docs. |
-| **Manual release** | Locks are released manually when a mission reaches CLOSED. No auto-release. |
+| **Runner release** | The Phase 8.0 runner releases centralized locks after completion or failure; manual tools may still release legacy lock files. |
 | **Stale locks** | If a lock is older than 24 hours with no progress, escalate to Por. |
 | **No cross-session locks** | Locks are per-session. Past session locks are archived. |
 

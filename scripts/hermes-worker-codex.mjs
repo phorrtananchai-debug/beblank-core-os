@@ -27,9 +27,11 @@ function npmCodexScript() {
 
 export function detectCodex() {
   const configured = process.env.HERMES_CODEX_BIN
+  const configuredScript = process.env.HERMES_CODEX_SCRIPT
   const npmScript = npmCodexScript()
   const candidates = []
   if (configured) candidates.push({ command: configured, prefix: [] })
+  if (configuredScript) candidates.push({ command: process.execPath, prefix: [configuredScript] })
   if (npmScript) candidates.push({ command: process.execPath, prefix: [npmScript] })
   candidates.push({ command: 'codex.exe', prefix: [] }, { command: 'codex', prefix: [] })
   for (const candidate of candidates) {
@@ -80,7 +82,7 @@ FORBIDDEN PATHS:
 ${packet.forbidden_files.map(path => `- ${path}`).join('\n') || '- none'}
 
 NON-NEGOTIABLE SAFETY RULES:
-- Do not push. Do not merge. Do not fetch or pull.
+- Do not commit. Do not push. Do not merge. Do not fetch or pull.
 - Do not modify files outside ALLOWED PATHS.
 - Do not expose, print, copy, or persist secrets or environment values.
 - Do not install dependencies or add services, watchers, daemons, or background processes.
@@ -160,7 +162,7 @@ export function adapterExecute(packetPath, { authorizedByDispatch = false } = {}
   const result = run(dryRun.availability.command, args, { cwd: dryRun.repo.repo, input: dryRun.prompt, maxBuffer: 20 * 1024 * 1024 })
   writeFileSync(stdoutPath, redact(result.stdout || ''), 'utf8')
   writeFileSync(stderrPath, redact(result.stderr || result.error?.message || ''), 'utf8')
-  record = { ...record, status: result.status === 0 ? 'COMPLETED' : 'FAILED', exit_code: result.status ?? 1, completed_at: new Date().toISOString(), closeout_detected: existsSync(closeoutPath) && readFileSync(closeoutPath, 'utf8').trim().length > 0 }
+  record = { ...record, status: result.status === 0 ? 'COMPLETED' : 'FAILED', exit_code: result.status ?? 1, completed_at: new Date().toISOString(), closeout_detected: existsSync(closeoutPath) && readFileSync(closeoutPath, 'utf8').trim().length > 0, quota_block: /quota (?:exceeded|exhausted)|rate limit|usage limit/i.test(result.stderr || '') }
   saveExecution(record)
   appendHistory('CODEX_EXECUTION_FINISHED', dryRun.mission_id, { status: record.status, exit_code: record.exit_code, closeout_detected: record.closeout_detected })
   return record

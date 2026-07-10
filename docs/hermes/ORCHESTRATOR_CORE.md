@@ -55,10 +55,8 @@ The lock checker evaluates:
 | No suitable agent found | Interrupt Por |
 | Build or lint fails | Interrupt Por |
 
-## Why No Auto Execution Yet
+## Execution Status After Phase 8.0
 
-The Orchestrator Core v1 is **planning and conflict detection only**. It produces routing recommendations and lock checks, but execution is still manual. Auto execution requires Phase 7.5 (Agent Bridge) which is not implemented. This ensures:
+The orchestrator now supports one-shot, manually invoked execution through `hermes:run`. It is not autonomous production infrastructure: dry-run is the default, execution requires explicit invocation and an authorized safe dispatcher assignment, and HIGH/CRITICAL or protected scope stops for Por. OpenCode and DeepSeek remain advisory-only.
 
-- Por always reviews the routing plan before work begins
-- Por controls when and how agents are invoked
-- No autonomous actions occur without human review
+The runner records evidence, reviews scope and checks, releases centralized locks, and may create a local commit only when the Zero Interrupt conditions are met. It never pushes or merges, and it provides no watcher, daemon, polling loop, cloud service, or production Firebase integration.

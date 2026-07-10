@@ -86,6 +86,7 @@ function chooseWorker(packet, analysis, agents) {
     const agent = agents.find(item => item.id === id)
     return { id, name: agent?.name || id, status: 'ADVISORY_ONLY' }
   }
+  if (requested.includes('codex')) return { id: 'codex-cli', name: 'Codex CLI', status: 'READY' }
   if (analysis.capabilities.includes('documentation') && !analysis.capabilities.some(cap => ['ui-implementation', 'architecture-review'].includes(cap))) {
     return { id: 'hermes-direct', name: 'Hermes Direct', status: 'READY' }
   }

@@ -19,7 +19,9 @@
     "hermes:queue": "node scripts/hermes-queue.mjs",
     "hermes:runtime": "node scripts/hermes-runtime.mjs",
     "hermes:dispatch": "node scripts/hermes-dispatch.mjs",
-    "hermes:codex": "node scripts/hermes-worker-codex.mjs"
+    "hermes:codex": "node scripts/hermes-worker-codex.mjs",
+    "hermes:run": "node scripts/hermes-run.mjs",
+    "hermes:review": "node scripts/hermes-review-runtime.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.2",
