@@ -3,6 +3,7 @@ import { AuthLayout } from '../layouts/AuthLayout'
 import { OSLayout } from '../layouts/OSLayout'
 import { PublicWebsiteLayout } from '../layouts/PublicWebsiteLayout'
 import { AIWorkflowPage } from '../pages/os/AIWorkflowPage'
+import { AIUsageMonitorPage } from '../pages/os/AIUsageMonitorPage'
 import { BridgeSettingsPage } from '../pages/os/BridgeSettingsPage'
 import { CommandCenterPage } from '../pages/os/CommandCenterPage'
 import { CapitalPage } from '../pages/os/CapitalPage'
@@ -77,6 +78,7 @@ export const AppRoutes = () => {
         <Route path="finance/family-office" element={<FamilyOfficePage />} />
         <Route path="finance/trading-lab" element={<TradingLabPage />} />
         <Route path="ai" element={<AIWorkflowPage view="overview" />} />
+        <Route path="ai/usage" element={<AIUsageMonitorPage />} />
         <Route path="ai/context" element={<AIWorkflowPage view="context" />} />
         <Route path="ai/reviews" element={<AIWorkflowPage view="reviews" />} />
         <Route path="ai/memory" element={<AIWorkflowPage view="memory" />} />
