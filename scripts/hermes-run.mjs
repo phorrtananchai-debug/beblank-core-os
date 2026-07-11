@@ -19,7 +19,7 @@ import {
 } from './hermes-runtime-store.mjs'
 import { dispatchMission } from './hermes-dispatch.mjs'
 import { adapterDryRun, adapterExecute, adapterStatus } from './hermes-worker-codex.mjs'
-import { parseStatus, reviewMission } from './hermes-review-runtime.mjs'
+import { parseStatus, reviewMission, runValidationChecks } from './hermes-review-runtime.mjs'
 import { syncCloseout } from './hermes-sync.mjs'
 
 function run(command, args, options = {}) { return spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options }) }
@@ -252,7 +252,15 @@ function executeMission(mission, { resume = false, commitEnabled = true, commitM
     if (!assignment.safe_to_run) throw new Error(`Mission cannot execute: ${assignment.approval_state}`)
     if (assignment.worker_id !== 'codex-cli') throw new Error(`Worker execution not implemented for ${assignment.selected_worker}`)
   }
-  const execution = existingExecution?.status === 'COMPLETED' ? existingExecution : adapterExecute(mission.packet_path, { authorizedByDispatch: true })
+  let execution = existingExecution?.status === 'COMPLETED' ? existingExecution : adapterExecute(mission.packet_path, { authorizedByDispatch: true })
+  if (execution.status === 'COMPLETED' && !execution.validation) {
+    const validation = runValidationChecks(mission.repo, parseTaskPacket(mission.packet_path))
+    execution = { ...execution, validation }
+    const runtime = readState('runtime.json')
+    runtime.executions[mission.mission_id] = execution
+    atomicWrite('runtime.json', runtime)
+    appendHistory('RUNNER_VALIDATION_COMPLETED', mission.mission_id, { checks: validation.checks.map(check => ({ command: check.command, status: check.status })), disallowed_writes: validation.disallowed_writes })
+  }
   if (execution.status === 'COMPLETED') updateMissionState(mission.mission_id, 'WAITING_REVIEW', { execution_status: execution.status })
   let review = reviewMission(mission.mission_id, { closeoutPath: execution.closeout_path })
   let commit = null

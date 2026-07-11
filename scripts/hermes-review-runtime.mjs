@@ -75,6 +75,24 @@ export function requiredChecks(repo, packet) {
     : runCheck(repo, npm, plan.args))
 }
 
+export const VALIDATION_WRITE_ALLOWLIST = Object.freeze(['.hermes/', 'node_modules/.tmp/', 'dist/'])
+
+export function isValidationWriteAllowed(file) {
+  const path = String(file || '').replaceAll('\\', '/').replace(/^\.\//, '')
+  return VALIDATION_WRITE_ALLOWLIST.some(scope => path === scope.slice(0, -1) || path.startsWith(scope))
+}
+
+export function runValidationChecks(repo, packet) {
+  const before = parseGitStatus(git(repo, ['status', '--short']).stdout)
+  const checks = requiredChecks(repo, packet)
+  const after = parseGitStatus(git(repo, ['status', '--short']).stdout)
+  const beforeMap = new Map(before.map(item => [item.path, item.code]))
+  const writes = after.filter(item => beforeMap.get(item.path) !== item.code).map(item => item.path)
+  const disallowed_writes = writes.filter(file => !isValidationWriteAllowed(file))
+  if (disallowed_writes.length) checks.push({ command: 'validation write boundary', exit_code: 1, status: 'FAIL', output: `Validation changed disallowed paths: ${disallowed_writes.join(', ')}` })
+  return { present: true, runner_phase: true, checks, temporary_writes: writes.filter(isValidationWriteAllowed), disallowed_writes, completed_at: new Date().toISOString() }
+}
+
 const REQUIRED_CLOSEOUT_HEADINGS = CLOSEOUT_V3_HEADINGS
 
 function closeoutCompleteness(path) {
@@ -115,7 +133,9 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
   const head = headResult.stdout.trim()
   const headChanged = Boolean(mission.baseline_head && head && head !== mission.baseline_head)
   const lock = readState('locks.json').locks.find(item => item.mission_id === missionId && item.status !== 'released') || null
-  const checks = execution?.status === 'COMPLETED' ? requiredChecks(packet.repo, packet) : []
+  const validationEvidence = execution?.validation || null
+  const checks = validationEvidence?.checks || []
+  const validationEvidenceMissing = Boolean(packet.required_checks.length) && !validationEvidence
   const workerCloseoutPath = closeoutPath || execution?.closeout_path
   const closeout = closeoutCompleteness(workerCloseoutPath)
   const workerCloseout = inspectWorkerCloseout(workerCloseoutPath, { changedFiles })
@@ -131,6 +151,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
   if (!closeout.complete) issues.push(`Closeout Packet v3 incomplete: ${closeout.missing.join(', ')}`)
   if (!execution) issues.push('Execution evidence is missing')
   else if (execution.status !== 'COMPLETED') issues.push(`Execution status is ${execution.status}`)
+  if (validationEvidenceMissing) issues.push('Required validation evidence is missing')
   if (!workerCloseout.passing) issues.push(`Worker closeout verdict is ${workerCloseout.verdict}`)
   issues.push(...objective.issues)
   if (checks.some(check => check.status === 'FAIL')) issues.push(`Required checks failed: ${checks.filter(check => check.status === 'FAIL').map(check => check.command).join(', ')}`)
@@ -148,7 +169,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
     protected_scope: analysis.protected_paths.length > 0 || ['HIGH', 'CRITICAL'].includes(analysis.risk),
     conflicts: conflicts.length > 0,
     head_changed: headChanged,
-    checks_failed: checks.some(check => check.status === 'FAIL') || (qaRequired && !qaArtifacts.length),
+    checks_failed: validationEvidenceMissing || checks.some(check => check.status === 'FAIL') || (qaRequired && !qaArtifacts.length),
     execution_missing: !execution,
     execution_failed: Boolean(execution && execution.status !== 'COMPLETED'),
     objective_failed: !objective.objective_verified,
@@ -169,6 +190,7 @@ export function reviewMission(missionId, { closeoutPath = null } = {}) {
     && !forbiddenTouched.length
     && !conflicts.length
     && !headChanged
+    && !validationEvidenceMissing
     && checks.every(check => check.status === 'PASS')
     && !analysis.protected_paths.length
   const result = {

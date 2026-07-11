@@ -149,7 +149,7 @@ NON-NEGOTIABLE SAFETY RULES:
 - Stop and report if scope, evidence, or required authority is unclear.
 
 EVIDENCE AND CLOSEOUT:
-- Run only the packet's required checks and safe read-only diagnostics.
+- Do not run the packet's required validation checks. Hermes runs those exact checks after worker execution in its trusted validation phase.
 - Record actual changed files, git status, checks, risks, limitations, and blockers truthfully.
 - A writing mission is successful only when every required output exists and was created or modified.
 - If a required output cannot be produced, return HOLD FOR EVIDENCE or NEEDS REWORK; do not claim success.
