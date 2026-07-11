@@ -419,6 +419,21 @@ try {
     assert.deepEqual(normalizeCloseoutFilePath('- `docs/hermes/guide.md`'), { path: 'docs/hermes/guide.md' })
     assert.deepEqual(normalizeCloseoutFilePath('  "docs\\hermes\\guide.md"  '), { path: 'docs/hermes/guide.md' })
   })
+  test('closeout file-list normalization extracts a leading path from approved annotations', () => {
+    for (const value of [
+      '`docs/hermes/guide.md` - modified',
+      '`docs/hermes/guide.md` — clarified operator workflow',
+      '`docs/hermes/guide.md`: updated documentation',
+      'docs/hermes/guide.md - modified',
+      '"docs/hermes/guide.md" - modified',
+      'docs\\hermes\\guide.md - modified',
+    ]) assert.deepEqual(normalizeCloseoutFilePath(value), { path: 'docs/hermes/guide.md' })
+  })
+  test('closeout annotations are excluded from exact changed-file comparison', () => {
+    const path = join(fixtureRoot, 'annotated-file-path.md')
+    writeFileSync(path, closeoutV3({ files: ['`docs/hermes/RUNTIME_V1_OPERATING_GUIDE.md` - modified closeout documentation'] }), 'utf8')
+    assert.equal(inspectWorkerCloseout(path, { changedFiles: ['docs/hermes/RUNTIME_V1_OPERATING_GUIDE.md'] }).passing, true)
+  })
   test('closeout file-list normalization compares balanced Markdown paths exactly', () => {
     const path = join(fixtureRoot, 'balanced-file-path.md')
     writeFileSync(path, closeoutV3({ files: ['`docs/hermes/RUNTIME_V1_OPERATING_GUIDE.md`'] }), 'utf8')
@@ -426,7 +441,7 @@ try {
     assert.equal(inspectWorkerCloseout(path, { changedFiles: ['docs/hermes/other.md'] }).files_match, false)
   })
   test('closeout file-list normalization fails closed for malformed and unsafe entries', () => {
-    for (const value of ['`docs/hermes/guide.md', 'docs/`hermes/guide.md', 'docs/*.md', '../guide.md', 'docs/../guide.md', 'this is prose, not a path']) {
+    for (const value of ['`docs/hermes/guide.md', 'docs/`hermes/guide.md', 'docs/*.md', '../guide.md', 'docs/../guide.md', 'this is prose, not a path', 'docs/hermes/guide.md = modified', 'docs/hermes/guide.md - modified docs/other.md']) {
       assert.ok(normalizeCloseoutFilePath(value).error, value)
     }
   })

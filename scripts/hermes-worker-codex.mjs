@@ -185,15 +185,28 @@ function closeoutFilePaths(section) {
 }
 
 export function normalizeCloseoutFilePath(value) {
-  let path = String(value || '').trim().replace(/^[-*]\s+/, '').trim()
-  if (!path || /^none\.?$/i.test(path)) return { ignored: true }
-  const first = path[0]
-  const last = path.at(-1)
-  if (['`', '"', "'"].includes(first) || ['`', '"', "'"].includes(last)) {
-    if (first !== last || !['`', '"', "'"].includes(first)) return { error: `Malformed file-list formatting: ${value}` }
-    path = path.slice(1, -1).trim()
+  const entry = String(value || '').trim().replace(/^[-*]\s+/, '').trim()
+  if (!entry || /^none\.?$/i.test(entry)) return { ignored: true }
+  const quoted = /^([`"'])([^`"']*)\1([\s\S]*)$/.exec(entry)
+  const plain = /^(\S+?)(?:(\s+(?:-|—)\s*|:\s*)([\s\S]*))?$/.exec(entry)
+  let path
+  let suffix
+  if (quoted) {
+    path = quoted[2]
+    suffix = quoted[3]
+  } else if (plain && !/^[`"']/.test(entry)) {
+    path = plain[1]
+    suffix = plain[2] ? `${plain[2]}${plain[3]}` : ''
+  } else {
+    return { error: `Malformed file-list formatting: ${value}` }
   }
   if (!path || /[`"']/.test(path)) return { error: `Malformed file-list path: ${value}` }
+  if (suffix) {
+    const annotation = suffix.replace(/^(?:\s+(?:-|—)\s*|:\s*)/, '')
+    if (!/^(?:\s+(?:-|—)\s*|:\s*)/.test(suffix) || !annotation || /[`"']/.test(annotation) || /(?:^|\s)(?:[\w.-]+[\\/][\w./-]*|[\w.-]+\.[A-Za-z0-9]+)(?:\s|$)/.test(annotation)) {
+      return { error: `Unsafe or ambiguous file-list annotation: ${value}` }
+    }
+  }
   path = path.replaceAll('\\', '/').replace(/^\.\//, '')
   if (path.includes('*') || path.includes('?') || /(^|\/)\.\.?(\/|$)/.test(path) || /\s/.test(path)) return { error: `Unsafe or ambiguous file-list path: ${value}` }
   if (!path.includes('/') && !/^[^/]+\.[A-Za-z0-9]+$/.test(path)) return { error: `Malformed file-list path: ${value}` }
