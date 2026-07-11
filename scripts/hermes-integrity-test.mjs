@@ -13,7 +13,7 @@ process.env.HERMES_RUNTIME_DIR = join(fixtureRoot, 'runtime')
 const store = await import('./hermes-runtime-store.mjs')
 const { classifyMission, validateDispatchPacket } = await import('./hermes-dispatch.mjs')
 const { determineReviewVerdict, isValidationWriteAllowed, normalizeRequiredChecks } = await import('./hermes-review-runtime.mjs')
-const { adapterExecute, buildCodexArgs, buildCodexPrompt, CLOSEOUT_V3_HEADINGS, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, normalizeCloseoutFilePath, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
+const { adapterExecute, buildCodexArgs, buildCodexPrompt, CLOSEOUT_V3_HEADINGS, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, interpretCloseoutStructuredState, normalizeCloseoutFilePath, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
 const { commitEligibility, finalizeAcceptedMission, parseCommitControls, resolveCommitMessage, validateStagedScope } = await import('./hermes-run.mjs')
 const { resolveSyncedState, syncCloseout } = await import('./hermes-sync.mjs')
 
@@ -476,9 +476,32 @@ try {
     const blocked = join(fixtureRoot, 'blocked.md')
     const contradictory = join(fixtureRoot, 'contradictory.md')
     writeFileSync(blocked, closeoutV3({ verdict: 'BLOCKED' }), 'utf8')
-    writeFileSync(contradictory, closeoutV3({ extra: '\n\nHOLD FOR EVIDENCE' }), 'utf8')
+    writeFileSync(contradictory, `${closeoutV3()}\n\n## Blockers\n\n- Active blocker: missing evidence.`, 'utf8')
     assert.equal(inspectWorkerCloseout(blocked).passing, false)
     assert.equal(inspectWorkerCloseout(contradictory).contradictory, true)
+  })
+  test('structured closeout interpretation ignores benign diagnostic blocker words', () => {
+    const path = join(fixtureRoot, 'benign-diagnostic.md')
+    writeFileSync(path, `${closeoutV3({ files: ['guide.md'] })}\n\n## Commands Run\n\n- Historical command failed outside the repository.\n\n## Blockers\n\nNone.\n\n## Evidence Gaps\n\nNo evidence gaps.`, 'utf8')
+    assert.equal(inspectWorkerCloseout(path, { changedFiles: ['guide.md'] }).passing, true)
+    assert.deepEqual(interpretCloseoutStructuredState(readFileSync(path, 'utf8')), { active_blockers: false, evidence_gaps: false, validation_failed: false, blocking_exception: false })
+  })
+  test('structured blockers, validation failures, and evidence gaps veto APPROVE', () => {
+    for (const section of ['## Blockers\n\n- Active blocker: repository lock.', '## Evidence Gaps\n\n- Missing required screenshot.']) {
+      const path = join(fixtureRoot, `structured-${section.slice(3, 10)}.md`)
+      writeFileSync(path, `${closeoutV3({ files: ['guide.md'] })}\n\n${section}`, 'utf8')
+      assert.equal(inspectWorkerCloseout(path, { changedFiles: ['guide.md'] }).passing, false)
+    }
+    const failedValidation = join(fixtureRoot, 'structured-validation.md')
+    writeFileSync(failedValidation, closeoutV3({ files: ['guide.md'] }).replace('## 7. Validation\n\nDocumented evidence.', '## 7. Validation\n\n- npm run lint: FAILED'), 'utf8')
+    assert.equal(inspectWorkerCloseout(failedValidation, { changedFiles: ['guide.md'] }).passing, false)
+  })
+  test('structured HOLD, BLOCKED, FAILED, and NEEDS_REWORK recommendations remain non-passing', () => {
+    for (const verdict of ['HOLD FOR EVIDENCE', 'BLOCKED', 'FAILED', 'NEEDS REWORK']) {
+      const path = join(fixtureRoot, `verdict-${verdict.replaceAll(' ', '-')}.md`)
+      writeFileSync(path, closeoutV3({ files: ['guide.md'], verdict }), 'utf8')
+      assert.equal(inspectWorkerCloseout(path, { changedFiles: ['guide.md'] }).passing, false)
+    }
   })
   test('closeout Files Changed must match verified mission changes', () => {
     assert.equal(inspectWorkerCloseout(passCloseout, { changedFiles: ['different.md'] }).files_match, false)

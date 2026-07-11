@@ -232,6 +232,26 @@ function normalizedCloseoutFilePaths(section) {
   return { paths, errors }
 }
 
+function emptyStructuredSection(section) {
+  const text = String(section || '').trim().replace(/^[-*]\s*/gm, '').trim().toLowerCase()
+  return !text || /^(?:none|no blockers?|no evidence gaps?|n\/a|not applicable|nil)[.!]?$/.test(text)
+}
+
+export function interpretCloseoutStructuredState(text) {
+  const blockers = closeoutSection(text, 'Blockers')
+  const evidenceGaps = closeoutSection(text, 'Evidence Gaps')
+  const exceptions = closeoutSection(text, 'Risk / Exceptions')
+  const validation = closeoutSection(text, 'Validation')
+  const validationFailed = /(?:^|\n)\s*(?:[-*]\s*)?(?:`?npm(?:\.cmd)?\b[^\n`]*`?|required check[^\n]*|check[^\n]*):\s*(?:FAIL(?:ED)?|BLOCKED)\b/im.test(validation)
+  const blockingException = /(?:^|\n)\s*(?:[-*]\s*)?(?:BLOCKING|BLOCKER)\s*:/im.test(exceptions)
+  return {
+    active_blockers: !emptyStructuredSection(blockers),
+    evidence_gaps: !emptyStructuredSection(evidenceGaps),
+    validation_failed: validationFailed,
+    blocking_exception: blockingException,
+  }
+}
+
 export function inspectWorkerCloseout(path, { changedFiles = [] } = {}) {
   if (!path || !existsSync(path)) return { detected: false, verdict: 'MISSING', passing: false, blocking: true, complete: false, missing: ['closeout file'], errors: ['Worker closeout is missing'] }
   const text = readFileSync(path, 'utf8')
@@ -243,16 +263,17 @@ export function inspectWorkerCloseout(path, { changedFiles = [] } = {}) {
   const expected = [...changedFiles].sort((a, b) => a.localeCompare(b))
   const actual = [...new Set(fileList.paths)].sort((a, b) => a.localeCompare(b))
   const filesMatch = fileList.errors.length === 0 && expected.length === actual.length && expected.every((file, index) => file === actual[index])
-  const contradictory = verdict === 'APPROVE' && /\b(HOLD FOR EVIDENCE|BLOCKED|FAILED|NEEDS REWORK|REJECT)\b/.test(text.toUpperCase())
+  const structured = interpretCloseoutStructuredState(text)
+  const contradictory = verdict === 'APPROVE' && (structured.active_blockers || structured.evidence_gaps || structured.validation_failed || structured.blocking_exception)
   const errors = []
   if (missing.length) errors.push(`Closeout Packet v3 missing headings: ${missing.join(', ')}`)
   if (verdict === 'UNKNOWN') errors.push('Closeout review recommendation is missing or unsupported')
   errors.push(...fileList.errors)
   if (!filesMatch) errors.push(`Closeout Files Changed does not match verified changes: expected ${expected.join(', ') || 'none'}; found ${actual.join(', ') || 'none'}`)
-  if (contradictory) errors.push('Closeout contradicts APPROVE with a blocking verdict')
+  if (contradictory) errors.push('Closeout contradicts APPROVE with structured blocking evidence')
   const complete = missing.length === 0 && filesMatch
   const passing = complete && verdict === 'APPROVE' && !contradictory
-  return { detected: true, verdict, passing, blocking: !passing, complete, missing, listed_files: actual, files_match: filesMatch, contradictory, errors }
+  return { detected: true, verdict, passing, blocking: !passing, complete, missing, listed_files: actual, files_match: filesMatch, contradictory, structured, errors }
 }
 
 function redact(text = '') {
