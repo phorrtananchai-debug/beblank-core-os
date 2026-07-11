@@ -6,23 +6,46 @@
 
 ## Runtime Component Map
 
-> **Phase 8.0 update:** The original component map below documents the pre-7.7 layout. The working local-first orchestration path now uses `.hermes/runtime/` as its authoritative six-file state store and the one-shot runner described later in this document.
-
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    .hermes/ (local, gitignored)              │
-│                                                             │
-│  inbox/  ──▶  Packet Validator  ──▶  review-queue/          │
-│                (7.2)                                        │
-│                                                             │
-│  outbox/  ◀──  Agent Bridge  ◀──  Review Engine             │
-│                (7.5)               (7.4)                    │
-│                                                             │
-│  closeouts/  ◀──  Hermes Sync CLI  ◀──  (external agents)  │
-│                     (7.3)                                   │
-│                                                             │
-│  state/  ◀──  (derived snapshots from all engines)          │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Hermes Runtime v1                              │
+│                                                                      │
+│  Runner                                                              │
+│  scripts/hermes-run.mjs                                              │
+│      │                                                               │
+│      ▼                                                               │
+│  Kernel ────────────────▶ Mission Queue                              │
+│  scripts/hermes-runtime.mjs  scripts/hermes-queue.mjs                │
+│      │                           │                                   │
+│      │                           ▼                                   │
+│      │                       Dispatcher                              │
+│      │                       scripts/hermes-dispatch.mjs             │
+│      │                           │                                   │
+│      │                           ▼                                   │
+│      │                       Codex Worker Adapter                    │
+│      │                       scripts/hermes-worker-codex.mjs         │
+│      │                           │                                   │
+│      └───────────────────────────┼───────────────┐                   │
+│                                  ▼               ▼                   │
+│                         Review Runtime      Runtime State Store       │
+│                  scripts/hermes-review-     scripts/hermes-runtime-  │
+│                  runtime.mjs                store.mjs                 │
+│                                                  │                   │
+│                                                  ▼                   │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │ .hermes/runtime/ — authoritative, local, gitignored state      │  │
+│  │                                                                │  │
+│  │ mission-store.json   queue.json       runtime.json              │  │
+│  │ agents.json          locks.json       history.json              │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+
+Legacy and supporting Phase 7.2–7.6 tools:
+
+inbox/ ──▶ Packet Validator ──▶ review-queue/
+external handoff ──▶ Hermes Sync CLI ──▶ closeouts/
+review-queue/ ──▶ Review Engine ──▶ closeouts/
+outbox/ ──▶ Agent Bridge ──▶ external agents ──▶ closeouts/
 ```
 
 ---
@@ -31,9 +54,18 @@
 
 ### 0. Kernel, Queue, Dispatcher, Worker, and Runner (Phases 7.7–8.0)
 
-**Locations:** `scripts/hermes-runtime-store.mjs`, `hermes-queue.mjs`, `hermes-runtime.mjs`, `hermes-dispatch.mjs`, `hermes-worker-codex.mjs`, `hermes-run.mjs`, and `hermes-review-runtime.mjs`.
+**Locations:**
+- Kernel state store: `scripts/hermes-runtime-store.mjs`
+- Kernel orchestration: `scripts/hermes-runtime.mjs`
+- Mission Queue: `scripts/hermes-queue.mjs`
+- Dispatcher: `scripts/hermes-dispatch.mjs`
+- Codex Worker Adapter: `scripts/hermes-worker-codex.mjs`
+- Runner: `scripts/hermes-run.mjs`
+- Review Runtime: `scripts/hermes-review-runtime.mjs`
 
-The kernel owns `mission-store.json`, `queue.json`, `runtime.json`, `agents.json`, `locks.json`, and `history.json` under `.hermes/runtime/`. Writes are atomic, previous valid versions are backed up, and malformed primary state can be restored from backup. The dispatcher creates evidence-bearing assignments without executing paid/advisory workers. The Codex adapter is dry-run by default. The runner handles one explicitly invoked mission and never runs as a watcher, daemon, or service.
+The Kernel owns the authoritative runtime state under `.hermes/runtime/`. The state store consists of exactly six files: `mission-store.json`, `queue.json`, `runtime.json`, `agents.json`, `locks.json`, and `history.json`. Writes are atomic, previous valid versions are backed up, and malformed primary state can be restored from backup.
+
+The Mission Queue manages pending runtime work. The Dispatcher converts queued missions into evidence-bearing worker assignments without independently authorizing paid or advisory execution. The Codex Worker Adapter provides the Codex execution boundary and is dry-run by default. The Review Runtime evaluates mission results and records review outcomes. The Runner coordinates one explicitly invoked mission through the runtime and never operates as a watcher, daemon, cron job, or background service.
 
 Execution remains policy-gated: protected/high-risk scope stops for Por, Codex quota is never guessed, and push/merge are not implemented. Real Codex execution still depends on local CLI authentication, quota, and network availability.
 
@@ -128,13 +160,20 @@ Execution remains policy-gated: protected/high-risk scope stops for Por, Codex q
 
 ## Current vs Future State
 
-| Component | Today (Manual) | Future (Automated) |
-|-----------|---------------|--------------------|
+| Component | Current State | Future State |
+|-----------|---------------|--------------|
+| **Kernel** | `hermes-runtime.mjs` coordinates explicitly invoked runtime operations through the authoritative state store | Extend orchestration only where governance permits; no autonomous service |
+| **Runtime state store** | `hermes-runtime-store.mjs` manages six authoritative JSON files under `.hermes/runtime/` with atomic writes, backups, and recovery | Preserve the six-file local store while strengthening validation and recovery |
+| **Mission Queue** | `hermes-queue.mjs` manages queued missions in `queue.json` | Add policy-safe queue operations without background polling |
+| **Dispatcher** | `hermes-dispatch.mjs` creates evidence-bearing assignments from queued missions | Expand supported worker routing while retaining approval and budget gates |
+| **Codex Worker Adapter** | `hermes-worker-codex.mjs` provides a dry-run-by-default Codex boundary | Permit explicit real execution only when authentication, quota, scope, and approval requirements are satisfied |
+| **Runner** | `hermes-run.mjs` processes one explicitly invoked mission | Remain one-shot and operator-invoked; no watcher, daemon, or cron |
+| **Review Runtime** | `hermes-review-runtime.mjs` evaluates runtime results and records review outcomes | Increase automated evidence checks without replacing Por approval |
 | **Packet validation** | Hermes reads packets manually, checks fields by eye | CLI validates schema automatically |
 | **External sync** | Hermes compares handoff claims against git state manually | CLI runs git checks and produces structured verdict |
 | **Review gate** | Hermes runs checklist by hand in chat | CLI runs checklist and produces structured verdict |
 | **Agent routing** | Hermes types terminal commands directly | CLI wraps with safety flags, captures evidence |
-| **Inbox monitoring** | None — Por places packets manually | Could watch inbox for new files (future) |
+| **Inbox monitoring** | None — Por places packets manually | Explicit operator-triggered intake may be added |
 | **Background watcher** | None — no daemon or cron | Not planned — local-first means no background services |
 
 ---
@@ -155,6 +194,43 @@ Execution remains policy-gated: protected/high-risk scope stops for Por, Codex q
 ## Dependency Graph
 
 ```
+Hermes Runtime v1
+=================
+
+scripts/hermes-run.mjs (Runner)
+  └─▶ scripts/hermes-runtime.mjs (Kernel)
+        ├─▶ scripts/hermes-runtime-store.mjs (Runtime State Store)
+        │     └─▶ .hermes/runtime/
+        │           ├── mission-store.json
+        │           ├── queue.json
+        │           ├── runtime.json
+        │           ├── agents.json
+        │           ├── locks.json
+        │           └── history.json
+        │
+        ├─▶ scripts/hermes-queue.mjs (Mission Queue)
+        │     ├─▶ mission-store.json
+        │     ├─▶ queue.json
+        │     ├─▶ locks.json
+        │     └─▶ history.json
+        │
+        ├─▶ scripts/hermes-dispatch.mjs (Dispatcher)
+        │     ├─▶ queue.json
+        │     ├─▶ agents.json
+        │     ├─▶ runtime.json
+        │     └─▶ scripts/hermes-worker-codex.mjs
+        │           (Codex Worker Adapter)
+        │           ├─▶ runtime.json
+        │           └─▶ history.json
+        │
+        └─▶ scripts/hermes-review-runtime.mjs (Review Runtime)
+              ├─▶ mission-store.json
+              ├─▶ runtime.json
+              └─▶ history.json
+
+Phase 7.2–7.6 Supporting Tools
+================================
+
 docs/hermes/PACKET_SCHEMA.md
   └─▶ Packet Validator (7.2)
         └─▶ .hermes/review-queue/
@@ -183,6 +259,13 @@ docs/hermes/ESCALATION_POLICY.md
 
 ```
 .hermes/                          (gitignored — real runtime)
+├── runtime/                      Authoritative Hermes Runtime v1 state
+│   ├── mission-store.json        Mission definitions and lifecycle state
+│   ├── queue.json                Pending and active mission queue
+│   ├── runtime.json              Current runtime execution state
+│   ├── agents.json               Worker and agent registry state
+│   ├── locks.json                Runtime coordination locks
+│   └── history.json              Append-oriented runtime event history
 ├── inbox/                        Incoming handoff/task packets
 ├── outbox/                       Packets for other agents
 ├── closeouts/                    Completed session closeouts
@@ -195,7 +278,32 @@ docs/hermes/ESCALATION_POLICY.md
 ├── outbox/.gitkeep
 ├── closeouts/.gitkeep
 ├── review-queue/.gitkeep
-└── state/.gitkeep
+├── state/.gitkeep
+├── agents/.gitkeep
+├── locks/.gitkeep
+├── queue/.gitkeep
+└── runtime/
+    ├── agents.json
+    ├── history.json
+    ├── locks.json
+    ├── mission-store.json
+    ├── queue.json
+    └── runtime.json
+
+scripts/                          Hermes runtime and supporting CLIs
+├── hermes-runtime-store.mjs      Kernel state-store implementation
+├── hermes-runtime.mjs            Runtime Kernel and orchestration
+├── hermes-queue.mjs              Mission Queue
+├── hermes-dispatch.mjs           Mission Dispatcher
+├── hermes-worker-codex.mjs       Codex Worker Adapter
+├── hermes-run.mjs                One-shot Runner
+├── hermes-review-runtime.mjs     Runtime review processing
+├── hermes-validate-packet.mjs    Phase 7.2 Packet Validator
+├── hermes-sync.mjs               Phase 7.3 Hermes Sync CLI
+├── hermes-agent-registry.mjs     Phase 7.4 Agent Registry
+├── hermes-route-task.mjs         Phase 7.4 Task Router
+├── hermes-lock-check.mjs         Phase 7.4 Lock Check
+└── hermes-review.mjs             Phase 7.4 Review Engine (legacy)
 
 docs/hermes/                      Governance and architecture docs
 ├── RUNTIME_ARCHITECTURE.md       This file — runtime map
