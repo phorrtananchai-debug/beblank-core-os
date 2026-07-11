@@ -184,6 +184,41 @@ function closeoutFilePaths(section) {
     .map(line => line.split(/\s+[|—-]\s+/)[0].trim())
 }
 
+export function normalizeCloseoutFilePath(value) {
+  let path = String(value || '').trim().replace(/^[-*]\s+/, '').trim()
+  if (!path || /^none\.?$/i.test(path)) return { ignored: true }
+  const first = path[0]
+  const last = path.at(-1)
+  if (['`', '"', "'"].includes(first) || ['`', '"', "'"].includes(last)) {
+    if (first !== last || !['`', '"', "'"].includes(first)) return { error: `Malformed file-list formatting: ${value}` }
+    path = path.slice(1, -1).trim()
+  }
+  if (!path || /[`"']/.test(path)) return { error: `Malformed file-list path: ${value}` }
+  path = path.replaceAll('\\', '/').replace(/^\.\//, '')
+  if (path.includes('*') || path.includes('?') || /(^|\/)\.\.?(\/|$)/.test(path) || /\s/.test(path)) return { error: `Unsafe or ambiguous file-list path: ${value}` }
+  if (!path.includes('/') && !/^[^/]+\.[A-Za-z0-9]+$/.test(path)) return { error: `Malformed file-list path: ${value}` }
+  return { path }
+}
+
+function normalizedCloseoutFilePaths(section) {
+  const paths = []
+  const errors = []
+  for (const raw of section.split(/\r?\n/)) {
+    let value = raw.trim()
+    if (!value || /^\|?\s*[-: ]+\|/.test(value)) continue
+    if (value.startsWith('|')) {
+      const cells = value.split('|')
+      value = cells[1]?.trim() || ''
+      if (/^file$/i.test(value)) continue
+    }
+    const normalized = normalizeCloseoutFilePath(value)
+    if (normalized.ignored) continue
+    if (normalized.error) errors.push(normalized.error)
+    else paths.push(normalized.path)
+  }
+  return { paths, errors }
+}
+
 export function inspectWorkerCloseout(path, { changedFiles = [] } = {}) {
   if (!path || !existsSync(path)) return { detected: false, verdict: 'MISSING', passing: false, blocking: true, complete: false, missing: ['closeout file'], errors: ['Worker closeout is missing'] }
   const text = readFileSync(path, 'utf8')
@@ -191,14 +226,15 @@ export function inspectWorkerCloseout(path, { changedFiles = [] } = {}) {
   const section = closeoutSection(text, 'Review Recommendation').toUpperCase().replaceAll('_', ' ')
   const verdictMatch = /\b(APPROVE|REVISE|HOLD FOR EVIDENCE|BLOCKED|FAILED|NEEDS REWORK|REJECT)\b/.exec(section)
   const verdict = verdictMatch?.[1]?.replaceAll(' ', '_') || 'UNKNOWN'
-  const listedFiles = closeoutFilePaths(closeoutSection(text, 'Files Changed'))
+  const fileList = normalizedCloseoutFilePaths(closeoutSection(text, 'Files Changed'))
   const expected = [...changedFiles].sort((a, b) => a.localeCompare(b))
-  const actual = [...new Set(listedFiles)].sort((a, b) => a.localeCompare(b))
-  const filesMatch = expected.length === actual.length && expected.every((file, index) => file === actual[index])
+  const actual = [...new Set(fileList.paths)].sort((a, b) => a.localeCompare(b))
+  const filesMatch = fileList.errors.length === 0 && expected.length === actual.length && expected.every((file, index) => file === actual[index])
   const contradictory = verdict === 'APPROVE' && /\b(HOLD FOR EVIDENCE|BLOCKED|FAILED|NEEDS REWORK|REJECT)\b/.test(text.toUpperCase())
   const errors = []
   if (missing.length) errors.push(`Closeout Packet v3 missing headings: ${missing.join(', ')}`)
   if (verdict === 'UNKNOWN') errors.push('Closeout review recommendation is missing or unsupported')
+  errors.push(...fileList.errors)
   if (!filesMatch) errors.push(`Closeout Files Changed does not match verified changes: expected ${expected.join(', ') || 'none'}; found ${actual.join(', ') || 'none'}`)
   if (contradictory) errors.push('Closeout contradicts APPROVE with a blocking verdict')
   const complete = missing.length === 0 && filesMatch

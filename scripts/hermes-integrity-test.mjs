@@ -13,7 +13,7 @@ process.env.HERMES_RUNTIME_DIR = join(fixtureRoot, 'runtime')
 const store = await import('./hermes-runtime-store.mjs')
 const { classifyMission, validateDispatchPacket } = await import('./hermes-dispatch.mjs')
 const { determineReviewVerdict, normalizeRequiredChecks } = await import('./hermes-review-runtime.mjs')
-const { adapterExecute, buildCodexArgs, buildCodexPrompt, CLOSEOUT_V3_HEADINGS, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
+const { adapterExecute, buildCodexArgs, buildCodexPrompt, CLOSEOUT_V3_HEADINGS, CODEX_MODEL, detectEffectiveSandbox, inspectWorkerCloseout, normalizeCloseoutFilePath, resolveCodexSandbox } = await import('./hermes-worker-codex.mjs')
 const { commitEligibility, finalizeAcceptedMission, parseCommitControls, resolveCommitMessage, validateStagedScope } = await import('./hermes-run.mjs')
 const { resolveSyncedState, syncCloseout } = await import('./hermes-sync.mjs')
 
@@ -412,6 +412,30 @@ try {
   writeFileSync(passCloseout, closeoutV3({ files: ['guide.md'] }), 'utf8')
   test('worker closeout APPROVE parser passes', () => {
     assert.equal(inspectWorkerCloseout(passCloseout, { changedFiles: ['guide.md'] }).passing, true)
+  })
+  test('closeout file-list normalization accepts plain, wrapped, quoted, and Windows paths', () => {
+    assert.deepEqual(normalizeCloseoutFilePath('docs/hermes/guide.md'), { path: 'docs/hermes/guide.md' })
+    assert.deepEqual(normalizeCloseoutFilePath('`docs/hermes/guide.md`'), { path: 'docs/hermes/guide.md' })
+    assert.deepEqual(normalizeCloseoutFilePath('- `docs/hermes/guide.md`'), { path: 'docs/hermes/guide.md' })
+    assert.deepEqual(normalizeCloseoutFilePath('  "docs\\hermes\\guide.md"  '), { path: 'docs/hermes/guide.md' })
+  })
+  test('closeout file-list normalization compares balanced Markdown paths exactly', () => {
+    const path = join(fixtureRoot, 'balanced-file-path.md')
+    writeFileSync(path, closeoutV3({ files: ['`docs/hermes/RUNTIME_V1_OPERATING_GUIDE.md`'] }), 'utf8')
+    assert.equal(inspectWorkerCloseout(path, { changedFiles: ['docs/hermes/RUNTIME_V1_OPERATING_GUIDE.md'] }).passing, true)
+    assert.equal(inspectWorkerCloseout(path, { changedFiles: ['docs/hermes/other.md'] }).files_match, false)
+  })
+  test('closeout file-list normalization fails closed for malformed and unsafe entries', () => {
+    for (const value of ['`docs/hermes/guide.md', 'docs/`hermes/guide.md', 'docs/*.md', '../guide.md', 'docs/../guide.md', 'this is prose, not a path']) {
+      assert.ok(normalizeCloseoutFilePath(value).error, value)
+    }
+  })
+  test('closeout file-list normalization continues rejecting extra, missing, and out-of-scope files', () => {
+    const path = join(fixtureRoot, 'wrong-files.md')
+    writeFileSync(path, closeoutV3({ files: ['`src/index.css`'] }), 'utf8')
+    const result = inspectWorkerCloseout(path, { changedFiles: ['docs/hermes/guide.md'] })
+    assert.equal(result.files_match, false)
+    assert.equal(result.passing, false)
   })
   test('closeout missing a required heading fails', () => {
     const path = join(fixtureRoot, 'missing-heading.md')
