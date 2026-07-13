@@ -21,6 +21,21 @@ import { dispatchMission } from './hermes-dispatch.mjs'
 import { adapterDryRun, adapterExecute, adapterStatus } from './hermes-worker-codex.mjs'
 import { parseStatus, reviewMission, runValidationChecks } from './hermes-review-runtime.mjs'
 import { syncCloseout } from './hermes-sync.mjs'
+import { runMissionCheckpointsV2 } from './hermes-runner-v2.mjs'
+
+export const RUNNER_LIFECYCLE_MODES = Object.freeze(['legacy-v1', 'v2-checkpoint'])
+
+export function parseLifecycleMode(args = []) {
+  const index = args.indexOf('--lifecycle-mode')
+  if (index < 0) return { mode: 'legacy-v1', args: [...args] }
+  const mode = args[index + 1]
+  if (!RUNNER_LIFECYCLE_MODES.includes(mode)) throw new Error(`Unsupported lifecycle mode: ${mode || 'missing'}`)
+  return { mode, args: args.filter((_arg, position) => position !== index && position !== index + 1) }
+}
+
+export function executeCheckpointMissionV2(input, dependencies = {}) {
+  return runMissionCheckpointsV2(input, dependencies)
+}
 
 function run(command, args, options = {}) { return spawnSync(command, args, { encoding: 'utf8', windowsHide: true, ...options }) }
 function git(repo, args) {
@@ -296,8 +311,10 @@ export function parseCommitControls(args) {
 }
 
 function main() {
+  const lifecycle = parseLifecycleMode(process.argv.slice(2))
+  const args = lifecycle.args
+  if (lifecycle.mode === 'v2-checkpoint') throw new Error('v2-checkpoint CLI intake is not available until Single Front Door; use executeCheckpointMissionV2 with a persisted v2 mission')
   initializeRuntime()
-  const args = process.argv.slice(2)
   const commitControls = parseCommitControls(args)
   if (args[0] === '--status') {
     const mission = getMission(args[1]); if (!mission) throw new Error(`Mission not found: ${args[1]}`)

@@ -2,6 +2,7 @@
 
 import {
   copyFileSync,
+  appendFileSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -16,6 +17,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import { V2_STATES, migrateMissionStateV1ToV2 } from './hermes-state-model-v2.mjs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = resolve(SCRIPT_DIR, '..')
@@ -207,6 +209,144 @@ export function parseFrontmatter(text) {
 
 function unquote(value) {
   return value.replace(/^(['"])(.*)\1$/, '$2')
+}
+
+export function getMissionDirectory(missionId) {
+  if (!/^[A-Za-z0-9._-]+$/.test(missionId || '')) throw new Error('Invalid mission ID for mission directory')
+  return join(dirname(RUNTIME_DIR), 'state', 'missions', missionId)
+}
+
+export function ensureMissionDirectoryV2(missionId) {
+  const root = getMissionDirectory(missionId)
+  for (const part of ['packet', 'plan', 'approval', 'baseline', 'attempts']) mkdirSync(join(root, part), { recursive: true })
+  return root
+}
+
+export function detectMissionSchemaVersion(record) {
+  if (!record || typeof record !== 'object') throw new Error('Mission record must be an object')
+  if (record.schemaVersion === 2) return 2
+  if (record.schemaVersion !== undefined) throw new Error(`Unsupported mission schema version: ${record.schemaVersion}`)
+  return 1
+}
+
+const V2_CHECKPOINT_VALUES = Object.freeze(['pending', 'complete', 'accepted', 'not-required'])
+
+function validateMissionStateV2(state) {
+  if (!state || state.schemaVersion !== 2) throw new Error('State must use schemaVersion 2')
+  if (!state.missionId || !/^[A-Za-z0-9._-]+$/.test(state.missionId)) throw new Error('State requires a valid missionId')
+  if (!V2_STATES.includes(state.state)) throw new Error(`Unknown v2 mission state: ${state.state}`)
+  if (!state.createdAt || !state.updatedAt) throw new Error('State requires createdAt and updatedAt')
+  if (Number.isNaN(Date.parse(state.createdAt)) || Number.isNaN(Date.parse(state.updatedAt))) throw new Error('State timestamps must be valid ISO timestamps')
+  if (!state.checkpoints || typeof state.checkpoints !== 'object') throw new Error('State requires checkpoints')
+  for (const [checkpoint, value] of Object.entries(state.checkpoints)) {
+    if (!V2_CHECKPOINT_VALUES.includes(value)) throw new Error(`State checkpoint ${checkpoint} has invalid value: ${value}`)
+  }
+}
+
+function v2StoreError(code, message, cause) {
+  const error = new Error(message)
+  error.code = code
+  if (cause) error.cause = cause
+  return error
+}
+
+function parseMissionRecord(path) {
+  try { return JSON.parse(readFileSync(path, 'utf8')) }
+  catch (error) { throw v2StoreError('HERMES_V2_MISSION_PARSE_ERROR', `Cannot parse v2 mission record: ${error.message}`, error) }
+}
+
+export function saveMissionStateV2(missionId, state, { fileOps = {} } = {}) {
+  validateMissionStateV2(state)
+  if (state.missionId !== missionId) throw new Error('Mission ID does not match v2 state')
+  const root = ensureMissionDirectoryV2(missionId)
+  const path = join(root, 'mission.json')
+  if (existsSync(path)) {
+    const existing = parseMissionRecord(path)
+    if (detectMissionSchemaVersion(existing) !== 2) throw new Error('Refusing to overwrite legacy mission evidence')
+  }
+  const temp = `${path}.${process.pid}.${Date.now()}.tmp`
+  const write = fileOps.writeFileSync || writeFileSync
+  const rename = fileOps.renameSync || renameSync
+  const remove = fileOps.rmSync || rmSync
+  try { write(temp, `${JSON.stringify(state, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' }); rename(temp, path) }
+  catch (error) {
+    try { if (existsSync(temp)) remove(temp, { force: true }) } catch { /* retain the original write error */ }
+    throw v2StoreError('HERMES_V2_ATOMIC_WRITE_FAILED', `Atomic v2 mission write failed: ${error.message}`, error)
+  }
+  return state
+}
+
+export function loadMissionStateV2(missionId, { migrateLegacy = true } = {}) {
+  const path = join(getMissionDirectory(missionId), 'mission.json')
+  if (existsSync(path)) {
+    const record = parseMissionRecord(path)
+    const version = detectMissionSchemaVersion(record)
+    if (version === 2) { validateMissionStateV2(record); return { schemaVersion: 2, state: record, legacy: null, warnings: [] } }
+    const migration = migrateMissionStateV1ToV2(record)
+    return { schemaVersion: 1, state: migrateLegacy ? migration.state : null, legacy: record, warnings: migration.warning ? [migration.warning] : [] }
+  }
+  let legacy = null
+  try { legacy = getMission(missionId) }
+  catch (error) {
+    if (/mission-store\.json is missing/.test(error.message)) throw v2StoreError('HERMES_V2_MISSION_NOT_FOUND', `Mission not found: ${missionId}`, error)
+    throw error
+  }
+  if (!legacy) throw new Error(`Mission not found: ${missionId}`)
+  const migration = migrateMissionStateV1ToV2(legacy)
+  return { schemaVersion: 1, state: migrateLegacy ? migration.state : null, legacy, warnings: migration.warning ? [migration.warning] : [] }
+}
+
+export function appendMissionEventV2(missionId, event) {
+  const root = ensureMissionDirectoryV2(missionId)
+  if (!event || event.missionId !== missionId) throw new Error('Event missionId must match mission directory')
+  if (!event.eventId || !event.timestamp || !event.actor || !event.type) throw new Error('Event requires eventId, timestamp, actor, and type')
+  if (Number.isNaN(Date.parse(event.timestamp))) throw new Error('Event timestamp is invalid')
+  appendFileSync(join(root, 'events.jsonl'), `${JSON.stringify(event)}\n`, 'utf8')
+  return event
+}
+
+export function createMissionAttemptDirectory(missionId, attempt) {
+  if (!Number.isInteger(attempt) || attempt < 1) throw new Error('Attempt must be a positive integer')
+  const path = join(ensureMissionDirectoryV2(missionId), 'attempts', String(attempt).padStart(3, '0'))
+  for (const name of ['worker', 'validation', 'review', 'closeout', 'sync', 'commit']) mkdirSync(join(path, name), { recursive: true })
+  return path
+}
+
+export function listMissionAttempts(missionId) {
+  const attempts = join(getMissionDirectory(missionId), 'attempts')
+  if (!existsSync(attempts)) return []
+  return readdirSync(attempts, { withFileTypes: true }).filter(item => item.isDirectory() && /^\d{3,}$/.test(item.name)).map(item => Number(item.name)).sort((a, b) => a - b)
+}
+
+const V2_ATTEMPT_STAGES = new Set(['worker-start', 'worker', 'validation', 'review', 'closeout', 'sync', 'commit', 'resume'])
+
+export function writeMissionAttemptEvidenceV2(missionId, attempt, stage, evidence, { fileOps = {} } = {}) {
+  if (!V2_ATTEMPT_STAGES.has(stage)) throw new Error(`Unsupported v2 attempt evidence stage: ${stage}`)
+  if (!evidence || typeof evidence !== 'object') throw new Error('Attempt evidence must be an object')
+  const attemptRoot = createMissionAttemptDirectory(missionId, attempt)
+  const stageRoot = join(attemptRoot, stage)
+  mkdirSync(stageRoot, { recursive: true })
+  const path = join(stageRoot, 'evidence.json')
+  const temp = `${path}.${process.pid}.${Date.now()}.tmp`
+  const write = fileOps.writeFileSync || writeFileSync
+  const rename = fileOps.renameSync || renameSync
+  const remove = fileOps.rmSync || rmSync
+  try {
+    write(temp, `${JSON.stringify(evidence, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' })
+    rename(temp, path)
+  } catch (error) {
+    try { if (existsSync(temp)) remove(temp, { force: true }) } catch { /* preserve original failure */ }
+    throw v2StoreError('HERMES_V2_EVIDENCE_WRITE_FAILED', `Atomic v2 evidence write failed: ${error.message}`, error)
+  }
+  return path
+}
+
+export function readMissionAttemptEvidenceV2(missionId, attempt, stage) {
+  if (!V2_ATTEMPT_STAGES.has(stage)) throw new Error(`Unsupported v2 attempt evidence stage: ${stage}`)
+  const path = join(getMissionDirectory(missionId), 'attempts', String(attempt).padStart(3, '0'), stage, 'evidence.json')
+  if (!existsSync(path)) return null
+  try { return JSON.parse(readFileSync(path, 'utf8')) }
+  catch (error) { throw v2StoreError('HERMES_V2_EVIDENCE_PARSE_ERROR', `Cannot parse v2 attempt evidence: ${error.message}`, error) }
 }
 
 function booleanValue(value, fallback) {

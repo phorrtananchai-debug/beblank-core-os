@@ -1,5 +1,7 @@
 # Hermes Runner Loop
 
+> Runtime State Model v2 checkpoint ownership, migration, resume, and compatibility are documented in [RUNTIME_STATE_MODEL_V2.md](./RUNTIME_STATE_MODEL_V2.md). The existing v1 loop remains the default until an operator explicitly selects a supported v2 entry boundary.
+
 The runner processes one mission per explicit invocation. It is not a daemon and performs no background polling.
 
 ```bash
