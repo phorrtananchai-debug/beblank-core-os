@@ -1,10 +1,12 @@
 import { MobileStudioApp } from '../../components/studio/mobile/MobileStudioApp'
 import { useAuth } from '../../core/auth/useAuth'
 import { useOs } from '../../core/os/useOs'
+import { useProjectWorkspace } from '../../core/projectWorkspace/useProjectWorkspace'
 
 export const StudioMobilePage = () => {
   const { isAuthenticated, login } = useAuth()
   const { data, createActionRequest } = useOs()
+  const workspace = useProjectWorkspace('sp-kcc-main', data)
 
   if (!isAuthenticated) {
     return <MobileStudioLanding onLogin={login} />
@@ -12,7 +14,17 @@ export const StudioMobilePage = () => {
 
   return (
     <section className="mobile-studio-route min-h-screen overflow-hidden bg-[#F5F5FA] font-[var(--font-ui)] text-[#212121]">
-      <MobileStudioApp data={data} createActionRequest={createActionRequest} />
+      {workspace.error && <div className="mx-auto max-w-[430px] bg-[#fff4f2] px-4 py-3 text-xs text-[#a43f37]" role="alert">{workspace.error.message} <button className="underline" type="button" onClick={() => void workspace.retry()}>Retry</button></div>}
+      <MobileStudioApp
+        data={data}
+        createActionRequest={createActionRequest}
+        workspace={workspace.data}
+        onUpdateWorkspaceTask={async (taskId) => {
+          const task = workspace.data?.tasks.find((item) => item.id === taskId)
+          if (!task) return
+          await workspace.repository.upsertTask(workspace.projectId, { ...task, status: task.status === 'done' ? 'in-progress' : 'done', progress: task.status === 'done' ? Math.min(task.progress, 90) : 100, updatedAt: new Date().toISOString() })
+        }}
+      />
     </section>
   )
 }

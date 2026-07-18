@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { ActionRequest, OsData, StudioMobileTab, StudioProject, StudioTask } from '../../../types/models'
+import type { PersistedProjectWorkspace, ProjectTask } from '../../../core/projectWorkspace/types'
+import { getAssetsForEntity } from '../../../core/projectWorkspace/selectors'
 
 type CreateActionRequest = (input: Omit<ActionRequest, 'id' | 'requestedAt' | 'requestedBy' | 'requiresApproval'>) => void
 type MobileTabKey = StudioMobileTab['key']
@@ -8,6 +10,8 @@ type CalendarMode = 'Week' | 'Month' | 'Year'
 interface MobileStudioAppProps {
   data: OsData
   createActionRequest: CreateActionRequest
+  workspace: PersistedProjectWorkspace | null
+  onUpdateWorkspaceTask: (taskId: string) => Promise<void>
 }
 
 type MobileProject = {
@@ -43,18 +47,18 @@ const navItems: Array<{ key: MobileTabKey; label: string }> = [
   { key: 'more', label: 'More' },
 ]
 
-const focusDate = new Date(2026, 4, 12)
+const focusDate = new Date()
 const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const timeGroups = ['Morning', 'Afternoon', 'Evening', 'No time'] as const
 const dayMs = 24 * 60 * 60 * 1000
 
-export const MobileStudioApp = ({ data }: MobileStudioAppProps) => {
+export const MobileStudioApp = ({ data, workspace, onUpdateWorkspaceTask }: MobileStudioAppProps) => {
   const [activeTab, setActiveTab] = useState<MobileTabKey>('home')
   const [selectedDate, setSelectedDate] = useState(focusDate)
   const [calendarMode, setCalendarMode] = useState<CalendarMode>('Month')
   const [selectedProjectId, setSelectedProjectId] = useState('')
-  const { projects, tasks } = useMemo(() => buildMobileData(data), [data])
+  const { projects, tasks } = useMemo(() => buildMobileData(data, workspace), [data, workspace])
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
 
   return (
@@ -90,6 +94,8 @@ export const MobileStudioApp = ({ data }: MobileStudioAppProps) => {
               projects={projects}
               selectedProject={selectedProject}
               tasks={tasks}
+              workspace={workspace}
+              onUpdateWorkspaceTask={onUpdateWorkspaceTask}
               onBack={() => setSelectedProjectId('')}
               onSelectProject={setSelectedProjectId}
             />
@@ -382,12 +388,16 @@ const ProjectsView = ({
   projects,
   selectedProject,
   tasks,
+  workspace,
+  onUpdateWorkspaceTask,
 }: {
   onBack: () => void
   onSelectProject: (projectId: string) => void
   projects: MobileProject[]
   selectedProject: MobileProject | null
   tasks: MobileTask[]
+  workspace: PersistedProjectWorkspace | null
+  onUpdateWorkspaceTask: (taskId: string) => Promise<void>
 }) => {
   if (selectedProject) {
     const projectTasks = tasks.filter((task) => task.projectId === selectedProject.id && task.type !== 'phase')
@@ -410,8 +420,9 @@ const ProjectsView = ({
         </section>
         <section className="mt-6">
           <SectionHead count={projectTasks.length} title="Tasks" />
-          <div className="grid gap-3">{projectTasks.map((task) => <TaskCard key={task.id} projects={projects} task={task} />)}</div>
+          <div className="grid gap-3">{projectTasks.map((task) => task.projectId === workspace?.project.id ? <MobileTaskEditorCard key={task.id} task={task} onUpdate={onUpdateWorkspaceTask} /> : <TaskCard key={task.id} projects={projects} task={task} />)}</div>
         </section>
+        {workspace?.project.id === selectedProject.id && <section className="mt-6"><SectionHead count={workspace.siteReports.length} title="Site reports" /><div className="grid gap-3">{workspace.siteReports.map((report) => <article key={report.id} className="rounded-[22px] border border-black/5 bg-white p-4"><strong className="text-sm">{report.workScope}</strong><p className="mt-1 text-xs text-[#777777]">{report.date} · {report.completedToday}</p><p className="mt-2 text-[11px] text-[#777777]">{getAssetsForEntity(workspace, 'site-report', report.id).length} linked assets</p></article>)}</div></section>}
       </div>
     )
   }
@@ -437,6 +448,12 @@ const ProjectsView = ({
       </div>
     </div>
   )
+}
+
+const MobileTaskEditorCard = ({ task, onUpdate }: { task: MobileTask; onUpdate: (taskId: string) => Promise<void> }) => {
+  const [saving, setSaving] = useState(false)
+  const [failure, setFailure] = useState('')
+  return <article className="rounded-[22px] border border-black/5 bg-white p-4"><strong className="text-sm">{task.title}</strong><p className="mt-1 text-xs text-[#777777]">{task.detail}</p>{failure && <p className="mt-2 text-xs text-[#a43f37]" role="alert">{failure}</p>}<button className="mt-3 rounded-full bg-[#212121] px-4 py-2 text-[11px] font-semibold text-white" type="button" disabled={saving} onClick={async () => { setSaving(true); setFailure(''); try { await onUpdate(task.id) } catch (error) { setFailure(error instanceof Error ? error.message : 'Task update failed.') } finally { setSaving(false) } }}>{saving ? 'Saving…' : task.status === 'done' ? 'Reopen task' : 'Mark done'}</button></article>
 }
 
 const QuickAddView = ({ projects }: { projects: MobileProject[] }) => (
@@ -552,8 +569,10 @@ const MetricCard = ({ label, value }: { label: string; value: number }) => <div 
 const EmptyCard = ({ compact = false, lines }: { compact?: boolean; lines: string[] }) => <div className={`rounded-[24px] border border-black/5 bg-white text-xs leading-5 text-[#777777] ${compact ? 'px-4 py-3' : 'p-5'}`}>{lines.map((line) => <p key={line}>{line}</p>)}</div>
 const Legend = () => <div className="mt-5 flex flex-wrap gap-2 rounded-[20px] bg-white/70 px-3 py-3 text-[10px] font-medium text-[#777777]"><span>Range</span><span>/</span><span>In Progress</span><span>/</span><span>Planned</span><span>/</span><span>Selected</span></div>
 
-const buildMobileData = (data: OsData): { projects: MobileProject[]; tasks: MobileTask[] } => {
-  const projects = data.studioProjects.length ? data.studioProjects.slice(0, 8).map(toMobileProject) : fallbackProjects
+const buildMobileData = (data: OsData, workspace: PersistedProjectWorkspace | null): { projects: MobileProject[]; tasks: MobileTask[] } => {
+  const legacyProjects = data.studioProjects.length ? data.studioProjects.slice(0, 8).map(toMobileProject) : fallbackProjects
+  const sharedProject: MobileProject | null = workspace ? { id: workspace.project.id, name: workspace.project.name, phase: workspace.project.phase, status: workspace.project.status === 'complete' ? 'DONE' : workspace.project.status === 'planning' ? 'PLANNED' : 'IN PROGRESS', startDate: workspace.project.startDate, endDate: workspace.project.targetHandoverDate, progress: workspace.project.actualProgress, note: workspace.project.summary } : null
+  const projects = sharedProject ? [sharedProject, ...legacyProjects.filter((project) => project.id !== sharedProject.id)] : legacyProjects
   const phaseTasks: MobileTask[] = projects.map((project) => ({
     id: `range-${project.id}`,
     projectId: project.id,
@@ -566,9 +585,12 @@ const buildMobileData = (data: OsData): { projects: MobileProject[]; tasks: Mobi
     status: project.status === 'DONE' ? 'done' : project.status === 'OVERDUE' ? 'overdue' : 'doing',
     type: 'phase' as const,
   }))
-  const taskItems = data.studioTasks.length ? data.studioTasks.slice(0, 16).map(toMobileTask) : fallbackTasks
+  const legacyTasks = data.studioTasks.length ? data.studioTasks.filter((task) => task.projectId !== workspace?.project.id).slice(0, 16).map(toMobileTask) : fallbackTasks
+  const taskItems = workspace ? [...workspace.tasks.map(toMobileWorkspaceTask), ...legacyTasks] : legacyTasks
   return { projects, tasks: [...phaseTasks, ...taskItems] }
 }
+
+const toMobileWorkspaceTask = (task: ProjectTask): MobileTask => ({ id: task.id, projectId: task.projectId, title: task.title, detail: task.description, phase: task.phase, date: task.plannedStart, startDate: task.plannedStart, endDate: task.plannedFinish, status: task.status === 'done' ? 'done' : task.status === 'blocked' ? 'overdue' : task.status === 'in-progress' || task.status === 'review' ? 'doing' : 'todo', type: 'task' })
 
 const toMobileProject = (project: StudioProject): MobileProject => ({
   id: project.id,

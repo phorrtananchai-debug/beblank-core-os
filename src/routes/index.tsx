@@ -64,6 +64,7 @@ export const AppRoutes = () => {
         <Route path="portfolio" element={<PortfolioManagerPage />} />
         <Route path="studio/mobile" element={<StudioMobilePage />} />
         <Route path="studio/projects/:projectId" element={<StudioProjectDetailPage />} />
+        <Route path="studio/projects/:projectId/:workspaceSection" element={<StudioProjectDetailPage />} />
         <Route path="studio/projects" element={<StudioWorkspacePage />} />
         <Route path="studio/timeline" element={<StudioWorkspacePage />} />
         <Route path="studio/site-watch" element={<StudioWorkspacePage />} />

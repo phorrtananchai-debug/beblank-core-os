@@ -107,12 +107,15 @@ export const StudioWorkspacePage = () => {
         summary="Studio now opens as a project operating system. The first read is the active project, the current site move, and the next decision."
         actions={
           <>
+            <Link className="studio-button-primary" to="/os/studio/projects/karun-central-khon-kaen-campus">
+              Open Karun CKK workspace
+            </Link>
             {featuredProject ? (
               <Link className="studio-button-secondary" to={`/os/studio/projects/${featuredProject.slug}`}>
                 Open primary project
               </Link>
             ) : null}
-            <Link className="studio-button-primary" to="/os/studio/mobile">
+            <Link className="studio-button-secondary" to="/os/studio/mobile">
               Launch mobile workspace
             </Link>
           </>

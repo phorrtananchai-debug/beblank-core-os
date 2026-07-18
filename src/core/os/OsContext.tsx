@@ -11,6 +11,8 @@ import { COMMAND_EVENT_LOG_LIMIT, createCommandEvent, type CommandEvent, type Co
 import { OsContext, type BridgeBootstrapDiagnostic, type OsContextValue } from './osContextObject'
 import { useApprovalWorkflow } from './useApprovalWorkflow'
 import type { DataProviderStatus, OsData, SourceStatus } from '../../types/models'
+import { projectWorkspaceRepository } from '../projectWorkspace/repository'
+import { synchronizeProjectWorkspaceToOsData } from '../projectWorkspace/legacyAdapter'
 
 const ALLOWED_BRIDGE_FIELDS = new Set(['projects', 'approvals', 'financeLedgerRows', 'holdings', 'dcaRecords', 'dividendRecords', 'dividendRecordsFullHistory', 'aiContexts'])
 
@@ -96,6 +98,18 @@ export const OsProvider = ({ children }: { children: React.ReactNode }) => {
   } = useApprovalWorkflow(data, setData, sourceStatuses, setSourceStatuses, setFinnhubStatus)
   const hasBootstrappedRef = useRef(false)
   const commandEventBusRef = useRef(createCommandEventBus())
+  const initialStudioDataRef = useRef(data)
+
+  useEffect(() => {
+    const projectId = 'sp-kcc-main'
+    const sync = () => {
+      const workspace = projectWorkspaceRepository.getSnapshot(projectId).data
+      if (workspace) setData((current) => synchronizeProjectWorkspaceToOsData(current, workspace))
+    }
+    const unsubscribe = projectWorkspaceRepository.subscribe(projectId, sync)
+    void projectWorkspaceRepository.hydrate(projectId, initialStudioDataRef.current).then(sync)
+    return unsubscribe
+  }, [])
 
   const publishCommandEvent = useCallback((input: CommandEventInput) => {
     const event = createCommandEvent(input)

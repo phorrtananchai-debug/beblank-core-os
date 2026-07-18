@@ -58,7 +58,7 @@ export const OSLayout = () => {
       <ShellInner>
         {/* existing shell content */}
         <div className="os-shell-frame mx-auto flex w-full max-w-[1500px] gap-5 rounded-[22px] border border-[var(--bb-border)]/80 bg-white/70 p-3 shadow-[var(--bb-shadow-sm)]">
-        <aside className="os-sidebar sticky top-5 flex h-[calc(100vh-2.5rem)] w-[292px] flex-col overflow-x-hidden rounded-[18px] border border-[var(--bb-border)] bg-white/90 p-5 shadow-[var(--bb-shadow-sm)]">
+        <aside className="os-sidebar sticky top-5 hidden h-[calc(100vh-2.5rem)] w-[292px] flex-col overflow-x-hidden rounded-[18px] border border-[var(--bb-border)] bg-white/90 p-5 shadow-[var(--bb-shadow-sm)] md:flex">
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <div className="mb-6">
               <p className="text-[10px] font-semibold text-[#777777]">Studio environment</p>
@@ -122,6 +122,10 @@ export const OSLayout = () => {
         </aside>
 
         <div className="min-w-0 flex-1 space-y-5">
+          <div className="flex items-center justify-between rounded-xl border border-[var(--bb-border)] bg-white px-3 py-2 md:hidden">
+            <NavLink className="text-xs font-semibold text-[var(--bb-text)] no-underline" to="/os/studio">BE BLANK OS / Studio</NavLink>
+            <NavLink className="text-xs font-semibold text-[var(--bb-accent-strong)] no-underline" to="/m">Open mobile</NavLink>
+          </div>
           <div className="os-workspace-panel break-words rounded-[20px] border border-[var(--bb-border)] bg-white/92 p-4 shadow-[var(--bb-shadow-sm)] md:p-7">
             <Outlet />
           </div>
